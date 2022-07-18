@@ -11,4 +11,16 @@ tasks:
       - poetry run python app.py
     silent: true
 
-  
+  build:
+    cmds:
+      - rm -rf build 
+      - rm -rf dist
+      - rm -rf .eggs
+      - poetry run python setup.py py2app
+
+  install:
+    cmds:
+      - killall Yanko || true
+      - task: build
+      - rm -rf /Applications/Yanko.app
+      - mv dist/Yanko.app /Applications

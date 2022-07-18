@@ -35,8 +35,7 @@ class Track:
     title: str
     album: str
     artist: str
-    albumId: str
-    artistId: str
+
     duration: int
     created: datetime = field(
         metadata=config(
@@ -46,6 +45,8 @@ class Track:
         )
     )
     size: int
+    albumId: Optional[str] = None
+    artistId: Optional[str] = None
     track: Optional[int] = None
     year: Optional[int] = None
     genre: Optional[str] = None

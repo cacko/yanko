@@ -145,7 +145,6 @@ class Config(dict):
         for key in dir(obj):
             if key.isupper():
                 self[key] = getattr(obj, key)
-        print(self)
 
     def get_namespace(
         self,

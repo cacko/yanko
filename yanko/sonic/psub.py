@@ -374,6 +374,13 @@ class pSub(object):
                     return
                 playing = self.play_stream(dict(song))
 
+    @property
+    def environment(self):
+        return dict(
+            os.environ,
+            PATH=f"{os.environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{os.environ.get('PATH')}",
+        )
+
     def play_stream(self, track_data):
         """
         Given track data, generate the stream url and pass it to ffplay to handle.
@@ -439,14 +446,13 @@ class pSub(object):
                 Playstatus(status=Status.PLAYING)
             )
 
-            ffplay = Popen(params)
+            ffplay = Popen(params, env=self.environment)
 
             has_finished = None
             open(os.path.join(click.get_app_dir('pSub'), 'play.lock'), 'w+').close()
 
             while has_finished is None:
                 has_finished = ffplay.poll()
-                print(f"playback_queue")
                 if self.playback_queue.empty():
                     time.sleep(0.1)
                     continue

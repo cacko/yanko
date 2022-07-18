@@ -11,11 +11,8 @@ OPTIONS = {
     },
     'packages': [
         'rumps',
-        'cachable',
         'dataclasses_json',
-        'jsonrpcclient',
         'requests',
-        'arrow',
         'tld',
     ],
 }

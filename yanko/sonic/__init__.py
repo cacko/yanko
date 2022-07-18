@@ -11,6 +11,7 @@ class Command(Enum):
     STOP = 'stop'
     NEXT = 'next'
     RANDOM = 'random'
+    NEWEST = 'newest'
     QUIT = 'quit'
     RESTART = 'restart'
 
@@ -19,6 +20,7 @@ class Action(Enum):
     NEXT = 'n'
     RESTART = 'b'
     EXIT = 'x'
+
 
 class Status(Enum):
     PLAYING = 'playing'
@@ -60,6 +62,30 @@ class Track:
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
+class Album:
+    id: str
+    parent: str
+    isDir: bool
+    title: str
+    album: str
+    artist: str
+    duration: int
+    created: datetime = field(
+        metadata=config(
+            encoder=datetime.isoformat,
+            decoder=datetime.fromisoformat,
+            mm_field=fields.DateTime(format="iso", tzinfo=timezone.utc),
+        )
+    )
+    artistId: Optional[str] = None
+    year: Optional[int] = None
+    genre: Optional[str] = None
+    coverArt: Optional[str] = None
+    songCount: Optional[int] = None
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
 class NowPlaying:
     track: Track
     start: datetime
@@ -75,3 +101,9 @@ class Playlist:
 @dataclass
 class Playstatus:
     status: Status
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class RecentlyAdded:
+    albums: list[Album]

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 import arrow
 from yanko.core.string import name_to_code
+from yanko.sonic import Track
 
 
 class Label(Enum):
@@ -19,6 +20,8 @@ class Label(Enum):
     NEXT = 'Next Song'
     RESTART = 'Replay'
     QUIT = 'Quit'
+    NEWEST = 'Recently addded'
+    ARTIST = 'Artist'
 
 
 class Icon(Enum):
@@ -32,6 +35,8 @@ class Icon(Enum):
     RESTART = 'restart.png'
     NOT_PLAYING = 'not_playing.png'
     PLAYING = 'playing.png'
+    NEWEST = 'newest.png'
+    ARTIST = 'artist.png'
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"
@@ -86,8 +91,20 @@ class ActionItemMeta(type):
         return cls("quit", Label.QUIT.value, icon=Icon.QUIT.value)
 
     @property
+    def album(cls) -> 'ActionItem':
+        return cls("album", Label.ALBUM.value, icon=Icon.ALBUM.value)
+
+    @property
     def random(cls) -> 'ActionItem':
         return cls("random", Label.RANDOM.value, icon=Icon.RANDOM.value)
+
+    @property
+    def newest(cls) -> 'ActionItem':
+        return cls("newest", Label.NEWEST.value, icon=Icon.NEWEST.value)
+
+    @property
+    def artist(cls) -> 'ActionItem':
+        return cls("artist", Label.ARTIST.value, icon=Icon.ARTIST.value)
 
 
 class ActionItem(MenuItem, metaclass=ActionItemMeta):

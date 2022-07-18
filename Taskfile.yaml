@@ -11,6 +11,13 @@ tasks:
       - poetry run python app.py
     silent: true
 
+  push:
+    desc: commit and pushes current changes
+    cmds:
+      - git add .  || true
+      - git commit -am "$(curl -s https://commit.cacko.net/index.txt)" || true
+      - git push || true
+
   build:
     cmds:
       - rm -rf build 
@@ -21,6 +28,11 @@ tasks:
   install:
     cmds:
       - killall Yanko || true
-      - task: build
       - rm -rf /Applications/Yanko.app
       - mv dist/Yanko.app /Applications
+
+  deploy:
+    cmds:
+      - task: push
+      - task: build
+      - task: install

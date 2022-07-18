@@ -66,6 +66,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__next()
                 case Command.RESTART:
                     await self.__restart()
+                case Command.NEWEST:
+                    await self.__newest()
             self.commander.task_done()
         except Exception as e:
             print(e)
@@ -82,6 +84,9 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def __random(self):
         self.psub.command_queue.put_nowait(Command.RANDOM)
+
+    async def __newest(self):
+        self.psub.command_queue.put_nowait(Command.NEWEST)
 
     async def __quit(self):
         self.psub.playback_queue.put_nowait(Action.EXIT)

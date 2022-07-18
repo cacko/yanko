@@ -8,7 +8,17 @@ from random import SystemRandom, shuffle
 from subprocess import CalledProcessError, Popen
 from threading import Thread
 
-from yanko.sonic import Action, Command, NowPlaying, Playlist, Playstatus, Track, Status
+from yanko.sonic import (
+    Action,
+    Command,
+    NowPlaying,
+    Playlist,
+    Playstatus,
+    Track,
+    Status,
+    RecentlyAdded,
+    Album
+)
 import requests
 from packaging import version
 
@@ -208,6 +218,17 @@ class pSub(object):
         if artists:
             return artists['subsonic-response']['artists'].get('index', [])
         return []
+
+    def get_album_list(self, type):
+        albums = self.make_request(
+            url='{}&type={}'.format(self.create_url('getAlbumList'), type)
+        )
+        if albums:
+            return albums['subsonic-response']['albumList'].get('album', [])
+        return []
+
+    def get_recently_added(self):
+        return self.get_album_list('newest')
 
     def get_playlists(self):
         """
@@ -496,6 +517,13 @@ class pSub(object):
             match(cmd):
                 case Command.RANDOM:
                     self.play_random_songs(None)
+                case Command.NEWEST:
+                    self.manager_queue.put_nowait(
+                        RecentlyAdded(
+                            albums=[Album(**data)
+                                    for data in self.get_recently_added()]
+                        )
+                    )
 
     def __exit(self, ffplay):
         click.secho('Exiting!', fg='blue')

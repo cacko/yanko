@@ -33,8 +33,8 @@ class Icon(Enum):
     ALBUM = 'album.png'
     NEXT = 'next.png'
     RESTART = 'restart.png'
-    NOT_PLAYING = 'not_playing.png'
     PLAYING = 'playing.png'
+    STOPPED = 'stopped.png'
     NEWEST = 'newest.png'
     ARTIST = 'artist.png'
 
@@ -108,7 +108,10 @@ class ActionItemMeta(type):
 
 
 class ActionItem(MenuItem, metaclass=ActionItemMeta):
-    pass
+
+    def __init__(self, title, callback=None, key=None, icon=None, dimensions=None, template=None):
+        template = True
+        super().__init__(title, callback, key, icon, dimensions, template)
 
 
 class ToggleAction(ActionItem):
@@ -116,49 +119,3 @@ class ToggleAction(ActionItem):
 
     def toggle(self, state: bool):
         getattr(self, self._states[int(state)])()
-
-
-class StatItem(ActionItem):
-
-    prefix: str = None
-
-    def __init__(self, title, prefix: str = None, **kwargs):
-        self.prefix = prefix
-        super().__init__(title, **kwargs)
-
-    def number(self, value=None):
-        if prefix:
-            self.title = f"{self.prefix}: {value}"
-        else:
-            self.template = f"{value}"
-        self.set_callback(lambda x: True)
-
-    def relative_time(self, value=None):
-        self.title = arrow.get(value).humanize(arrow.utcnow())
-        self.set_callback(lambda x: True)
-
-    def money(self, value=None):
-        self.title = F"{float(value):.5f}$"
-        self.set_callback(lambda x: True)
-
-    def hashrate(self, value=None):
-        value = value / 1000000
-        self.title = f"{value:.3f} MH/s"
-        self.set_callback(lambda x: True)
-
-
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class BarStats:
-    local_hr: Optional[float] = None
-    preset: Optional[str] = "default"
-    remote_hr: Optional[float] = None
-
-    @property
-    def display(self):
-        parts = filter(None, [
-            f"{name_to_code(self.preset).upper()}",
-            f"{self.local_hr:.2f}MH/s" if self.local_hr else None,
-            f"{self.remote_hr:.2f}MH/s" if self.remote_hr else None,
-        ])
-        return " | ".join(parts)

@@ -42,8 +42,9 @@ class YankoApp(rumps.App):
                 None,
                 ActionItem.quit
             ],
-            icon=Icon.NOT_PLAYING.value,
-            quit_button=None
+            icon=Icon.STOPPED.value,
+            quit_button=None,
+            template=False
         )
         self.menu.setAutoenablesItems = False
         self.__playlist = Playlist(self.menu)
@@ -148,6 +149,7 @@ class YankoApp(rumps.App):
 
     def _onPlaystatus(self, resp: Playstatus):
         if resp.status == Status.PLAYING:
+            self.template = False
             self.icon = Icon.PLAYING.value
             ActionItem.stop.show()
             ActionItem.play.hide()
@@ -155,7 +157,8 @@ class YankoApp(rumps.App):
                 ActionItem.next.show()
             ActionItem.restart.show()
         elif resp.status == Status.STOPPED:
-            self.icon = Icon.NOT_PLAYING.value
+            self.template = False
+            self.icon = Icon.STOPPED.value
             ActionItem.stop.hide()
             if len(self.__playlist):
                 ActionItem.play.show()

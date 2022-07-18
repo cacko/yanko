@@ -36,6 +36,7 @@ class pSub(object):
     command_queue: LifoQueue = None
     playback_queue: LifoQueue = None
     manager_queue: LifoQueue = None
+    playing: bool = False
 
     """
     pSub Object interfaces with the Subsonic server and handles streaming media
@@ -284,8 +285,7 @@ class pSub(object):
             if not random_songs:
                 return
 
-            self.list = random_songs['subsonic-response']['randomSongs'].get('song', [
-            ])
+            self.list = random_songs['subsonic-response']['randomSongs'].get('song', [])
 
             self.manager_queue.put_nowait(
                 Playlist(
@@ -346,7 +346,7 @@ class pSub(object):
                     return
                 playing = self.play_stream(dict(song))
 
-    def play_album(self, album_id, randomise):
+    def play_album(self, album_id):
         """
         Get the songs for the given album id and play them
         :param album_id:
@@ -354,14 +354,14 @@ class pSub(object):
         :return:
         """
         songs = self.get_album_tracks(album_id)
-
-        if self.invert_random:
-            randomise = not randomise
-
-        if randomise:
-            shuffle(songs)
-
         playing = True
+
+        self.manager_queue.put_nowait(
+            Playlist(
+                start=datetime.now(tz=timezone.utc),
+                tracks=[Track(**data) for data in songs]
+            )
+        )
 
         while playing:
             for song in songs:
@@ -470,6 +470,7 @@ class pSub(object):
             ffplay = Popen(params, env=self.environment)
 
             has_finished = None
+            self.playing = True
             open(os.path.join(click.get_app_dir('pSub'), 'play.lock'), 'w+').close()
 
             while has_finished is None:
@@ -487,6 +488,8 @@ class pSub(object):
                         return self.__restart(ffplay, track_data)
                     case Action.NEXT:
                         return self.__next(ffplay)
+                    case Action.STOP:
+                        return self.__stop(ffplay)
 
                 self.playback_queue.task_done()
 
@@ -513,10 +516,12 @@ class pSub(object):
             if self.command_queue.empty():
                 time.sleep(0.1)
                 continue
-            cmd = self.command_queue.get_nowait()
+            cmd, payload = self.command_queue.get_nowait()
             match(cmd):
                 case Command.RANDOM:
                     self.play_random_songs(None)
+                case Command.ALBUM:
+                    self.play_album(payload)
                 case Command.NEWEST:
                     self.manager_queue.put_nowait(
                         RecentlyAdded(
@@ -531,6 +536,16 @@ class pSub(object):
         ffplay.terminate()
         self.manager_queue.put_nowait(
             Playstatus(status=Status.EXIT))
+        self.playing = False
+        return False
+
+    def __stop(self, ffplay):
+        click.secho('Stop!', fg='blue')
+        os.remove(os.path.join(click.get_app_dir('pSub'), 'play.lock'))
+        ffplay.terminate()
+        self.manager_queue.put_nowait(
+            Playstatus(status=Status.STOPPED))
+        self.playing = False
         return False
 
     def __restart(self, ffplay, track_data):
@@ -539,6 +554,7 @@ class pSub(object):
         ffplay.terminate()
         self.manager_queue.put_nowait(
             Playstatus(status=Status.STOPPED))
+        self.playing = False
         return self.play_stream(track_data)
 
     def __next(self, ffplay):
@@ -547,6 +563,7 @@ class pSub(object):
         ffplay.terminate()
         self.manager_queue.put_nowait(
             Playstatus(status=Status.STOPPED))
+        self.playing = False
         return True
 
 # # _________ .____    .___

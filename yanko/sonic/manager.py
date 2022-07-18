@@ -56,7 +56,7 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def commander_runner(self):
         try:
-            cmd: Command = self.commander.get_nowait()
+            cmd, payload = self.commander.get_nowait()
             match(cmd):
                 case Command.RANDOM:
                     await self.__random()
@@ -68,6 +68,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__restart()
                 case Command.NEWEST:
                     await self.__newest()
+                case Command.ALBUM:
+                    await self.__album(payload)
             self.commander.task_done()
         except Exception as e:
             print(e)
@@ -83,10 +85,15 @@ class Manager(object, metaclass=ManagerMeta):
             print(e)
 
     async def __random(self):
-        self.psub.command_queue.put_nowait(Command.RANDOM)
+        self.psub.command_queue.put_nowait((Command.RANDOM, None))
 
     async def __newest(self):
-        self.psub.command_queue.put_nowait(Command.NEWEST)
+        self.psub.command_queue.put_nowait((Command.NEWEST, None))
+
+    async def __album(self, albumId):
+        if self.psub.playing:
+            self.psub.playback_queue.put_nowait(Action.STOP)
+        self.psub.command_queue.put_nowait((Command.ALBUM, albumId))
 
     async def __quit(self):
         self.psub.playback_queue.put_nowait(Action.EXIT)
@@ -97,3 +104,4 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def __restart(self):
         self.psub.playback_queue.put_nowait(Action.RESTART)
+

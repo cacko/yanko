@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 from yanko.sonic import Track
-from rumps import Menu
+from rumps import Menu, MenuItem
+from yanko.ui.models import Icon, MusicItem
+from yanko.core.string import truncate
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -17,7 +19,7 @@ class Playlist:
     __menu: Menu = None
 
     def __init__(self, menu: Menu) -> None:
-        self.__menu = Menu
+        self.__menu = menu
 
     def __len__(self):
         return len(self.__items)
@@ -41,6 +43,45 @@ class Playlist:
     def append(self, item: PlaylistItem):
         self.__items.append(item)
 
+    def update(self, tracks: list[Track], callback):
+        self.reset()
+        insert_before = self.__menu.keys()[0]
+        insert_after = None
+        for idx, track in enumerate(tracks):
+            if insert_after:
+                insert_after = self.__menu.insert_after(
+                    insert_after,
+                    MusicItem(
+                        f"{idx+1:02d}. {track.artist} ∕ {truncate(track.title)}",
+                        callback=callback,
+                        id=track.id
+                    )
+                )
+            elif insert_before:
+                insert_after = self.__menu.insert_before(
+                    insert_before,
+                    MusicItem(
+                        f"{idx+1:02d}. {track.artist} ∕ {truncate(track.title)}",
+                        callback=callback,
+                        id=track.id
+                    )
+                )
+            self.append(PlaylistItem(
+                track=track,
+                key=insert_after
+            ))
+        self.__menu.insert_after(insert_after, None)
+
     def reset(self):
         for item in self.__items:
             self.__menu.pop(item.key)
+
+    def setNowPlaying(self, track: Track):
+        for item in self.__items:
+            menu_item: MenuItem = self.__menu.get(item.key)
+            if not menu_item:
+                continue
+            if item.track.id == track.id:
+                menu_item.set_icon(Icon.NOWPLAYING.value, template=True)
+            else:
+                menu_item.set_icon(None)

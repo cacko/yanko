@@ -14,12 +14,14 @@ class Command(Enum):
     NEWEST = 'newest'
     QUIT = 'quit'
     RESTART = 'restart'
+    ALBUM = 'album'
 
 
 class Action(Enum):
     NEXT = 'n'
     RESTART = 'b'
     EXIT = 'x'
+    STOP = 's'
 
 
 class Status(Enum):

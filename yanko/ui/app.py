@@ -13,10 +13,13 @@ from yanko.ui.models import (
     ActionItem,
     Icon,
     Label,
+    MusicItem,
 )
 from yanko.sonic.manager import Manager
 from yanko.ui.items.playlist import Playlist, PlaylistItem
+from yanko.ui.items.albumlist import Albumlist
 from yanko import log
+from yanko.core.string import truncate
 
 
 class YankoApp(rumps.App):
@@ -24,6 +27,7 @@ class YankoApp(rumps.App):
     manager: Manager = None
     __nowPlaying: NowPlaying = None
     __playlist: Playlist = None
+    __recently_added: Albumlist = None
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -48,6 +52,7 @@ class YankoApp(rumps.App):
         )
         self.menu.setAutoenablesItems = False
         self.__playlist = Playlist(self.menu)
+        self.__recently_added = Albumlist(self.menu.get(Label.NEWEST.value))
         ActionItem.stop.hide()
         ActionItem.play.hide()
         ActionItem.next.hide()
@@ -58,7 +63,7 @@ class YankoApp(rumps.App):
             self.onPlayerResult
         ])
         t.start()
-        self.manager.commander.put_nowait(Command.NEWEST)
+        self.manager.commander.put_nowait((Command.NEWEST, None))
 
     @rumps.clicked(Label.PLAY.value)
     def onStart(self, sender):
@@ -70,19 +75,19 @@ class YankoApp(rumps.App):
 
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):
-        self.manager.commander.put_nowait(Command.RANDOM)
+        self.manager.commander.put_nowait((Command.RANDOM, None))
 
     @rumps.clicked(Label.QUIT.value)
     def onQuit(self, sender):
-        self.manager.commander.put_nowait(Command.QUIT)
+        self.manager.commander.put_nowait((Command.QUIT, None))
 
     @rumps.clicked(Label.NEXT.value)
     def onNext(self, sender):
-        self.manager.commander.put_nowait(Command.NEXT)
+        self.manager.commander.put_nowait((Command.NEXT, None))
 
     @rumps.clicked(Label.RESTART.value)
     def onRestart(self, sender):
-        self.manager.commander.put_nowait(Command.RESTART)
+        self.manager.commander.put_nowait((Command.RESTART, None))
 
     @rumps.events.on_screen_sleep
     def sleep(self):
@@ -105,47 +110,24 @@ class YankoApp(rumps.App):
     def _onNowPlaying(self, resp: NowPlaying):
         self.__nowPlaying = resp
         track = resp.track
-        self.title = f"{track.artist} / {track.title:.20s}"
+        self.title = f"{track.artist} / {truncate(track.title)}"
+        self.__playlist.setNowPlaying(track)
 
     @rumps.timer(0.1)
     def updateTimer(self, sender):
         if self.__nowPlaying:
             track = self.__nowPlaying.track
-            self.title = f"{track.artist} / {track.title:.20s}"
+            self.title = f"{track.artist} / {truncate(track.title)}"
 
     def _onPlaylist(self, resp: Playlist):
         list = resp.tracks
-        self.__playlist.reset()
-        insert_before = self.menu.keys()[0]
-        insert_after = None
-        for idx, track in enumerate(list):
-            if insert_after:
-                insert_after = self.menu.insert_after(
-                    insert_after,
-                    MenuItem(
-                        f"{idx+1:02d}. {track.artist} / {track.title:<20}",
-                        callback=self._onPlaylistItem,
-                    )
-                )
-            elif insert_before:
-                insert_after = self.menu.insert_before(
-                    insert_before,
-                    MenuItem(
-                        f"{idx+1:02d}. {track.artist} / {track.title:<20}",
-                        callback=self._onPlaylistItem,
-                    )
-                )
-            self.__playlist.append(PlaylistItem(
-                track=track,
-                key=insert_after
-            ))
-        self.menu.insert_after(insert_after, None)
+        self.__playlist.update(list, self._onPlaylistItem)
 
     def _onPlaylistItem(self, sender):
-        print(sender)
+        log.debug(sender)
 
-    def _onAlbumClick(self, sender):
-        print(sender)
+    def _onAlbumClick(self, sender: MusicItem):
+        self.manager.commander.put_nowait((Command.ALBUM, sender.id))
 
     def _onPlaystatus(self, resp: Playstatus):
         if resp.status == Status.PLAYING:
@@ -171,9 +153,5 @@ class YankoApp(rumps.App):
             rumps.quit_application()
 
     def _onRecentlyAdded(self, resp: RecentlyAdded):
-        item: MenuItem = self.menu.get(Label.NEWEST.value)
         albums = resp.albums
-        menu = []
-        for album in albums:
-            menu.append(MenuItem(f"{album.artist} / {album.title}", callback=self._onAlbumClick))
-        item.update(menu)          
+        self.__recently_added.update(albums, self._onAlbumClick)         

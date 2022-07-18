@@ -37,6 +37,7 @@ class Icon(Enum):
     STOPPED = 'stopped.png'
     NEWEST = 'newest.png'
     ARTIST = 'artist.png'
+    NOWPLAYING = 'nowplaying.png'
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"
@@ -112,6 +113,18 @@ class ActionItem(MenuItem, metaclass=ActionItemMeta):
     def __init__(self, title, callback=None, key=None, icon=None, dimensions=None, template=None):
         template = True
         super().__init__(title, callback, key, icon, dimensions, template)
+
+class MusicItem(MenuItem):
+
+    __id = None
+
+    def __init__(self, title, id, callback=None, key=None, icon=None, dimensions=None, template=None):
+        self.__id  = id
+        super().__init__(title, callback, key, icon, dimensions, template)
+
+    @property
+    def id(self):
+        return self.__id
 
 
 class ToggleAction(ActionItem):

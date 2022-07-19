@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 from yanko.sonic import Track
-from rumps import Menu
+from rumps import Menu, App
 from yanko.ui.models import Icon, MusicItem
 from Cocoa import NSFont, NSFontAttributeName
 from PyObjCTools.Conversion import propertyListFromPythonCollection
@@ -49,10 +49,12 @@ class PlaylistMenuItem(MusicItem):
 class Playlist:
 
     __items: list[PlaylistItem] = []
-    __menu: Menu = None
+    __app: App = None
+    __insert_before: str = None
 
-    def __init__(self, menu: Menu) -> None:
-        self.__menu = menu
+    def __init__(self, app: App, insert_before: str) -> None:
+        self.__app = app
+        self.__insert_before = insert_before
 
     def __len__(self):
         return len(self.__items)
@@ -78,11 +80,12 @@ class Playlist:
 
     def update(self, tracks: list[Track], callback):
         self.reset()
-        insert_before = self.__menu.keys()[0]
+        menu = self.__app.menu
+        insert_before = self.__insert_before
         insert_after = None
         for idx, track in enumerate(tracks):
             if insert_after:
-                insert_after = self.__menu.insert_after(
+                insert_after = menu.insert_after(
                     insert_after,
                     PlaylistMenuItem(
                         track.displayTitle(idx),
@@ -91,7 +94,7 @@ class Playlist:
                     )
                 )
             elif insert_before:
-                insert_after = self.__menu.insert_before(
+                insert_after = menu.insert_before(
                     insert_before,
                     PlaylistMenuItem(
                         track.displayTitle(idx),
@@ -103,15 +106,21 @@ class Playlist:
                 track=track,
                 key=insert_after
             ))
-        self.__menu.insert_after(insert_after, None)
+        menu.insert_after(insert_after, None)
 
     def reset(self):
+        if not len(self.__items):
+            return
+        menu = self.__app.menu
+        keys = menu.keys()
         for item in self.__items:
-            self.__menu.pop(item.key)
+            if item.key in keys:
+                menu.pop(item.key)
 
     def setNowPlaying(self, track: Track):
+        menu = self.__app.menu
         for idx, item in enumerate(self.__items):
-            menu_item = self.__menu.get(item.key)
+            menu_item = menu.get(item.key)
             if isinstance(menu_item, PlaylistMenuItem):
                 if menu_item.id == track.id:
                     menu_item.set_icon(Icon.NOWPLAYING.value, template=True)

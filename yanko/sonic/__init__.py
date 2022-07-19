@@ -18,6 +18,7 @@ class Command(Enum):
     ALBUM = 'album'
     COVER_ART = 'cover_art'
     RECENTLY_PLAYED = 'recent'
+    SONG = 'song'
 
 
 class Action(Enum):

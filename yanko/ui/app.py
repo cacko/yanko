@@ -55,7 +55,7 @@ class YankoApp(rumps.App):
             template=False
         )
         self.menu.setAutoenablesItems = False
-        self.__playlist = Playlist(self.menu)
+        self.__playlist = Playlist(self, Label.RANDOM.value)
         self.__last_added = Albumlist(self, Label.NEWEST.value)
         self.__recent = Albumlist(self, Label.RECENT.value)
         ActionItem.stop.hide()
@@ -111,8 +111,6 @@ class YankoApp(rumps.App):
         method = f"_on{resp.__class__.__name__}"
         if hasattr(self, method):
             getattr(self, method)(resp)
-        else:
-            logging.debug(resp)
 
     def _onNowPlaying(self, resp: NowPlaying):
         self.__nowPlaying = resp
@@ -139,7 +137,7 @@ class YankoApp(rumps.App):
         self.__playlist.update(list, self._onPlaylistItem)
 
     def _onPlaylistItem(self, sender):
-        logging.debug(sender)
+        self.manager.commander.put_nowait((Command.SONG, sender.id))
 
     def _onAlbumClick(self, sender: MusicItem):
         self.manager.commander.put_nowait((Command.ALBUM, sender.id))
@@ -169,11 +167,8 @@ class YankoApp(rumps.App):
 
     def _onLastAdded(self, resp: LastAdded):
         albums = resp.albums
-        print("n last added", albums)
         self.__last_added.update(albums, self._onAlbumClick)     
 
     def _onRecentlyPlayed(self, resp: RecentlyPlayed):
         albums = resp.albums
-        print("n fd d", albums)
-
         self.__recent.update(albums, self._onAlbumClick)

@@ -86,6 +86,8 @@ class Client(object):
     playback_queue: LifoQueue = None
     manager_queue: LifoQueue = None
     playing: bool = False
+    playqueue: list[Track] = []
+    skip_to: str = None
 
     def __init__(self):
         server_config = app_config.get('server', {})
@@ -239,24 +241,32 @@ class Client(object):
         playing = True
 
         while playing:
-            random_songs = self.make_request(url)
+            songs = []
+            if not self.skip_to:
+                random_songs = self.make_request(url)
 
-            if not random_songs:
-                return
+                if not random_songs:
+                    return
 
-            songs = random_songs['subsonic-response']['randomSongs'].get('song', [
-            ])
+                songs = random_songs['subsonic-response']['randomSongs'].get(
+                    'song', [])
 
-            self.manager_queue.put_nowait(
-                Playlist(
-                    start=datetime.now(tz=timezone.utc),
-                    tracks=[Track(**data) for data in songs]
+
+                self.manager_queue.put_nowait(
+                    Playlist(
+                        start=datetime.now(tz=timezone.utc),
+                        tracks=[Track(**data) for data in songs]
+                    )
                 )
-            )
 
             for random_song in songs:
                 if not playing:
                     return
+                if self.skip_to:
+                    if self.skip_to != random_song.get("id"):
+                        continue
+                    else:
+                        self.skip_to = None
                 playing = self.play_stream(dict(random_song))
 
     def play_radio(self, radio_id):
@@ -304,7 +314,14 @@ class Client(object):
             for song in songs:
                 if not playing:
                     return
+                if self.skip_to:
+                    if self.skip_to != song.get("id"):
+                        continue
+                    else:
+                        self.skip_to = None
                 playing = self.play_stream(dict(song))
+                if self.skip_to:
+                    break
 
     def play_playlist(self, playlist_id):
         playlist_info = self.make_request(
@@ -393,6 +410,7 @@ class Client(object):
                     continue
 
                 command = self.playback_queue.get_nowait()
+                self.playback_queue.task_done()
 
                 match (command):
                     case Action.EXIT:
@@ -404,7 +422,6 @@ class Client(object):
                     case Action.STOP:
                         return self.__stop(ffplay)
 
-                self.playback_queue.task_done()
             self.lock_file.unlink(missing_ok=True)
             return True
 
@@ -435,6 +452,9 @@ class Client(object):
                 case Command.NEWEST:
                     self.manager_queue.put_nowait(
                         LastAdded(albums=self.__toAlbums(self.get_last_added)))
+                case Command.SONG:
+                    self.skip_to = payload
+
             self.command_queue.task_done()
 
     def __toAlbums(self, fnc):

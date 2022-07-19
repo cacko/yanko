@@ -17,9 +17,10 @@ from yanko.sonic import (
     NowPlaying,
     Playlist,
     Playstatus,
+    RecentlyPlayed,
     Track,
     Status,
-    RecentlyAdded,
+    LastAdded,
     Album,
 )
 import requests
@@ -233,8 +234,11 @@ class Client(object):
             return albums['subsonic-response']['albumList'].get('album', [])
         return []
 
-    def get_recently_added(self):
+    def get_last_added(self):
         return self.get_album_list('newest')
+
+    def get_recently_played(self):
+        return self.get_album_list('recent')
 
     def get_playlists(self):
         """
@@ -522,11 +526,22 @@ class Client(object):
                     self.play_random_songs(None)
                 case Command.ALBUM:
                     self.play_album(payload)
+                case Command.RECENTLY_PLAYED:
+                    self.manager_queue.put_nowait(
+                        RecentlyPlayed(
+                            albums=[
+                                Album(
+                                    **{**data, "coverArt": self.create_url("getCoverArt", id=data.get("id"), size=200)})
+                                for data in self.get_recently_played()]
+                        )
+                    )
                 case Command.NEWEST:
                     self.manager_queue.put_nowait(
-                        RecentlyAdded(
-                            albums=[Album(**data)
-                                    for data in self.get_recently_added()]
+                        LastAdded(
+                            albums=[
+                                Album(
+                                    **{**data, "coverArt": self.create_url("getCoverArt", id=data.get("id"), size=200)})
+                                for data in self.get_last_added()]
                         )
                     )
             self.command_queue.task_done()

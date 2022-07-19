@@ -20,7 +20,8 @@ class Label(Enum):
     NEXT = 'Next Song'
     RESTART = 'Replay'
     QUIT = 'Quit'
-    NEWEST = 'Recently addded'
+    NEWEST = 'Last addded'
+    RECENT = 'Recently played'
     ARTIST = 'Artist'
 
 
@@ -38,6 +39,8 @@ class Icon(Enum):
     NEWEST = 'newest.png'
     ARTIST = 'artist.png'
     NOWPLAYING = 'nowplaying.png'
+    DEFAULT_ART = 'default_art.png'
+    RECENT = 'recents.png'
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"
@@ -107,6 +110,10 @@ class ActionItemMeta(type):
     def artist(cls) -> 'ActionItem':
         return cls("artist", Label.ARTIST.value, icon=Icon.ARTIST.value)
 
+    @property
+    def recent(cls) -> 'ActionItem':
+        return cls("recent", Label.RECENT.value, icon=Icon.RECENT.value)
+
 
 class ActionItem(MenuItem, metaclass=ActionItemMeta):
 
@@ -114,13 +121,15 @@ class ActionItem(MenuItem, metaclass=ActionItemMeta):
         template = True
         super().__init__(title, callback, key, icon, dimensions, template)
 
+
 class MusicItem(MenuItem):
 
     __id = None
 
     def __init__(self, title, id, callback=None, key=None, icon=None, dimensions=None, template=None):
-        self.__id  = id
-        super().__init__(title, callback, key, icon, dimensions, template)
+        self.__id = id
+        super().__init__(title, callback=callback, key=key,
+                         icon=icon, dimensions=dimensions, template=template)
 
     @property
     def id(self):

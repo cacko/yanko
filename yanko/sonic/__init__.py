@@ -16,6 +16,7 @@ class Command(Enum):
     RESTART = 'restart'
     ALBUM = 'album'
     COVER_ART = 'cover_art'
+    RECENTLY_PLAYED = 'recent'
 
 
 class Action(Enum):
@@ -86,6 +87,7 @@ class Album:
     coverArt: Optional[str] = None
     songCount: Optional[int] = None
 
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class NowPlaying:
@@ -108,5 +110,11 @@ class Playstatus:
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
-class RecentlyAdded:
+class LastAdded:
+    albums: list[Album]
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class RecentlyPlayed:
     albums: list[Album]

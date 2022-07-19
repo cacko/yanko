@@ -1,5 +1,5 @@
 from yanko.ui.models import MusicItem
-from yanko.sonic import Track, Album
+from yanko.sonic import Track
 from AppKit import NSAttributedString
 
 

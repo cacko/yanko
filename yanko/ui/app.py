@@ -4,7 +4,8 @@ from yanko.sonic import (
     Command,
     Playlist,
     NowPlaying,
-    RecentlyAdded,
+    LastAdded,
+    RecentlyPlayed,
     Status,
     Playstatus
 )
@@ -27,7 +28,8 @@ class YankoApp(rumps.App):
     manager: Manager = None
     __nowPlaying: NowPlaying = None
     __playlist: Playlist = None
-    __recently_added: Albumlist = None
+    __last_added: Albumlist = None
+    __recent: Albumlist = None
     __nowPlayingSection = []
 
     def __init__(self):
@@ -38,6 +40,7 @@ class YankoApp(rumps.App):
                 ActionItem.artist,
                 ActionItem.album,
                 ActionItem.find,
+                ActionItem.recent,
                 ActionItem.newest,
                 None,
                 ActionItem.play,
@@ -53,7 +56,8 @@ class YankoApp(rumps.App):
         )
         self.menu.setAutoenablesItems = False
         self.__playlist = Playlist(self.menu)
-        self.__recently_added = Albumlist(self.menu.get(Label.NEWEST.value))
+        self.__last_added = Albumlist(self, Label.NEWEST.value)
+        self.__recent = Albumlist(self, Label.RECENT.value)
         ActionItem.stop.hide()
         ActionItem.play.hide()
         ActionItem.next.hide()
@@ -65,6 +69,8 @@ class YankoApp(rumps.App):
         ])
         t.start()
         self.manager.commander.put_nowait((Command.NEWEST, None))
+        self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
+
 
     @rumps.clicked(Label.PLAY.value)
     def onStart(self, sender):
@@ -122,7 +128,7 @@ class YankoApp(rumps.App):
         ]
         # rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
 
-    @rumps.timer(0.1)
+    @rumps.timer(1)
     def updateTimer(self, sender):
         if self.__nowPlaying:
             track = self.__nowPlaying.track
@@ -161,6 +167,13 @@ class YankoApp(rumps.App):
         elif resp.status == Status.EXIT:
             rumps.quit_application()
 
-    def _onRecentlyAdded(self, resp: RecentlyAdded):
+    def _onLastAdded(self, resp: LastAdded):
         albums = resp.albums
-        self.__recently_added.update(albums, self._onAlbumClick)         
+        print("n last added", albums)
+        self.__last_added.update(albums, self._onAlbumClick)     
+
+    def _onRecentlyPlayed(self, resp: RecentlyPlayed):
+        albums = resp.albums
+        print("n fd d", albums)
+
+        self.__recent.update(albums, self._onAlbumClick)

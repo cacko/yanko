@@ -1,7 +1,18 @@
+import logging
+from pathlib import Path
 from queue import LifoQueue
-from yanko.sonic import Action, Command, NowPlaying, Playstatus, Status
+from yanko.sonic import Action, Command, NowPlaying, Playstatus, LastAdded, Status, RecentlyPlayed
 from yanko.sonic.api import Client, CoverArtFile
 import asyncio
+from multiprocessing.pool import ThreadPool
+
+
+async def resolveCoverArt(obj):
+    ca = CoverArtFile(obj.coverArt)
+    res: Path = await ca.path
+    obj.coverArt = res.as_posix() if res.exists() else None
+    return obj
+
 
 class ManagerMeta(type):
 
@@ -66,27 +77,31 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__restart()
                 case Command.NEWEST:
                     await self.__newest()
+                case Command.RECENTLY_PLAYED:
+                    await self.__recently_played()
                 case Command.ALBUM:
                     await self.__album(payload)
             self.commander.task_done()
         except Exception as e:
-            print(e)
+            logging.exception(e)
 
     async def player_runner(self):
         try:
             cmd = self.__player_queue.get_nowait()
-
             if isinstance(cmd, Playstatus) and cmd == Status.EXIT:
                 self.__running = False
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
-                ca = CoverArtFile(cmd.track.coverArt)
-                res = await ca.path
-                if res:
-                    cmd.track.coverArt = res.as_posix()
+                cmd.track = await resolveCoverArt(cmd.track)
+            elif isinstance(cmd, LastAdded) or isinstance(cmd, RecentlyPlayed):
+                mapped = []
+                for album in cmd.albums:
+                    alm = await resolveCoverArt(album)
+                    mapped.append(alm)
+                cmd.albums = mapped
             self.player_callback(cmd)
             self.__player_queue.task_done()
         except Exception as e:
-            print(e)
+            logging.exception(e)
 
     async def __random(self):
         if self.api.playing:
@@ -95,6 +110,9 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def __newest(self):
         self.api.command_queue.put_nowait((Command.NEWEST, None))
+
+    async def __recently_played(self):
+        self.api.command_queue.put_nowait((Command.RECENTLY_PLAYED, None))
 
     async def __album(self, albumId):
         if self.api.playing:

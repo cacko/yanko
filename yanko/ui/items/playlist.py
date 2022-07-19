@@ -5,6 +5,10 @@ from yanko.sonic import Track
 from rumps import Menu, MenuItem
 from yanko.ui.models import Icon, MusicItem
 from yanko.core.string import truncate
+from Cocoa import (NSFont, NSFontAttributeName,
+                   NSColor, NSForegroundColorAttributeName)
+from PyObjCTools.Conversion import propertyListFromPythonCollection
+from AppKit import NSAttributedString
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -12,6 +16,19 @@ from yanko.core.string import truncate
 class PlaylistItem:
     track: Track
     key: str
+
+
+class PlaylistMenuItem(MusicItem):
+
+    def __init__(self, title, id, callback=None, key=None, icon=None, dimensions=None, template=None):
+        super().__init__(title, id, callback, key, icon, dimensions, template)
+        font = NSFont.fontWithName_size_("MesloLGS NF", 12)
+        attributes = propertyListFromPythonCollection({
+            NSFontAttributeName: font,
+        }, conversionHelper=lambda x: x)
+
+        tt = NSAttributedString.alloc().initWithString_attributes_(title, attributes)
+        self._menuitem.setAttributedTitle_(tt)
 
 
 class Playlist:
@@ -45,7 +62,6 @@ class Playlist:
         self.__items.append(item)
 
     def update(self, tracks: list[Track], callback):
-        print(self.__items)
         self.reset()
         insert_before = self.__menu.keys()[0]
         insert_after = None
@@ -53,7 +69,7 @@ class Playlist:
             if insert_after:
                 insert_after = self.__menu.insert_after(
                     insert_after,
-                    MusicItem(
+                    PlaylistMenuItem(
                         f"{idx+1:02d}. {track.artist} ∕ {truncate(track.title)}",
                         callback=callback,
                         id=track.id
@@ -62,7 +78,7 @@ class Playlist:
             elif insert_before:
                 insert_after = self.__menu.insert_before(
                     insert_before,
-                    MusicItem(
+                    PlaylistMenuItem(
                         f"{idx+1:02d}. {track.artist} ∕ {truncate(track.title)}",
                         callback=callback,
                         id=track.id

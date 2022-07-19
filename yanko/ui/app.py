@@ -112,7 +112,7 @@ class YankoApp(rumps.App):
         track = resp.track
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
-        rumps.notification(track.title, track.artist, track.album ,icon=track.coverArt)
+        rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
 
     @rumps.timer(0.1)
     def updateTimer(self, sender):

@@ -458,7 +458,7 @@ class Client(object):
                 coverArtUrl = self.create_url(
                     "getCoverArt",
                     id=coverArt,
-                    size=500
+                    size=200
                 )
             self.manager_queue.put_nowait(
                 NowPlaying(

@@ -292,17 +292,17 @@ class Client(object):
             if not random_songs:
                 return
 
-            self.list = random_songs['subsonic-response']['randomSongs'].get('song', [
+            songs = random_songs['subsonic-response']['randomSongs'].get('song', [
             ])
 
             self.manager_queue.put_nowait(
                 Playlist(
                     start=datetime.now(tz=timezone.utc),
-                    tracks=[Track(**data) for data in self.list]
+                    tracks=[Track(**data) for data in songs]
                 )
             )
 
-            for random_song in self.list:
+            for random_song in songs:
                 if not playing:
                     return
                 playing = self.play_stream(dict(random_song))
@@ -391,7 +391,7 @@ class Client(object):
                     return
                 playing = self.play_stream(dict(song))
 
-    @ property
+    @property
     def environment(self):
         return dict(
             os.environ,

@@ -17,6 +17,7 @@ from yanko.ui.models import (
 from yanko.sonic.manager import Manager
 from yanko.ui.items.playlist import Playlist
 from yanko.ui.items.albumlist import Albumlist
+from yanko.ui.items.nowplaying import NowPlayingItem
 import logging
 from yanko.core.string import truncate
 
@@ -27,6 +28,7 @@ class YankoApp(rumps.App):
     __nowPlaying: NowPlaying = None
     __playlist: Playlist = None
     __recently_added: Albumlist = None
+    __nowPlayingSection = []
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -107,12 +109,18 @@ class YankoApp(rumps.App):
             logging.debug(resp)
 
     def _onNowPlaying(self, resp: NowPlaying):
-        print(resp)
         self.__nowPlaying = resp
         track = resp.track
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
-        rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
+        for itm in self.__nowPlayingSection:
+            self._menu.pop(itm)
+        top = self.menu.keys()[0]
+        self.__nowPlayingSection = [
+            self.menu.insert_before(top, NowPlayingItem(track, callback=self._onAlbumClick)),
+            self.menu.insert_before(top, None)
+        ]
+        # rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
 
     @rumps.timer(0.1)
     def updateTimer(self, sender):

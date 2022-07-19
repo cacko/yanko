@@ -78,7 +78,7 @@ class Manager(object, metaclass=ManagerMeta):
 
             if isinstance(cmd, Playstatus) and cmd == Status.EXIT:
                 self.__running = False
-            if isinstance(cmd, NowPlaying) and cmd.track.coverArt:
+            elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
                 ca = CoverArtFile(cmd.track.coverArt)
                 res = await ca.path
                 if res:
@@ -89,6 +89,8 @@ class Manager(object, metaclass=ManagerMeta):
             print(e)
 
     async def __random(self):
+        if self.api.playing:
+            self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     async def __newest(self):

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 from dataclasses_json import dataclass_json, Undefined
 from yanko.sonic import Track
 from rumps import Menu, MenuItem
@@ -44,6 +45,7 @@ class Playlist:
         self.__items.append(item)
 
     def update(self, tracks: list[Track], callback):
+        print(self.__items)
         self.reset()
         insert_before = self.__menu.keys()[0]
         insert_after = None
@@ -78,10 +80,9 @@ class Playlist:
 
     def setNowPlaying(self, track: Track):
         for item in self.__items:
-            menu_item: MenuItem = self.__menu.get(item.key)
-            if not menu_item:
-                continue
-            if item.track.id == track.id:
-                menu_item.set_icon(Icon.NOWPLAYING.value, template=True)
-            else:
-                menu_item.set_icon(None)
+            menu_item = self.__menu.get(item.key)
+            if isinstance(menu_item, MusicItem):
+                if menu_item.id == track.id:
+                    menu_item.set_icon(Icon.NOWPLAYING.value, template=True)
+                else:
+                    menu_item.set_icon(None)

@@ -1,9 +1,7 @@
 from queue import LifoQueue
-from yanko.sonic import Action, Command, Playstatus, Status
-from yanko.sonic.psub import pSub
-import time
+from yanko.sonic import Action, Command, NowPlaying, Playstatus, Status
+from yanko.sonic.api import Client, CoverArtFile
 import asyncio
-
 
 class ManagerMeta(type):
 
@@ -21,16 +19,16 @@ class Manager(object, metaclass=ManagerMeta):
     eventLoop: asyncio.AbstractEventLoop = None
     manager_callback = None
     player_callback = None
-    psub = None
+    api = None
     __running = False
     __player_queue: LifoQueue = None
 
     def __init__(self) -> None:
         self.eventLoop = asyncio.new_event_loop()
         self.commander = LifoQueue()
-        self.psub = pSub()
+        self.api = Client()
         self.__player_queue = LifoQueue()
-        self.psub.manager_queue = self.__player_queue
+        self.api.manager_queue = self.__player_queue
 
     def start(self, manager_callback, player_callback):
         self.manager_callback = manager_callback
@@ -77,31 +75,35 @@ class Manager(object, metaclass=ManagerMeta):
     async def player_runner(self):
         try:
             cmd = self.__player_queue.get_nowait()
-            self.player_callback(cmd)
-            self.__player_queue.task_done()
+
             if isinstance(cmd, Playstatus) and cmd == Status.EXIT:
                 self.__running = False
+            if isinstance(cmd, NowPlaying) and cmd.track.coverArt:
+                ca = CoverArtFile(cmd.track.coverArt)
+                res = await ca.path
+                if res:
+                    cmd.track.coverArt = res.as_posix()
+            self.player_callback(cmd)
+            self.__player_queue.task_done()
         except Exception as e:
             print(e)
 
     async def __random(self):
-        self.psub.command_queue.put_nowait((Command.RANDOM, None))
+        self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     async def __newest(self):
-        self.psub.command_queue.put_nowait((Command.NEWEST, None))
+        self.api.command_queue.put_nowait((Command.NEWEST, None))
 
     async def __album(self, albumId):
-        if self.psub.playing:
-            self.psub.playback_queue.put_nowait(Action.STOP)
-        self.psub.command_queue.put_nowait((Command.ALBUM, albumId))
+        if self.api.playing:
+            self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
     async def __quit(self):
-        self.psub.playback_queue.put_nowait(Action.EXIT)
-
+        self.api.playback_queue.put_nowait(Action.EXIT)
 
     async def __next(self):
-        self.psub.playback_queue.put_nowait(Action.NEXT)
+        self.api.playback_queue.put_nowait(Action.NEXT)
 
     async def __restart(self):
-        self.psub.playback_queue.put_nowait(Action.RESTART)
-
+        self.api.playback_queue.put_nowait(Action.RESTART)

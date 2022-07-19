@@ -136,8 +136,7 @@ class Config(dict):
         return True
 
     def from_toml(self, filename="config.toml"):
-        self.from_file(filename, load=toml.load)        
-
+        self.from_file(filename, load=toml.load)
 
     def from_object(self, obj: t.Union[object, str]) -> None:
         if isinstance(obj, str):
@@ -168,3 +167,27 @@ class Config(dict):
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {dict.__repr__(self)}>"
+
+
+class app_config_meta(type):
+    _instance = None
+
+    def __call__(self, *args, **kwds):
+        if not self._instance:
+            self._instance = super().__call__(*args, **kwds)
+        return self._instance
+
+    def get(cls, var, *args, **kwargs):
+        return cls().getvar(var, *args, **kwargs)
+
+
+class app_config(object, metaclass=app_config_meta):
+
+    _config = None
+
+    def __init__(self) -> None:
+        self._config = Config()
+        self._config.from_toml("config.toml")
+
+    def getvar(self, var, *args, **kwargs):
+        return self._config.get(var, *args, *kwargs)

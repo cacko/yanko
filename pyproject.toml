@@ -23,6 +23,7 @@ toml = "^0.10.2"
 tld = "^0.12.6"
 arrow = "^1.2.2"
 dataclasses-json = "^0.5.7"
+cachable = "^0.3.3"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

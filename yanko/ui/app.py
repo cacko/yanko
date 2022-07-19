@@ -1,6 +1,5 @@
 import rumps
 from threading import Thread
-from rumps import MenuItem
 from yanko.sonic import (
     Command,
     Playlist,
@@ -16,9 +15,9 @@ from yanko.ui.models import (
     MusicItem,
 )
 from yanko.sonic.manager import Manager
-from yanko.ui.items.playlist import Playlist, PlaylistItem
+from yanko.ui.items.playlist import Playlist
 from yanko.ui.items.albumlist import Albumlist
-from yanko import log
+import logging
 from yanko.core.string import truncate
 
 
@@ -98,20 +97,22 @@ class YankoApp(rumps.App):
         pass
 
     def onManagerResult(self, resp):
-        log.debug(resp)
+        logging.debug(resp)
 
     def onPlayerResult(self, resp):
         method = f"_on{resp.__class__.__name__}"
         if hasattr(self, method):
             getattr(self, method)(resp)
         else:
-            log.debug(resp)
+            logging.debug(resp)
 
     def _onNowPlaying(self, resp: NowPlaying):
+        print(resp)
         self.__nowPlaying = resp
         track = resp.track
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
+        rumps.notification(track.title, track.artist, track.album ,icon=track.coverArt)
 
     @rumps.timer(0.1)
     def updateTimer(self, sender):
@@ -124,7 +125,7 @@ class YankoApp(rumps.App):
         self.__playlist.update(list, self._onPlaylistItem)
 
     def _onPlaylistItem(self, sender):
-        log.debug(sender)
+        logging.debug(sender)
 
     def _onAlbumClick(self, sender: MusicItem):
         self.manager.commander.put_nowait((Command.ALBUM, sender.id))

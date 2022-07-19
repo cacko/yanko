@@ -1,13 +1,16 @@
-from ctypes import Union
+from ctypes import cdll
+from dataclasses import dataclass
 import hashlib
 import os
 import string
 import sys
 import time
-from random import SystemRandom, shuffle
+from random import SystemRandom
 from subprocess import CalledProcessError, Popen
 from threading import Thread
+from cachable import CachableFile
 
+from dataclasses_json import dataclass_json
 from yanko.sonic import (
     Action,
     Command,
@@ -17,20 +20,65 @@ from yanko.sonic import (
     Track,
     Status,
     RecentlyAdded,
-    Album
+    Album,
 )
 import requests
-from packaging import version
-
 from queue import LifoQueue
 from datetime import datetime, timezone
 import click
-from yanko import app_config
+from yanko.core.config import app_config
 import urllib3
+from urllib.parse import urlencode
+from hashlib import blake2b
+from cachable.request import Request
 urllib3.disable_warnings()
 
 
-class pSub(object):
+@dataclass_json()
+@dataclass()
+class ApiArguments:
+    u: str
+    t: str
+    s: str
+    v: str
+    c: str = "yAnKo"
+    f: str = "json"
+
+
+class CoverArtFile(CachableFile):
+
+    _url: str = None
+    __filename: str = None
+
+    def __init__(self, url: str) -> None:
+        self._url = url
+
+    @property
+    def filename(self):
+        if not self.__filename:
+            h = blake2b(digest_size=20)
+            h.update(self._url.encode())
+            self.__filename = f"{h.hexdigest()}.png"
+        return self.__filename
+
+    @property
+    def url(self):
+        return self._url
+
+    async def _init(self):
+        if self.isCached:
+            return
+        try:
+            req = Request(self.url)
+            content = await req.binary
+            self.storage_path.write_bytes(content.binary)
+            self._struct = self.storage_path.read_bytes()
+            self.tocache(self._struct)
+        except Exception:
+            self._path = self.DEFAULT
+
+
+class Client(object):
 
     list = []
     command_queue: LifoQueue = None
@@ -38,12 +86,7 @@ class pSub(object):
     manager_queue: LifoQueue = None
     playing: bool = False
 
-    """
-    pSub Object interfaces with the Subsonic server and handles streaming media
-    """
-
     def __init__(self):
-        # Get the Server Config
         server_config = app_config.get('server', {})
         self.host = server_config.get('host')
         self.username = server_config.get('username', '')
@@ -52,23 +95,13 @@ class pSub(object):
         self.ssl = server_config.get('ssl', False)
         self.verify_ssl = server_config.get('verify_ssl', True)
 
-        # internal variables
         self.search_results = []
 
-        # get the streaming config
         streaming_config = app_config.get('streaming', {})
         self.format = streaming_config.get('format', 'raw')
         self.display = streaming_config.get('display', False)
         self.show_mode = streaming_config.get('show_mode', 0)
         self.invert_random = streaming_config.get('invert_random', False)
-        # self.notify = streaming_config.get('notify', True)
-
-        # if self.notify:
-        #     import kmya.notifications as notifications
-        #     self.notifications = notifications.Notifications(self)
-
-        # use a Queue to handle command input while a file is playing.
-        # set the thread going now
         self.command_queue = LifoQueue()
         input_thread = Thread(target=self.add_input)
         input_thread.daemon = True
@@ -81,6 +114,16 @@ class pSub(object):
         client_config = app_config.get('client', {})
         self.pre_exe = client_config.get('pre_exe', '')
         self.pre_exe = self.pre_exe.split(' ') if self.pre_exe != '' else []
+
+    @property
+    def api_args(self) -> dict[str, str]:
+        token, salt = self.hash_password()
+        return ApiArguments(
+            u=self.username,
+            t=token,
+            s=salt,
+            v=self.api
+        ).to_dict()
 
     def test_config(self):
         """
@@ -114,31 +157,14 @@ class pSub(object):
         token = hashlib.md5(salted_password.encode('utf-8')).hexdigest()
         return token, salt
 
-    def create_url(self, endpoint):
-        """
-        build the standard url for interfacing with the Subsonic REST API
-        :param endpoint: REST endpoint to incorporate in the url
-        """
-        token, salt = self.hash_password()
-        if version.parse(self.api) < version.parse("1.13.0"):
-            url = '{}://{}/rest/{}.view?u={}&p={}&v={}&c=pSub&f=json'.format(
-                'https' if self.ssl else 'http',
-                self.host,
-                endpoint,
-                self.username,
-                self.password,
-                self.api
-            )
-        else:
-            url = '{}://{}/rest/{}?u={}&t={}&s={}&v={}&c=pSub&f=json'.format(
-                'https' if self.ssl else 'http',
-                self.host,
-                endpoint,
-                self.username,
-                token,
-                salt,
-                self.api
-            )
+    def create_url(self, endpoint, **kwargs):
+
+        qs = urlencode({
+            **kwargs,
+            **self.api_args
+        })
+
+        url = f"https://{self.host}/rest/{endpoint}?{qs}"
 
         return url
 
@@ -185,27 +211,10 @@ class pSub(object):
         return response
 
     def scrobble(self, song_id):
-        """
-        notify the Subsonic server that a track is being played within pSub
-        :param song_id:
-        :return:
-        """
-        self.make_request(
-            url='{}&id={}'.format(
-                self.create_url('scrobble'),
-                song_id
-            )
-        )
+        self.make_request(self.create_url('scrobble', id=song_id))
 
     def search(self, query):
-        """
-        search using query and return the result
-        :return:
-        :param query: search term string
-        """
-        results = self.make_request(
-            url='{}&query={}'.format(self.create_url('search3'), query)
-        )
+        results = self.make_request(self.create_url('search3'), query=query)
         if results:
             return results['subsonic-response'].get('searchResult3', [])
         return []
@@ -221,9 +230,7 @@ class pSub(object):
         return []
 
     def get_album_list(self, type):
-        albums = self.make_request(
-            url='{}&type={}'.format(self.create_url('getAlbumList'), type)
-        )
+        albums = self.make_request(self.create_url('getAlbumList', type=type))
         if albums:
             return albums['subsonic-response']['albumList'].get('album', [])
         return []
@@ -258,8 +265,8 @@ class pSub(object):
         :param album_id: id of the album
         :return: list
         """
-        album_info = self.make_request('{}&id={}'.format(
-            self.create_url('getAlbum'), album_id))
+        album_info = self.make_request(
+            self.create_url('getAlbum', id=album_id))
         songs = []
 
         for song in album_info['subsonic-response']['album'].get('song', []):
@@ -285,7 +292,8 @@ class pSub(object):
             if not random_songs:
                 return
 
-            self.list = random_songs['subsonic-response']['randomSongs'].get('song', [])
+            self.list = random_songs['subsonic-response']['randomSongs'].get('song', [
+            ])
 
             self.manager_queue.put_nowait(
                 Playlist(
@@ -319,24 +327,18 @@ class pSub(object):
                     return
                 playing = self.play_stream(dict(radio_track))
 
-    def play_artist(self, artist_id, randomise):
+    def play_artist(self, artist_id):
         """
         Get the songs by the given artist_id and play them
         :param artist_id:  id of the artist to play
         :param randomise: if True, randomise the playback order
         """
-        artist_info = self.make_request('{}&id={}'.format(
-            self.create_url('getArtist'), artist_id))
+        artist_info = self.make_request(
+            self.create_url('getArtist', id=artist_id))
         songs = []
 
         for album in artist_info['subsonic-response']['artist']['album']:
             songs += self.get_album_tracks(album.get('id'))
-
-        if self.invert_random:
-            randomise = not randomise
-
-        if randomise:
-            shuffle(songs)
 
         playing = True
 
@@ -369,7 +371,7 @@ class pSub(object):
                     return
                 playing = self.play_stream(dict(song))
 
-    def play_playlist(self, playlist_id, randomise):
+    def play_playlist(self, playlist_id):
         """
         Get the tracks from the supplied playlist id and play them
         :param playlist_id:
@@ -381,12 +383,6 @@ class pSub(object):
         )
         songs = playlist_info['subsonic-response']['playlist']['entry']
 
-        if self.invert_random:
-            randomise = not randomise
-
-        if randomise:
-            shuffle(songs)
-
         playing = True
 
         while playing:
@@ -395,7 +391,7 @@ class pSub(object):
                     return
                 playing = self.play_stream(dict(song))
 
-    @property
+    @ property
     def environment(self):
         return dict(
             os.environ,
@@ -456,12 +452,18 @@ class pSub(object):
             params += ['-nodisp']
 
         try:
-            # if self.notify:
-            #     self.notifications.show_notification(track_data)
+            coverArt = track_data.get("coverArt")
+            coverArtUrl = coverArt
+            if coverArt:
+                coverArtUrl = self.create_url(
+                    "getCoverArt",
+                    id=coverArt,
+                    size=500
+                )
             self.manager_queue.put_nowait(
                 NowPlaying(
                     start=datetime.now(tz=timezone.utc),
-                    track=Track(**track_data))
+                    track=Track(**{**track_data, "coverArt": coverArtUrl}))
             )
             self.manager_queue.put_nowait(
                 Playstatus(status=Status.PLAYING)
@@ -522,6 +524,7 @@ class pSub(object):
                     self.play_random_songs(None)
                 case Command.ALBUM:
                     self.play_album(payload)
+
                 case Command.NEWEST:
                     self.manager_queue.put_nowait(
                         RecentlyAdded(

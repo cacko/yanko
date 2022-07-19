@@ -15,6 +15,7 @@ class Command(Enum):
     QUIT = 'quit'
     RESTART = 'restart'
     ALBUM = 'album'
+    COVER_ART = 'cover_art'
 
 
 class Action(Enum):
@@ -85,12 +86,12 @@ class Album:
     coverArt: Optional[str] = None
     songCount: Optional[int] = None
 
-
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class NowPlaying:
     track: Track
     start: datetime
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass

@@ -89,6 +89,8 @@ class Client(object):
     playqueue: list[Track] = []
     skip_to: str = None
 
+    BATCH_SIZE = 20
+
     def __init__(self):
         server_config = app_config.get('server', {})
         self.host = server_config.get('host')
@@ -209,19 +211,6 @@ class Client(object):
     def get_recently_played(self):
         return self.get_album_list(AlbumType.RECENT)
 
-    def get_playlists(self):
-        playlists = self.make_request(url=self.create_url(Subsonic.PLAYLISTS))
-        if playlists:
-            return playlists['subsonic-response']['playlists'].get('playlist', [])
-        return []
-
-    def get_music_folders(self):
-        music_folders = self.make_request(
-            url=self.create_url(Subsonic.MUSIC_FOLDERS))
-        if music_folders:
-            return music_folders['subsonic-response']['musicFolders'].get('musicFolder', [])
-        return []
-
     def get_album_tracks(self, album_id):
         album_info = self.make_request(
             self.create_url(Subsonic.ALBUM, id=album_id))
@@ -232,14 +221,9 @@ class Client(object):
 
         return songs
 
-    def play_random_songs(self, music_folder):
-        url = self.create_url(Subsonic.RANDOM_SONGS)
-
-        if music_folder is not None:
-            url = '{}&musicFolderId={}'.format(url, music_folder)
-
+    def play_random_songs(self):
+        url = self.create_url(Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE)
         playing = True
-
         while playing:
             songs = []
             if not self.skip_to:
@@ -250,7 +234,6 @@ class Client(object):
 
                 songs = random_songs['subsonic-response']['randomSongs'].get(
                     'song', [])
-
 
                 self.manager_queue.put_nowait(
                     Playlist(
@@ -273,12 +256,22 @@ class Client(object):
         playing = True
         while playing:
             similar_songs = self.make_request(self.create_url(
-                Subsonic.SIMILAR_SONGS2, id=radio_id))
+                Subsonic.SIMILAR_SONGS2, id=radio_id, count=self.BATCH_SIZE))
 
             if not similar_songs:
                 return
 
-            for radio_track in similar_songs['subsonic-response']['similarSongs2'].get('song', []):
+            songs = similar_songs['subsonic-response']['similarSongs2'].get('song', [
+            ])
+
+            self.manager_queue.put_nowait(
+                Playlist(
+                    start=datetime.now(tz=timezone.utc),
+                    tracks=[Track(**data) for data in songs]
+                )
+            )
+
+            for radio_track in songs:
                 if not playing:
                     return
                 playing = self.play_stream(dict(radio_track))
@@ -310,18 +303,21 @@ class Client(object):
             )
         )
 
-        while playing:
-            for song in songs:
-                if not playing:
-                    return
-                if self.skip_to:
-                    if self.skip_to != song.get("id"):
-                        continue
-                    else:
-                        self.skip_to = None
-                playing = self.play_stream(dict(song))
-                if self.skip_to:
-                    break
+        artist_id = songs[0].get("artistId")
+
+        for song in songs:
+            if not playing:
+                return
+            if self.skip_to:
+                if self.skip_to != song.get("id"):
+                    continue
+                else:
+                    self.skip_to = None
+            playing = self.play_stream(dict(song))
+            if self.skip_to:
+                return self.play_album(album_id)
+
+        return self.play_radio(artist_id)
 
     def play_playlist(self, playlist_id):
         playlist_info = self.make_request(
@@ -443,7 +439,7 @@ class Client(object):
             cmd, payload = self.command_queue.get_nowait()
             match(cmd):
                 case Command.RANDOM:
-                    self.play_random_songs(None)
+                    self.play_random_songs()
                 case Command.ALBUM:
                     self.play_album(payload)
                 case Command.RECENTLY_PLAYED:

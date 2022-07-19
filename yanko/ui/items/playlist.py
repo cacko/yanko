@@ -6,13 +6,14 @@ from yanko.ui.models import Icon, MusicItem
 from Cocoa import NSFont, NSFontAttributeName
 from PyObjCTools.Conversion import propertyListFromPythonCollection
 from AppKit import NSAttributedString
+from typing import Optional
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class PlaylistItem:
-    track: Track
     key: str
+    track: Optional[Track] = None
 
 
 class PlaylistMenuItem(MusicItem):
@@ -67,6 +68,12 @@ class Playlist:
         self.__items[key] = value
 
     def __delitem__(self, key):
+        try:
+            itm = self.__items[key]
+            del self.__items[key]
+            del self.__app.menu[itm.key]
+        except KeyError:
+            pass
         del self.__items[key]
 
     def __iter__(self):
@@ -106,22 +113,25 @@ class Playlist:
                 track=track,
                 key=insert_after
             ))
-        menu.insert_after(insert_after, None)
+        self.append(PlaylistItem(key=menu.insert_after(insert_after, None)))
 
     def reset(self):
         if not len(self.__items):
             return
         menu = self.__app.menu
-        keys = menu.keys()
-        for item in self.__items:
-            if item.key in keys:
-                menu.pop(item.key)
+        items = self.__items[:]
+        self.__items = []
+        for item in items:
+            try:
+                del menu[item.key]
+            except KeyError:
+                pass
 
     def setNowPlaying(self, track: Track):
         menu = self.__app.menu
         for idx, item in enumerate(self.__items):
             menu_item = menu.get(item.key)
-            if isinstance(menu_item, PlaylistMenuItem):
+            if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
                 if menu_item.id == track.id:
                     menu_item.set_icon(Icon.NOWPLAYING.value, template=True)
                     menu_item.setAttrTitle(item.track.displayTitle())

@@ -79,8 +79,6 @@ class CoverArtFile(CachableFile):
 
 
 class Client(object):
-
-    list = []
     command_queue: LifoQueue = None
     playback_queue: LifoQueue = None
     manager_queue: LifoQueue = None
@@ -524,7 +522,6 @@ class Client(object):
                     self.play_random_songs(None)
                 case Command.ALBUM:
                     self.play_album(payload)
-
                 case Command.NEWEST:
                     self.manager_queue.put_nowait(
                         RecentlyAdded(
@@ -532,6 +529,7 @@ class Client(object):
                                     for data in self.get_recently_added()]
                         )
                     )
+            self.command_queue.task_done()
 
     def __exit(self, ffplay):
         click.secho('Exiting!', fg='blue')

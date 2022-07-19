@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from marshmallow import fields
 from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional
+from yanko.core.string import truncate
 
 
 class Command(Enum):
@@ -30,6 +31,28 @@ class Status(Enum):
     PLAYING = 'playing'
     STOPPED = 'stopped'
     EXIT = 'exit'
+
+
+class Subsonic(Enum):
+    SIMILAR_SONGS2 = 'getSimilarSongs2'
+    RANDOM_SONGS = 'getRandomSongs'
+    MUSIC_FOLDERS = 'getMusicFolders'
+    ALBUM_LIST = 'getAlbumList'
+    ALBUM = 'getAlbum'
+    SCROBBLE = 'scrobble'
+    SEARCH3 = 'search3'
+    ARTISTS = 'getArtists'
+    PLAYLISTS = 'getPlaylists'
+    ARTIST = 'getArtist'
+    PLAYLIST = 'getPlaylist'
+    DOWNLOAD = 'download'
+    COVER_ART = 'getCoverArt'
+    PING = 'ping'
+
+
+class AlbumType(Enum):
+    NEWEST = 'newest'
+    RECENT = 'recent'
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -62,6 +85,12 @@ class Track:
     bitRate: Optional[int] = None
     path: Optional[str] = None
     discNumber: Optional[int] = None
+
+    def displayTitle(self, idx=None) -> str:
+        if idx is None:
+            return f"{self.artist} ∕ {truncate(self.title)}"
+        nm = idx + 1
+        return f"{nm:02d}. {self.artist} ∕ {truncate(self.title)}"
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

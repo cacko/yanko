@@ -13,7 +13,7 @@ logging.basicConfig(
 
 
 def start():
-    cache_dir = Path("~/.cache/yanko").expanduser()
+    cache_dir = app_config.app_dir / "cache"
     if not cache_dir.parent.exists():
         cache_dir.parent.mkdir(parents=True)
     Cachable.register(app_config.get(

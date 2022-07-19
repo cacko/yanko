@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 import toml
 import os
-
+import click
 
 def import_string(import_name: str, silent: bool = False) -> t.Any:
     import_name = import_name.replace(":", ".")
@@ -59,9 +59,11 @@ class ConfigAttribute:
 
 class Config(dict):
 
-    def __init__(self, defaults: t.Optional[dict] = None):
+    def __init__(self, root, defaults: t.Optional[dict] = None):
         dict.__init__(self, defaults or {})
-        self.root_path = Path.home() / ".config" / "yanko"
+        self.root_path: Path = root
+        if not self.root_path.exists():
+            self.root_path.mkdir(parents=True)
 
     def from_pyfile(self, filename: str, silent: bool = False) -> bool:
         filename = (self.root_path / filename).absolute().as_posix()
@@ -180,13 +182,16 @@ class app_config_meta(type):
     def get(cls, var, *args, **kwargs):
         return cls().getvar(var, *args, **kwargs)
 
+    @property
+    def app_dir(cls):
+        return Path(click.get_app_dir("Yanko")).expanduser()
 
 class app_config(object, metaclass=app_config_meta):
 
     _config = None
 
     def __init__(self) -> None:
-        self._config = Config()
+        self._config = Config(__class__.app_dir)
         self._config.from_toml("config.toml")
 
     def getvar(self, var, *args, **kwargs):

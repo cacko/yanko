@@ -1,15 +1,8 @@
-from re import U
-from sys import prefix
 from rumps import MenuItem
 from pathlib import Path
 from enum import Enum
 from dataclasses_json import dataclass_json, Undefined
 from dataclasses import dataclass
-from typing import Optional
-import arrow
-from yanko.core.string import name_to_code
-from yanko.sonic import Track
-
 
 class Label(Enum):
     PLAY = 'Play'
@@ -130,6 +123,7 @@ class MusicItem(MenuItem):
         self.__id = id
         super().__init__(title, callback=callback, key=key,
                          icon=icon, dimensions=dimensions, template=template)
+
 
     @property
     def id(self):

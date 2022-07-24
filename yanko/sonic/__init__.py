@@ -19,6 +19,7 @@ class Command(Enum):
     COVER_ART = 'cover_art'
     RECENTLY_PLAYED = 'recent'
     SONG = 'song'
+    SEARCH = 'search'
 
 
 class Action(Enum):
@@ -117,6 +118,12 @@ class Album:
     coverArt: Optional[str] = None
     songCount: Optional[int] = None
 
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Artist:
+    id: str
+    name: str
+    albumCount: Optional[int] = 0
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -148,3 +155,23 @@ class LastAdded:
 @dataclass
 class RecentlyPlayed:
     albums: list[Album]
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class SearchItemIcon:
+    path: str
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class SearchItem:
+    uid: str
+    title: str
+    subtitle: str
+    arg: str
+    icon: Optional[SearchItemIcon] = None
+    type = "file:skipcheck"
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Search:
+    items: list[SearchItem]

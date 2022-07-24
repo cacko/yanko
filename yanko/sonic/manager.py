@@ -1,10 +1,11 @@
 import logging
 from pathlib import Path
 from queue import LifoQueue
-from yanko.sonic import Action, Command, NowPlaying, Playstatus, LastAdded, Status, RecentlyPlayed
+from yanko.sonic import Action, Command, NowPlaying, Playstatus, LastAdded, Search, Status, RecentlyPlayed
 from yanko.sonic.api import Client, CoverArtFile
 import asyncio
-from multiprocessing.pool import ThreadPool
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 
 async def resolveCoverArt(obj):
@@ -12,6 +13,13 @@ async def resolveCoverArt(obj):
     res: Path = await ca.path
     obj.coverArt = res.as_posix() if res.exists() else None
     return obj
+
+async def resolveIcon(obj):
+    ca = CoverArtFile(obj.icon.path)
+    res: Path = await ca.path
+    obj.icon.path = res.as_posix() if res.exists() else None
+    return obj
+
 
 
 class ManagerMeta(type):
@@ -27,6 +35,7 @@ class ManagerMeta(type):
 class Manager(object, metaclass=ManagerMeta):
 
     commander: LifoQueue = None
+    alfred: LifoQueue = None
     eventLoop: asyncio.AbstractEventLoop = None
     manager_callback = None
     player_callback = None
@@ -83,6 +92,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__album(payload)
                 case Command.SONG:
                     await self.__song(payload)
+                case Command.SEARCH:
+                    await self.__search(payload)
             self.commander.task_done()
         except Exception as e:
             logging.exception(e)
@@ -94,11 +105,28 @@ class Manager(object, metaclass=ManagerMeta):
                 self.__running = False
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
                 cmd.track = await resolveCoverArt(cmd.track)
+            elif isinstance(cmd, Search) and len(cmd.items):
+                mapped = []
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    jobs = [executor.submit(resolveIcon, item) for item in cmd.items]
+                    for future in as_completed(jobs):
+                        try:
+                            res = await future.result()
+                            mapped.append(res)
+                        except Exception as e:
+                            logging.error(e, exc_info=True)
+                cmd.items = mapped
+
             elif isinstance(cmd, LastAdded) or isinstance(cmd, RecentlyPlayed):
                 mapped = []
-                for album in cmd.albums:
-                    alm = await resolveCoverArt(album)
-                    mapped.append(alm)
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    jobs = [executor.submit(resolveCoverArt, album) for album in cmd.albums]
+                    for future in as_completed(jobs):
+                        try:
+                            res = await future.result()
+                            mapped.append(res)
+                        except Exception as e:
+                            logging.error(e, exc_info=True)
                 cmd.albums = mapped
             self.player_callback(cmd)
             self.__player_queue.task_done()
@@ -116,6 +144,9 @@ class Manager(object, metaclass=ManagerMeta):
     async def __recently_played(self):
         self.api.command_queue.put_nowait((Command.RECENTLY_PLAYED, None))
 
+    async def __search(self, query):
+        self.api.search_queue.put_nowait((Command.SEARCH, query))
+
     async def __album(self, albumId):
         if self.api.playing:
             self.api.playback_queue.put_nowait(Action.STOP)
@@ -125,7 +156,6 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.skip_to = songId
         if self.api.playing:
             self.api.playback_queue.put_nowait(Action.NEXT)
-
 
     async def __quit(self):
         self.api.playback_queue.put_nowait(Action.EXIT)

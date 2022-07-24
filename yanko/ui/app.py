@@ -1,3 +1,4 @@
+from queue import LifoQueue
 import rumps
 from threading import Thread
 from yanko.sonic import (
@@ -6,6 +7,7 @@ from yanko.sonic import (
     NowPlaying,
     LastAdded,
     RecentlyPlayed,
+    Search,
     Status,
     Playstatus
 )
@@ -21,6 +23,8 @@ from yanko.ui.items.albumlist import Albumlist
 from yanko.ui.items.nowplaying import NowPlayingItem
 import logging
 from yanko.core.string import truncate
+from yanko.api.server import Server
+
 
 
 class YankoApp(rumps.App):
@@ -30,6 +34,7 @@ class YankoApp(rumps.App):
     __playlist: Playlist = None
     __last_added: Albumlist = None
     __recent: Albumlist = None
+    __alfred: LifoQueue = None
     __nowPlayingSection = []
 
     def __init__(self):
@@ -68,6 +73,10 @@ class YankoApp(rumps.App):
             self.onPlayerResult
         ])
         t.start()
+        ts = Thread(target=Server.start, args=[
+            self.manager.commander,
+        ])
+        ts.start()
         self.manager.commander.put_nowait((Command.NEWEST, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
 
@@ -125,6 +134,9 @@ class YankoApp(rumps.App):
             self.menu.insert_before(top, None)
         ]
         # rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
+
+    def _onSearch(self, resp: Search):
+        Server.queue.put_nowait(resp.to_dict())
 
     @rumps.timer(1)
     def updateTimer(self, sender):

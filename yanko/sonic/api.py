@@ -19,6 +19,9 @@ from yanko.sonic import (
     Playlist,
     Playstatus,
     RecentlyPlayed,
+    Search,
+    SearchItem,
+    SearchItemIcon,
     Track,
     Status,
     LastAdded,
@@ -31,7 +34,7 @@ from queue import LifoQueue
 from datetime import datetime, timezone
 from yanko.core.config import app_config
 import urllib3
-from urllib.parse import urlencode
+from urllib.parse import urlencode,urlparse,parse_qs
 from hashlib import blake2b
 from cachable.request import Request
 urllib3.disable_warnings()
@@ -59,8 +62,11 @@ class CoverArtFile(CachableFile):
     @property
     def filename(self):
         if not self.__filename:
+            pu = urlparse(self._url)
+            pa = parse_qs(pu.query)
+            id = "".join(pa.get("id", []))
             h = blake2b(digest_size=20)
-            h.update(self._url.encode())
+            h.update(id.encode())
             self.__filename = f"{h.hexdigest()}.png"
         return self.__filename
 
@@ -68,21 +74,10 @@ class CoverArtFile(CachableFile):
     def url(self):
         return self._url
 
-    async def _init(self):
-        if self.isCached:
-            return
-        try:
-            req = Request(self.url)
-            content = await req.binary
-            self.storage_path.write_bytes(content.binary)
-            self._struct = self.storage_path.read_bytes()
-            self.tocache(self._struct)
-        except Exception:
-            self._path = self.DEFAULT
-
 
 class Client(object):
     command_queue: LifoQueue = None
+    search_queue: LifoQueue = None
     playback_queue: LifoQueue = None
     manager_queue: LifoQueue = None
     playing: bool = False
@@ -107,10 +102,18 @@ class Client(object):
         self.display = streaming_config.get('display', False)
         self.show_mode = streaming_config.get('show_mode', 0)
         self.invert_random = streaming_config.get('invert_random', False)
+
         self.command_queue = LifoQueue()
         input_thread = Thread(target=self.add_input)
         input_thread.daemon = True
         input_thread.start()
+
+
+        self.search_queue = LifoQueue()
+        search_thread = Thread(target=self.add_search)
+        search_thread.daemon = True
+        search_thread.start()
+
         self.playback_queue = LifoQueue()
 
         # remove the lock file if one exists
@@ -189,7 +192,19 @@ class Client(object):
         results = self.make_request(
             self.create_url(Subsonic.SEARCH3, query=query))
         if results:
-            return results['subsonic-response'].get('searchResult3', [])
+            results = results['subsonic-response'].get('searchResult3', [])
+            response = []
+            for album in results.get("album", []):
+                coverArt = self.create_url(Subsonic.COVER_ART, id=album.get("id"), size=200)
+                album = Album(**album)
+                response.append(SearchItem(
+                    uid=album.id,
+                    title=album.title,
+                    subtitle=album.artist,
+                    arg=f"album={album.id}",
+                    icon=SearchItemIcon(path=coverArt)
+                ))
+            return response
         return []
 
     def get_artists(self):
@@ -450,8 +465,20 @@ class Client(object):
                         LastAdded(albums=self.__toAlbums(self.get_last_added)))
                 case Command.SONG:
                     self.skip_to = payload
-
+                case Command.SEARCH:
+                    self.manager_queue.put_nowait(Search(items=self.search(payload)))
             self.command_queue.task_done()
+
+    def add_search(self):
+        while True:
+            if self.search_queue.empty():
+                time.sleep(0.1)
+                continue
+            cmd, payload = self.search_queue.get_nowait()
+            match(cmd):
+                case Command.SEARCH:
+                    self.manager_queue.put_nowait(Search(items=self.search(payload)))
+            self.search_queue.task_done()
 
     def __toAlbums(self, fnc):
         return [

@@ -1,8 +1,6 @@
 from rumps import MenuItem
 from pathlib import Path
 from enum import Enum
-from dataclasses_json import dataclass_json, Undefined
-from dataclasses import dataclass
 
 class Label(Enum):
     PLAY = 'Play'
@@ -43,17 +41,6 @@ class Icon(Enum):
         return obj
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class ApiStats:
-    activeWorkers: int
-    lastSeen: int
-    usdPerMin: float
-    averageHashrate: float
-    currentHashrate: float
-    pool: str
-
-
 class ActionItemMeta(type):
 
     _instances = {}
@@ -80,16 +67,8 @@ class ActionItemMeta(type):
         return cls("restart", Label.RESTART.value, icon=Icon.RESTART.value)
 
     @property
-    def find(cls) -> 'ActionItem':
-        return cls("find", Label.FIND.value, icon=Icon.FIND.value)
-
-    @property
     def quit(cls) -> 'ActionItem':
         return cls("quit", Label.QUIT.value, icon=Icon.QUIT.value)
-
-    @property
-    def album(cls) -> 'ActionItem':
-        return cls("album", Label.ALBUM.value, icon=Icon.ALBUM.value)
 
     @property
     def random(cls) -> 'ActionItem':

@@ -6,8 +6,6 @@ from yanko.sonic.api import Client, CoverArtFile
 import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-
-
 async def resolveCoverArt(obj):
     ca = CoverArtFile(obj.coverArt)
     res: Path = await ca.path
@@ -24,6 +22,28 @@ def find_idx_by_id(items, item, k='id'):
     for idx,itm in enumerate(items):
         if getattr(itm, k) == getattr(item, k):
             return idx
+
+async def resolveSearch(items):
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        jobs = [executor.submit(resolveIcon, item) for item in items]
+        for future in as_completed(jobs):
+            try:
+                res = await future.result()
+                items[find_idx_by_id(items, res, 'uid')] = res
+            except Exception as e:
+                logging.error(e, exc_info=True)
+    return items
+
+async def resolveAlbums(albums):
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        jobs = [executor.submit(resolveCoverArt, album) for album in albums]
+        for future in as_completed(jobs):
+            try:
+                res = await future.result()
+                albums[find_idx_by_id(albums, res)] = res
+            except Exception as e:
+                logging.error(e, exc_info=True)
+    return albums
 
 class ManagerMeta(type):
 
@@ -111,24 +131,9 @@ class Manager(object, metaclass=ManagerMeta):
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
                 cmd.track = await resolveCoverArt(cmd.track)
             elif isinstance(cmd, Search) and len(cmd.items):
-                with ThreadPoolExecutor(max_workers=10) as executor:
-                    jobs = [executor.submit(resolveIcon, item) for item in cmd.items]
-                    for future in as_completed(jobs):
-                        try:
-                            res = await future.result()
-                            cmd.items[find_idx_by_id(cmd.items, res, 'uid')] = res
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
-
+                cmd.items = await resolveSearch(cmd.items)
             elif isinstance(cmd, LastAdded) or isinstance(cmd, RecentlyPlayed):
-                with ThreadPoolExecutor(max_workers=10) as executor:
-                    jobs = [executor.submit(resolveCoverArt, album) for album in cmd.albums]
-                    for future in as_completed(jobs):
-                        try:
-                            res = await future.result()
-                            cmd.albums[find_idx_by_id(cmd.albums, res)] = res
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
+                cmd.albums = await resolveAlbums(cmd.albums)
             self.player_callback(cmd)
             self.__player_queue.task_done()
         except Exception as e:

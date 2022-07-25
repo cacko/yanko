@@ -34,7 +34,6 @@ class YankoApp(rumps.App):
     __playlist: Playlist = None
     __last_added: Albumlist = None
     __recent: Albumlist = None
-    __alfred: LifoQueue = None
     __nowPlayingSection = []
 
     def __init__(self):
@@ -43,8 +42,6 @@ class YankoApp(rumps.App):
             menu=[
                 ActionItem.random,
                 ActionItem.artist,
-                ActionItem.album,
-                ActionItem.find,
                 ActionItem.recent,
                 ActionItem.newest,
                 None,
@@ -138,12 +135,6 @@ class YankoApp(rumps.App):
     def _onSearch(self, resp: Search):
         Server.queue.put_nowait(resp.to_dict())
 
-    @rumps.timer(1)
-    def updateTimer(self, sender):
-        if self.__nowPlaying:
-            track = self.__nowPlaying.track
-            self.title = f"{track.artist} / {truncate(track.title)}"
-
     def _onPlaylist(self, resp: Playlist):
         list = resp.tracks
         self.__playlist.update(list, self._onPlaylistItem)
@@ -156,7 +147,6 @@ class YankoApp(rumps.App):
 
     def _onPlaystatus(self, resp: Playstatus):
         if resp.status == Status.PLAYING:
-            self.template = False
             self.icon = Icon.PLAYING.value
             ActionItem.stop.show()
             ActionItem.play.hide()
@@ -164,7 +154,6 @@ class YankoApp(rumps.App):
                 ActionItem.next.show()
             ActionItem.restart.show()
         elif resp.status == Status.STOPPED:
-            self.template = False
             self.icon = Icon.STOPPED.value
             ActionItem.stop.hide()
             if len(self.__playlist):

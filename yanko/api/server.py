@@ -7,7 +7,6 @@ from yanko.sonic import Command
 
 app = Bottle()
 
-
 class ServerMeta(type):
 
     _instance: 'Server' = None

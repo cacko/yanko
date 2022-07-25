@@ -94,6 +94,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__song(payload)
                 case Command.SEARCH:
                     await self.__search(payload)
+                case Command.ALBUMSONG:
+                    await self.__albumsong(*payload.split('/'))
             self.commander.task_done()
         except Exception as e:
             logging.exception(e)
@@ -148,6 +150,12 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.SEARCH, query))
 
     async def __album(self, albumId):
+        if self.api.playing:
+            self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.command_queue.put_nowait((Command.ALBUM, albumId))
+
+    async def __albumsong(self, albumId, songId):
+        self.api.skip_to = songId
         if self.api.playing:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))

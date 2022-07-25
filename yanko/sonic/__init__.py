@@ -20,6 +20,7 @@ class Command(Enum):
     RECENTLY_PLAYED = 'recent'
     SONG = 'song'
     SEARCH = 'search'
+    ALBUMSONG = 'albumsong'
 
 
 class Action(Enum):

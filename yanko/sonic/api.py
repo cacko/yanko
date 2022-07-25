@@ -194,6 +194,16 @@ class Client(object):
         if results:
             results = results['subsonic-response'].get('searchResult3', [])
             response = []
+            for song in results.get("song", []):
+                coverArt = self.create_url(Subsonic.COVER_ART, id=song.get("coverArt"), size=200)
+                track = Track(**song)
+                response.append(SearchItem(
+                    uid=track.id,
+                    title=track.title,
+                    subtitle=f"{track.artist} / {track.album}",
+                    arg=f"albumsong={track.albumId}/{track.id}",
+                    icon=SearchItemIcon(path=coverArt)
+                ))
             for album in results.get("album", []):
                 coverArt = self.create_url(Subsonic.COVER_ART, id=album.get("id"), size=200)
                 album = Album(**album)

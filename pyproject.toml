@@ -25,6 +25,7 @@ dataclasses-json = "^0.5.7"
 cachable = "^0.3.3"
 rumps = "^0.5.3"
 bottle = "^0.12.21"
+Pillow = "^9.2.0"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

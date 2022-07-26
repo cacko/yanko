@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 from dataclasses_json import dataclass_json, Undefined
 from yanko.sonic import Track
 from rumps import Menu, App
@@ -43,7 +44,7 @@ class PlaylistMenuItem(MusicItem):
         if not title:
             title = self.title
         tt = NSAttributedString.alloc().initWithString_attributes_(
-            self.title, self.string_attributes)
+            title, self.string_attributes)
         self._menuitem.setAttributedTitle_(tt)
 
 
@@ -133,8 +134,6 @@ class Playlist:
             menu_item = menu.get(item.key)
             if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
                 if menu_item.id == track.id:
-                    menu_item.set_icon(Icon.NOWPLAYING.value, template=True)
-                    menu_item.setAttrTitle(item.track.displayTitle())
+                    menu_item.setAttrTitle(f"🔈 {item.track.displayTitle()}")
                 else:
-                    menu_item.set_icon(None)
                     menu_item.setAttrTitle(item.track.displayTitle(idx))

@@ -1,7 +1,7 @@
-from queue import LifoQueue
 import rumps
 from threading import Thread
 from yanko.sonic import (
+    ArtistAlbums,
     Command,
     Playlist,
     NowPlaying,
@@ -30,9 +30,9 @@ from yanko.api.server import Server
 class YankoApp(rumps.App):
 
     manager: Manager = None
-    __nowPlaying: NowPlaying = None
     __playlist: Playlist = None
     __last_added: Albumlist = None
+    __artist_albums: Albumlist = None
     __recent: Albumlist = None
     __nowPlayingSection = []
 
@@ -45,9 +45,9 @@ class YankoApp(rumps.App):
                 ActionItem.recent,
                 ActionItem.newest,
                 None,
+                ActionItem.next,
                 ActionItem.play,
                 ActionItem.stop,
-                ActionItem.next,
                 ActionItem.restart,
                 None,
                 ActionItem.quit
@@ -59,6 +59,7 @@ class YankoApp(rumps.App):
         self.menu.setAutoenablesItems = False
         self.__playlist = Playlist(self, Label.RANDOM.value)
         self.__last_added = Albumlist(self, Label.NEWEST.value)
+        self.__artist_albums = Albumlist(self, Label.ARTIST.value)
         self.__recent = Albumlist(self, Label.RECENT.value)
         ActionItem.stop.hide()
         ActionItem.play.hide()
@@ -119,7 +120,6 @@ class YankoApp(rumps.App):
             getattr(self, method)(resp)
 
     def _onNowPlaying(self, resp: NowPlaying):
-        self.__nowPlaying = resp
         track = resp.track
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
@@ -130,6 +130,8 @@ class YankoApp(rumps.App):
             self.menu.insert_before(top, NowPlayingItem(track, callback=self._onAlbumClick)),
             self.menu.insert_before(top, None)
         ]
+        self.icon = resp.track.coverArtIcon
+        self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
         # rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
 
     def _onSearch(self, resp: Search):
@@ -147,7 +149,6 @@ class YankoApp(rumps.App):
 
     def _onPlaystatus(self, resp: Playstatus):
         if resp.status == Status.PLAYING:
-            self.icon = Icon.PLAYING.value
             ActionItem.stop.show()
             ActionItem.play.hide()
             if len(self.__playlist):
@@ -173,3 +174,7 @@ class YankoApp(rumps.App):
     def _onRecentlyPlayed(self, resp: RecentlyPlayed):
         albums = resp.albums
         self.__recent.update(albums, self._onAlbumClick)
+
+    def _onArtistAlbums(self, resp: ArtistAlbums):
+        albums = resp.albums
+        self.__artist_albums.update(albums, self._onAlbumClick)

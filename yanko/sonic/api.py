@@ -9,11 +9,11 @@ import time
 from random import SystemRandom
 from subprocess import CalledProcessError, Popen
 from threading import Thread
-from cachable import CachableFile
 
 from dataclasses_json import dataclass_json
 from yanko.sonic import (
     Action,
+    ArtistAlbums,
     Command,
     NowPlaying,
     Playlist,
@@ -34,9 +34,7 @@ from queue import LifoQueue
 from datetime import datetime, timezone
 from yanko.core.config import app_config
 import urllib3
-from urllib.parse import urlencode,urlparse,parse_qs
-from hashlib import blake2b
-from cachable.request import Request
+from urllib.parse import urlencode
 urllib3.disable_warnings()
 
 
@@ -51,30 +49,6 @@ class ApiArguments:
     f: str = "json"
 
 
-class CoverArtFile(CachableFile):
-
-    _url: str = None
-    __filename: str = None
-
-    def __init__(self, url: str) -> None:
-        self._url = url
-
-    @property
-    def filename(self):
-        if not self.__filename:
-            pu = urlparse(self._url)
-            pa = parse_qs(pu.query)
-            id = "".join(pa.get("id", []))
-            h = blake2b(digest_size=20)
-            h.update(id.encode())
-            self.__filename = f"{h.hexdigest()}.png"
-        return self.__filename
-
-    @property
-    def url(self):
-        return self._url
-
-
 class Client(object):
     command_queue: LifoQueue = None
     search_queue: LifoQueue = None
@@ -83,6 +57,7 @@ class Client(object):
     playing: bool = False
     playqueue: list[Track] = []
     skip_to: str = None
+    __artist_cache = {}
 
     BATCH_SIZE = 20
 
@@ -107,7 +82,6 @@ class Client(object):
         input_thread = Thread(target=self.add_input)
         input_thread.daemon = True
         input_thread.start()
-
 
         self.search_queue = LifoQueue()
         search_thread = Thread(target=self.add_search)
@@ -195,7 +169,8 @@ class Client(object):
             results = results['subsonic-response'].get('searchResult3', [])
             response = []
             for album in results.get("album", []):
-                coverArt = self.create_url(Subsonic.COVER_ART, id=album.get("id"), size=200)
+                coverArt = self.create_url(
+                    Subsonic.COVER_ART, id=album.get("id"), size=200)
                 album = Album(**album)
                 response.append(SearchItem(
                     uid=album.id,
@@ -205,7 +180,8 @@ class Client(object):
                     icon=SearchItemIcon(path=coverArt)
                 ))
             for song in results.get("song", []):
-                coverArt = self.create_url(Subsonic.COVER_ART, id=song.get("coverArt"), size=200)
+                coverArt = self.create_url(
+                    Subsonic.COVER_ART, id=song.get("coverArt"), size=200)
                 track = Track(**song)
                 response.append(SearchItem(
                     uid=track.id,
@@ -301,12 +277,19 @@ class Client(object):
                     return
                 playing = self.play_stream(dict(radio_track))
 
+    def get_artist(self, artist_id):
+        if artist_id not in self.__artist_cache:
+            artist_info = self.make_request(
+                self.create_url(Subsonic.ARTIST, id=artist_id))
+            if artist_info:
+                self.__artist_cache[artist_id] = artist_info['subsonic-response']['artist'].get(
+                    "album", [])
+        return self.__artist_cache[artist_id]
+
     def play_artist(self, artist_id):
-        artist_info = self.make_request(
-            self.create_url(Subsonic.ARTIST, id=artist_id))
         songs = []
 
-        for album in artist_info['subsonic-response']['artist']['album']:
+        for album in self.get_artist(artist_id):
             songs += self.get_album_tracks(album.get('id'))
 
         playing = True
@@ -476,7 +459,8 @@ class Client(object):
                 case Command.SONG:
                     self.skip_to = payload
                 case Command.SEARCH:
-                    self.manager_queue.put_nowait(Search(items=self.search(payload)))
+                    self.manager_queue.put_nowait(
+                        Search(items=self.search(payload)))
             self.command_queue.task_done()
 
     def add_search(self):
@@ -487,14 +471,18 @@ class Client(object):
             cmd, payload = self.search_queue.get_nowait()
             match(cmd):
                 case Command.SEARCH:
-                    self.manager_queue.put_nowait(Search(items=self.search(payload)))
+                    self.manager_queue.put_nowait(
+                        Search(items=self.search(payload)))
+                case Command.ARTIST_ALBUMS:
+                    self.manager_queue.put_nowait(ArtistAlbums(
+                        albums=self.__toAlbums(self.get_artist, payload)))
             self.search_queue.task_done()
 
-    def __toAlbums(self, fnc):
+    def __toAlbums(self, fnc, *args):
         return [
             Album(
                 **{**data, "coverArt": self.create_url(Subsonic.COVER_ART, id=data.get("id"), size=200)})
-            for data in fnc()
+            for data in fnc(*args)
         ]
 
     def __exit(self, ffplay):

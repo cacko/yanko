@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
 from queue import LifoQueue
-from yanko.sonic import Action, Command, NowPlaying, Playstatus, LastAdded, Search, Status, RecentlyPlayed
-from yanko.sonic.api import Client, CoverArtFile
+from yanko.sonic import Action, ArtistAlbums, Command, NowPlaying, Playstatus, LastAdded, Search, Status, RecentlyPlayed
+from yanko.sonic.api import Client
+from yanko.sonic.coverart import CoverArtFile
 import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -10,6 +11,8 @@ async def resolveCoverArt(obj):
     ca = CoverArtFile(obj.coverArt)
     res: Path = await ca.path
     obj.coverArt = res.as_posix() if res.exists() else None
+    icon: Path = await ca.icon_path
+    obj.coverArtIcon = icon.as_posix() if icon.exists() else None
     return obj
 
 async def resolveIcon(obj):
@@ -119,6 +122,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__search(payload)
                 case Command.ALBUMSONG:
                     await self.__albumsong(*payload.split('/'))
+                case Command.ARTIST_ALBUMS:
+                    await self.__artist_albums(payload)
             self.commander.task_done()
         except Exception as e:
             logging.exception(e)
@@ -132,7 +137,11 @@ class Manager(object, metaclass=ManagerMeta):
                 cmd.track = await resolveCoverArt(cmd.track)
             elif isinstance(cmd, Search) and len(cmd.items):
                 cmd.items = await resolveSearch(cmd.items)
-            elif isinstance(cmd, LastAdded) or isinstance(cmd, RecentlyPlayed):
+            elif isinstance(cmd, LastAdded):
+                cmd.albums = await resolveAlbums(cmd.albums)
+            elif isinstance(cmd, RecentlyPlayed):
+                cmd.albums = await resolveAlbums(cmd.albums)
+            elif isinstance(cmd, ArtistAlbums):
                 cmd.albums = await resolveAlbums(cmd.albums)
             self.player_callback(cmd)
             self.__player_queue.task_done()
@@ -152,6 +161,9 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def __search(self, query):
         self.api.search_queue.put_nowait((Command.SEARCH, query))
+
+    async def __artist_albums(self, query):
+        self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
 
     async def __album(self, albumId):
         if self.api.playing:

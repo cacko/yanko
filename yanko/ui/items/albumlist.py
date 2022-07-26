@@ -70,6 +70,7 @@ class Albumlist:
         for album in albums:
             menu.append(AlbumMenuItem(album, callback=callback))
         self.menu.update(menu)
+        self.menu._menuitem.setEnabled_(True)
 
     def reset(self):
         for item in self.__items:

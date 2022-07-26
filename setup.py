@@ -14,7 +14,8 @@ OPTIONS = {
         'dataclasses_json',
         'requests',
         'tld',
-        'cachable'
+        'cachable',
+        'pillow'
     ],
 }
 setup(

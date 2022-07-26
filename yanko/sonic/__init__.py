@@ -21,6 +21,7 @@ class Command(Enum):
     SONG = 'song'
     SEARCH = 'search'
     ALBUMSONG = 'albumsong'
+    ARTIST_ALBUMS = 'artist_albums'
 
 
 class Action(Enum):
@@ -83,6 +84,7 @@ class Track:
     year: Optional[int] = None
     genre: Optional[str] = None
     coverArt: Optional[str] = None
+    coverArtIcon: Optional[str] = None
     contentType: Optional[str] = None
     suffix: Optional[str] = None
     bitRate: Optional[int] = None
@@ -117,6 +119,7 @@ class Album:
     year: Optional[int] = None
     genre: Optional[str] = None
     coverArt: Optional[str] = None
+    coverArtIcon: Optional[str] = None
     songCount: Optional[int] = None
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -155,6 +158,11 @@ class LastAdded:
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class RecentlyPlayed:
+    albums: list[Album]
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class ArtistAlbums:
     albums: list[Album]
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

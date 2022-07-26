@@ -15,7 +15,7 @@ OPTIONS = {
         'requests',
         'tld',
         'cachable',
-        'pillow'
+        'Pillow'
     ],
 }
 setup(

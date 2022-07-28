@@ -2,13 +2,21 @@ import logging
 from pathlib import Path
 from queue import LifoQueue
 from yanko.core import perftime
-from yanko.sonic import Action, ArtistAlbums, Command, NowPlaying, Playstatus, LastAdded, Search, Status, RecentlyPlayed
+from yanko.sonic import (
+    Action,
+    ArtistAlbums,
+    Command,
+    NowPlaying,
+    Playstatus,
+    LastAdded,
+    Search,
+    Status,
+    RecentlyPlayed
+)
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 import asyncio
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing.pool import ThreadPool
-from functools import partial
 from itertools import repeat
 
 

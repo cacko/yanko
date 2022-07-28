@@ -33,7 +33,10 @@ async def resolveCoverArt(obj):
     res: Path = await ca.path
     obj.coverArt = res.as_posix() if res.exists() else None
     icon: Path = await ca.icon_path
-    obj.coverArtIcon = icon.as_posix() if icon.exists() else None
+    if icon:
+        obj.coverArtIcon = icon.as_posix()
+    else:
+        obj.coverArtIcob = None
     return obj
 
 

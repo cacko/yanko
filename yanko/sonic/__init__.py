@@ -5,7 +5,28 @@ from marshmallow import fields
 from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional
 from yanko.core.string import truncate
+from yanko.core.date import isodate_decoder, isodate_encoder
 
+RESULT_KEYS = [
+    'searchResult3',
+    'playlists',
+    'searchResult2',
+    'searchResult',
+    'nowPlaying',
+    'randomSongs',
+    'albumList2',
+    'albumList',
+    'topSongs',
+    'similarSongs2',
+    'similarSongs',
+    'albumInfo',
+    'artistInfo2',
+    'artistInfo',
+    'song',
+    'album',
+    'artist',
+    'artists'
+]
 
 class Command(Enum):
     PLAY = 'play'
@@ -72,8 +93,8 @@ class Track:
     duration: int
     created: datetime = field(
         metadata=config(
-            encoder=datetime.isoformat,
-            decoder=datetime.fromisoformat,
+            encoder=isodate_encoder,
+            decoder=isodate_decoder,
             mm_field=fields.DateTime(format="iso", tzinfo=timezone.utc),
         )
     )
@@ -110,8 +131,8 @@ class Album:
     duration: int
     created: datetime = field(
         metadata=config(
-            encoder=datetime.isoformat,
-            decoder=datetime.fromisoformat,
+            encoder=isodate_encoder,
+            decoder=isodate_decoder,
             mm_field=fields.DateTime(format="iso", tzinfo=timezone.utc),
         )
     )
@@ -122,12 +143,15 @@ class Album:
     coverArtIcon: Optional[str] = None
     songCount: Optional[int] = None
 
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Artist:
     id: str
     name: str
     albumCount: Optional[int] = 0
+    artistImageUrl: Optional[str] = None
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -160,15 +184,18 @@ class LastAdded:
 class RecentlyPlayed:
     albums: list[Album]
 
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class ArtistAlbums:
     albums: list[Album]
 
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class SearchItemIcon:
     path: str
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -180,7 +207,31 @@ class SearchItem:
     icon: Optional[SearchItemIcon] = None
     type = "file:skipcheck"
 
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Search:
     items: list[SearchItem]
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Response:
+    status: str
+    serverVersion: str
+    type: str
+    version: str
+    error: Optional[dict]
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Search3Response:
+    artist: Optional[list[Artist]] = None
+    album: Optional[list[Album]] = None
+    song: Optional[list[Track]] = None
+
+    def __post_init__(self):
+        for k in ['artist', 'album', 'song']:
+            if not getattr(self, k):
+                setattr(self, k, [])

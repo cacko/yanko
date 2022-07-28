@@ -14,6 +14,7 @@ from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from yanko.sonic import (
     Action,
+    Artist,
     ArtistAlbums,
     Command,
     NowPlaying,
@@ -21,6 +22,7 @@ from yanko.sonic import (
     Playstatus,
     RecentlyPlayed,
     Search,
+    Search3Response,
     SearchItem,
     SearchItemIcon,
     Track,
@@ -28,7 +30,8 @@ from yanko.sonic import (
     LastAdded,
     Album,
     Subsonic,
-    AlbumType
+    AlbumType,
+    RESULT_KEYS
 )
 import requests
 from queue import LifoQueue
@@ -151,6 +154,7 @@ class Client(object):
             }
 
         subsonic_response = response.get('subsonic-response', {})
+
         status = subsonic_response.get('status', 'failed')
 
         if status == 'failed':
@@ -158,6 +162,10 @@ class Client(object):
             logging.error(
                 f"Command failed - {error.get('code')} {error.get('message')}")
             return None
+
+        for k,v in subsonic_response.items():
+            if k in RESULT_KEYS:
+                return v
 
         return response
 
@@ -169,29 +177,37 @@ class Client(object):
             results = self.make_request(
                 self.create_url(Subsonic.SEARCH3, query=query))
             if results:
-                results = results['subsonic-response'].get('searchResult3', [])
+                results: Search3Response = Search3Response.from_dict(results)
                 response = []
-                for album in results.get("album", []):
-                    coverArt = self.create_url(
-                        Subsonic.COVER_ART, id=album.get("id"), size=200)
-                    album = Album(**album)
+                for artist in results.artist:
+                    iconUrl = self.create_url(
+                        Subsonic.COVER_ART, id=artist.id, size=200)
+                    response.append(SearchItem(
+                        uid=artist.id,
+                        title=artist.name,
+                        subtitle=f"Total albums: {artist.albumCount}",
+                        arg=f"artist={artist.id}",
+                        icon=SearchItemIcon(path=iconUrl)
+                    ))
+                for album in results.album:
+                    iconUrl = self.create_url(
+                        Subsonic.COVER_ART, id=album.id, size=200)
                     response.append(SearchItem(
                         uid=album.id,
                         title=album.title,
                         subtitle=album.artist,
                         arg=f"album={album.id}",
-                        icon=SearchItemIcon(path=coverArt)
+                        icon=SearchItemIcon(path=iconUrl)
                     ))
-                for song in results.get("song", []):
-                    coverArt = self.create_url(
-                        Subsonic.COVER_ART, id=song.get("coverArt"), size=200)
-                    track = Track(**song)
+                for track in results.song:
+                    iconUrl = self.create_url(
+                        Subsonic.COVER_ART, id=track.coverArt, size=200)
                     response.append(SearchItem(
                         uid=track.id,
                         title=track.title,
                         subtitle=f"{track.artist} / {track.album}",
                         arg=f"albumsong={track.albumId}/{track.id}",
-                        icon=SearchItemIcon(path=coverArt)
+                        icon=SearchItemIcon(path=iconUrl)
                     ))
                 return response
         return []
@@ -199,14 +215,14 @@ class Client(object):
     def get_artists(self):
         artists = self.make_request(url=self.create_url(Subsonic.ARTISTS))
         if artists:
-            return artists['subsonic-response']['artists'].get('index', [])
+            return artists.get('index', [])
         return []
 
     def get_album_list(self, album_type: AlbumType):
         albums = self.make_request(self.create_url(
             Subsonic.ALBUM_LIST, type=album_type.value))
         if albums:
-            return albums['subsonic-response']['albumList'].get('album', [])
+            return albums.get('album', [])
         return []
 
     def get_last_added(self):
@@ -220,7 +236,7 @@ class Client(object):
             self.create_url(Subsonic.ALBUM, id=album_id))
         songs = []
 
-        for song in album_info['subsonic-response']['album'].get('song', []):
+        for song in album_info.get('song', []):
             songs.append(song)
 
         return songs
@@ -235,7 +251,7 @@ class Client(object):
                 if not random_songs:
                     return
 
-                songs = random_songs['subsonic-response']['randomSongs'].get(
+                songs = random_songs.get(
                     'song', [])
 
                 self.playqueue = songs[:]
@@ -270,7 +286,7 @@ class Client(object):
             if not similar_songs:
                 return
 
-            songs = similar_songs['subsonic-response']['similarSongs2'].get('song', [
+            songs = similar_songs.get('song', [
             ])
 
             self.manager_queue.put_nowait(
@@ -290,13 +306,11 @@ class Client(object):
             artist_info = self.make_request(
                 self.create_url(Subsonic.ARTIST, id=artist_id))
             if artist_info:
-                self.__artist_cache[artist_id] = artist_info['subsonic-response']['artist'].get(
-                    "album", [])
+                self.__artist_cache[artist_id] = artist_info.get("album", [])
         return self.__artist_cache[artist_id]
 
     def play_artist(self, artist_id):
         songs = []
-
         for album in self.get_artist(artist_id):
             songs += self.get_album_tracks(album.get('id'))
 
@@ -338,7 +352,7 @@ class Client(object):
     def play_playlist(self, playlist_id):
         playlist_info = self.make_request(
             self.create_url(Subsonic.PLAYLIST, id=playlist_id))
-        songs = playlist_info['subsonic-response']['playlist']['entry']
+        songs = playlist_info['entry']
 
         playing = True
 

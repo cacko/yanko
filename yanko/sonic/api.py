@@ -57,6 +57,7 @@ class Client(object):
     playing: bool = False
     playqueue: list[Track] = []
     skip_to: str = None
+    ffplay = None
     __artist_cache = {}
 
     BATCH_SIZE = 20
@@ -406,14 +407,14 @@ class Client(object):
                 Playstatus(status=Status.PLAYING)
             )
 
-            ffplay = Popen(params, env=self.environment)
+            self.ffplay = Popen(params, env=self.environment)
 
             has_finished = None
             self.playing = True
             self.lock_file.open("w+").close()
 
             while has_finished is None:
-                has_finished = ffplay.poll()
+                has_finished = self.ffplay.poll()
                 if self.playback_queue.empty():
                     time.sleep(0.1)
                     continue
@@ -422,14 +423,12 @@ class Client(object):
                 self.playback_queue.task_done()
 
                 match (command):
-                    case Action.EXIT:
-                        return self.__exit(ffplay)
                     case Action.RESTART:
-                        return self.__restart(ffplay, track_data)
+                        return self.__restart(track_data)
                     case Action.NEXT:
-                        return self.__next(ffplay)
+                        return self.__next()
                     case Action.STOP:
-                        return self.__stop(ffplay)
+                        return self.__stop()
 
             self.lock_file.unlink(missing_ok=True)
             return True
@@ -481,6 +480,8 @@ class Client(object):
                 case Command.ARTIST_ALBUMS:
                     self.manager_queue.put_nowait(ArtistAlbums(
                         albums=self.__toAlbums(self.get_artist, payload)))
+                case Command.QUIT:
+                    self.__exit()
             self.search_queue.task_done()
 
     def __toAlbums(self, fnc, *args):
@@ -490,34 +491,30 @@ class Client(object):
             for data in fnc(*args)
         ]
 
-    def __exit(self, ffplay):
+    def __terminate(self):
         self.lock_file.unlink(missing_ok=True)
-        ffplay.terminate()
-        self.manager_queue.put_nowait(
-            Playstatus(status=Status.EXIT))
-        self.playing = False
-        return False
-
-    def __stop(self, ffplay):
-        self.lock_file.unlink(missing_ok=True)
-        ffplay.terminate()
+        if self.ffplay:
+            self.ffplay.terminate()
+            self.ffplay = None
         self.manager_queue.put_nowait(
             Playstatus(status=Status.STOPPED))
         self.playing = False
+
+    def __exit(self):
+        self.__terminate()
+        self.manager_queue.put_nowait(
+            Playstatus(status=Status.EXIT)
+        )
         return False
 
-    def __restart(self, ffplay, track_data):
-        self.lock_file.unlink(missing_ok=True)
-        ffplay.terminate()
-        self.manager_queue.put_nowait(
-            Playstatus(status=Status.STOPPED))
-        self.playing = False
+    def __stop(self):
+        self.__terminate()
+        return False
+
+    def __restart(self, track_data):
+        self.__terminate()
         return self.play_stream(track_data)
 
-    def __next(self, ffplay):
-        self.lock_file.unlink(missing_ok=True)
-        ffplay.terminate()
-        self.manager_queue.put_nowait(
-            Playstatus(status=Status.STOPPED))
-        self.playing = False
+    def __next(self):
+        self.__terminate()
         return True

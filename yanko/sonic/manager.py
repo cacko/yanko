@@ -182,7 +182,7 @@ class Manager(object, metaclass=ManagerMeta):
             self.api.playback_queue.put_nowait(Action.NEXT)
 
     async def __quit(self):
-        self.api.playback_queue.put_nowait(Action.EXIT)
+        self.api.search_queue.put_nowait((Command.QUIT, None))
 
     async def __next(self):
         self.api.playback_queue.put_nowait(Action.NEXT)

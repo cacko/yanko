@@ -127,7 +127,7 @@ class YankoApp(rumps.App):
             self._menu.pop(itm)
         top = self.menu.keys()[0]
         self.__nowPlayingSection = [
-            self.menu.insert_before(top, NowPlayingItem(track, callback=self._onAlbumClick)),
+            self.menu.insert_before(top, NowPlayingItem(track, callback=self._onNowPlayClick)),
             self.menu.insert_before(top, None)
         ]
         self.icon = resp.track.coverArtIcon
@@ -144,8 +144,11 @@ class YankoApp(rumps.App):
     def _onPlaylistItem(self, sender):
         self.manager.commander.put_nowait((Command.SONG, sender.id))
 
-    def _onAlbumClick(self, sender: NowPlayingItem):
+    def _onNowPlayClick(self, sender: NowPlayingItem):
         self.manager.commander.put_nowait((Command.ALBUMSONG, f"{sender.id}/{sender.track.id}"))
+
+    def _onAlbumClick(self, sender: MusicItem):
+        self.manager.commander.put_nowait((Command.ALBUM, sender.id))
 
     def _onPlaystatus(self, resp: Playstatus):
         if resp.status == Status.PLAYING:
@@ -156,6 +159,7 @@ class YankoApp(rumps.App):
             ActionItem.restart.show()
         elif resp.status == Status.STOPPED:
             self.icon = Icon.STOPPED.value
+            self.title = ''
             ActionItem.stop.hide()
             if len(self.__playlist):
                 ActionItem.play.show()

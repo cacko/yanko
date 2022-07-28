@@ -1,0 +1,14 @@
+from contextlib import contextmanager
+import time
+import logging
+
+
+@contextmanager
+def perftime(name, silent=False):
+    st = time.perf_counter()
+    try:
+        yield
+    finally:
+        if not silent:
+            total = time.perf_counter() - st
+            logging.debug(f"{name} -> {total}s")

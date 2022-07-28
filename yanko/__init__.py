@@ -3,7 +3,6 @@ from os import environ
 from cachable.cacheable import Cachable
 from yanko.ui.app import YankoApp
 from yanko.core.config import app_config
-from pathlib import Path
 
 logging.basicConfig(
     level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "INFO")),

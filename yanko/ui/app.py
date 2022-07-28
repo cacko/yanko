@@ -169,6 +169,7 @@ class YankoApp(rumps.App):
                 ActionItem.next.hide()
             ActionItem.restart.hide()
         elif resp.status == Status.EXIT:
+            self.lock_file.unlink(missing_ok=True)
             rumps.quit_application()
 
     def _onLastAdded(self, resp: LastAdded):

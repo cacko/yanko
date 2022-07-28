@@ -1,11 +1,24 @@
 import logging
 from pathlib import Path
 from queue import LifoQueue
+from yanko.core import perftime
 from yanko.sonic import Action, ArtistAlbums, Command, NowPlaying, Playstatus, LastAdded, Search, Status, RecentlyPlayed
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from multiprocessing.pool import ThreadPool
+from functools import partial
+from itertools import repeat
+
+
+def run_async(args):
+    fn, obj = args
+    loop = asyncio.new_event_loop()
+    task = fn(obj)
+    res = loop.run_until_complete(task)
+    return res
+
 
 async def resolveCoverArt(obj):
     ca = CoverArtFile(obj.coverArt)
@@ -15,38 +28,47 @@ async def resolveCoverArt(obj):
     obj.coverArtIcon = icon.as_posix() if icon.exists() else None
     return obj
 
+
 async def resolveIcon(obj):
     ca = CoverArtFile(obj.icon.path)
     res: Path = await ca.path
     obj.icon.path = res.as_posix() if res.exists() else None
     return obj
 
+
 def find_idx_by_id(items, item, k='id'):
-    for idx,itm in enumerate(items):
+    for idx, itm in enumerate(items):
         if getattr(itm, k) == getattr(item, k):
             return idx
 
+
 async def resolveSearch(items):
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        jobs = [executor.submit(resolveIcon, item) for item in items]
-        for future in as_completed(jobs):
+    with ThreadPool(10) as pool:
+        jobs = pool.map(run_async, zip(repeat(resolveIcon, len(items)), items))
+        for res in jobs:
             try:
-                res = await future.result()
                 items[find_idx_by_id(items, res, 'uid')] = res
             except Exception as e:
                 logging.error(e, exc_info=True)
+        pool.close()
+        pool.join()
     return items
 
+
 async def resolveAlbums(albums):
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        jobs = [executor.submit(resolveCoverArt, album) for album in albums]
-        for future in as_completed(jobs):
-            try:
-                res = await future.result()
-                albums[find_idx_by_id(albums, res)] = res
-            except Exception as e:
-                logging.error(e, exc_info=True)
-    return albums
+    with perftime("resolve albums"):
+        with ThreadPool(10) as pool:
+            jobs = pool.map(run_async, zip(
+                repeat(resolveCoverArt, len(albums)), albums))
+            for res in jobs:
+                try:
+                    albums[find_idx_by_id(albums, res)] = res
+                except Exception as e:
+                    logging.error(e, exc_info=True)
+            pool.close()
+            pool.join()
+        return albums
+
 
 class ManagerMeta(type):
 

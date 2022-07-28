@@ -11,6 +11,7 @@ from subprocess import CalledProcessError, Popen
 from threading import Thread
 
 from dataclasses_json import dataclass_json
+from yanko.core import perftime
 from yanko.sonic import (
     Action,
     ArtistAlbums,
@@ -164,34 +165,35 @@ class Client(object):
         self.make_request(self.create_url(Subsonic.SCROBBLE, id=song_id))
 
     def search(self, query):
-        results = self.make_request(
-            self.create_url(Subsonic.SEARCH3, query=query))
-        if results:
-            results = results['subsonic-response'].get('searchResult3', [])
-            response = []
-            for album in results.get("album", []):
-                coverArt = self.create_url(
-                    Subsonic.COVER_ART, id=album.get("id"), size=200)
-                album = Album(**album)
-                response.append(SearchItem(
-                    uid=album.id,
-                    title=album.title,
-                    subtitle=album.artist,
-                    arg=f"album={album.id}",
-                    icon=SearchItemIcon(path=coverArt)
-                ))
-            for song in results.get("song", []):
-                coverArt = self.create_url(
-                    Subsonic.COVER_ART, id=song.get("coverArt"), size=200)
-                track = Track(**song)
-                response.append(SearchItem(
-                    uid=track.id,
-                    title=track.title,
-                    subtitle=f"{track.artist} / {track.album}",
-                    arg=f"albumsong={track.albumId}/{track.id}",
-                    icon=SearchItemIcon(path=coverArt)
-                ))
-            return response
+        with perftime("search"):
+            results = self.make_request(
+                self.create_url(Subsonic.SEARCH3, query=query))
+            if results:
+                results = results['subsonic-response'].get('searchResult3', [])
+                response = []
+                for album in results.get("album", []):
+                    coverArt = self.create_url(
+                        Subsonic.COVER_ART, id=album.get("id"), size=200)
+                    album = Album(**album)
+                    response.append(SearchItem(
+                        uid=album.id,
+                        title=album.title,
+                        subtitle=album.artist,
+                        arg=f"album={album.id}",
+                        icon=SearchItemIcon(path=coverArt)
+                    ))
+                for song in results.get("song", []):
+                    coverArt = self.create_url(
+                        Subsonic.COVER_ART, id=song.get("coverArt"), size=200)
+                    track = Track(**song)
+                    response.append(SearchItem(
+                        uid=track.id,
+                        title=track.title,
+                        subtitle=f"{track.artist} / {track.album}",
+                        arg=f"albumsong={track.albumId}/{track.id}",
+                        icon=SearchItemIcon(path=coverArt)
+                    ))
+                return response
         return []
 
     def get_artists(self):

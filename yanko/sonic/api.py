@@ -226,7 +226,6 @@ class Client(object):
         url = self.create_url(Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE)
         playing = True
         while playing:
-            songs = []
             if not self.skip_to:
                 random_songs = self.make_request(url)
 
@@ -236,13 +235,19 @@ class Client(object):
                 songs = random_songs['subsonic-response']['randomSongs'].get(
                     'song', [])
 
+                self.playqueue = songs[:]
+
                 self.manager_queue.put_nowait(
                     Playlist(
                         start=datetime.now(tz=timezone.utc),
                         tracks=[Track(**data) for data in songs]
                     )
                 )
-
+            else:
+                selected_song = next(filter(lambda sng: sng.get("id") == self.skip_to, self.playqueue), None)
+                if not selected_song:
+                    songs = self.playqueue[:]
+            
             for random_song in songs:
                 if not playing:
                     return

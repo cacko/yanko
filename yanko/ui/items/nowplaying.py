@@ -14,3 +14,7 @@ class NowPlayingItem(MusicItem):
         super().__init__(title, id, callback, key, icon, dimensions, template)
         tt = NSAttributedString.alloc().initWithString_(f"{track.artist}\n{track.title}\n{track.album}")
         self._menuitem.setAttributedTitle_(tt)
+
+    @property
+    def track(self) -> Track:
+        return self.__track

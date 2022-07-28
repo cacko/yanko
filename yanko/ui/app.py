@@ -144,8 +144,8 @@ class YankoApp(rumps.App):
     def _onPlaylistItem(self, sender):
         self.manager.commander.put_nowait((Command.SONG, sender.id))
 
-    def _onAlbumClick(self, sender: MusicItem):
-        self.manager.commander.put_nowait((Command.ALBUM, sender.id))
+    def _onAlbumClick(self, sender: NowPlayingItem):
+        self.manager.commander.put_nowait((Command.ALBUMSONG, f"{sender.id}/{sender.track.id}"))
 
     def _onPlaystatus(self, resp: Playstatus):
         if resp.status == Status.PLAYING:

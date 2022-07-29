@@ -19,6 +19,8 @@ class CoverArtFile(CachableFile):
             pu = urlparse(self._url)
             pa = parse_qs(pu.query)
             id = "".join(pa.get("id", []))
+            if not id:
+                id = self._url
             h = blake2b(digest_size=20)
             h.update(id.encode())
             self.__filename = f"{h.hexdigest()}.png"

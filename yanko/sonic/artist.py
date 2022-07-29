@@ -7,7 +7,7 @@ from yanko.sonic import ArtistInfo, ArtistInfoResponse
 class ArtistInfo(Cachable):
 
     _url = None
-    __id = None
+    _id = None
 
     def __init__(self, url) -> None:
         self._url = url
@@ -15,14 +15,14 @@ class ArtistInfo(Cachable):
 
     @property
     def id(self):
-        if not self.__id:
+        if not self._id:
             pu = urlparse(self._url)
             pa = parse_qs(pu.query)
             id = "".join(pa.get("id", []))
             h = blake2b(digest_size=20)
             h.update(id.encode())
-            self.__id = h.hexdigest
-        return self.__id
+            self._id = h.hexdigest
+        return self._id
 
     @property
     async def info(self)-> ArtistInfo:

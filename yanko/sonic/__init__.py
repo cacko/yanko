@@ -73,6 +73,7 @@ class Subsonic(Enum):
     DOWNLOAD = 'download'
     COVER_ART = 'getCoverArt'
     PING = 'ping'
+    ARTIST_INFO = 'getArtistInfo'
 
 
 class AlbumType(Enum):
@@ -151,7 +152,18 @@ class Artist:
     name: str
     albumCount: Optional[int] = 0
     artistImageUrl: Optional[str] = None
+    artist_info: Optional[str] = None
 
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class ArtistInfo:
+    biography: Optional[str] = None
+    musicBrainzId: Optional[str] = None
+    lastFmUrl: Optional[str] = None
+    smallImageUrl: Optional[str] = None
+    mediumImageUrl: Optional[str] = None
+    largeImageUrl: Optional[str] = None
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -207,6 +219,15 @@ class SearchItem:
     icon: Optional[SearchItemIcon] = None
     type = "file:skipcheck"
 
+class ArtistSearchItem(SearchItem):
+    pass
+
+class AlbumSearchItem(SearchItem):
+    pass
+
+class TrackSearchItem(SearchItem):
+    pass
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -214,15 +235,16 @@ class Search:
     items: list[SearchItem]
 
 
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Response:
-    status: str
-    serverVersion: str
-    type: str
-    version: str
-    error: Optional[dict]
-
+    status: Optional[str] = None
+    serverVersion: Optional[str] = None
+    type: Optional[str] = None
+    version: Optional[str] = None
+    error: Optional[dict] = None
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -235,3 +257,8 @@ class Search3Response:
         for k in ['artist', 'album', 'song']:
             if not getattr(self, k):
                 setattr(self, k, [])
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class ArtistInfoResponse(Response):
+    artistInfo: Optional[ArtistInfo] = None

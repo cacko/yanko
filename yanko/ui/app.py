@@ -1,5 +1,6 @@
+from traceback import print_exc
 import rumps
-from threading import Thread
+from yanko.core.thread import StoppableThread
 from yanko.sonic import (
     ArtistAlbums,
     Command,
@@ -25,9 +26,20 @@ import logging
 from yanko.core.string import truncate
 from yanko.api.server import Server
 
+class YankoAppMeta(type):
+
+    _instance = None
+
+    def __call__(self, *args, **kwds):
+        if not self._instance:
+            self._instance = super().__call__(*args, **kwds)
+        return self._instance
+
+    def quit(cls):
+        cls().terminate()
 
 
-class YankoApp(rumps.App):
+class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     manager: Manager = None
     __playlist: Playlist = None
@@ -35,6 +47,7 @@ class YankoApp(rumps.App):
     __artist_albums: Albumlist = None
     __recent: Albumlist = None
     __nowPlayingSection = []
+    __threads = []
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -66,15 +79,17 @@ class YankoApp(rumps.App):
         ActionItem.next.hide()
         ActionItem.restart.hide()
         self.manager = Manager()
-        t = Thread(target=self.manager.start, args=[
+        t = StoppableThread(target=self.manager.start, args=[
             self.onManagerResult,
             self.onPlayerResult
         ])
         t.start()
-        ts = Thread(target=Server.start, args=[
+        self.__threads.append(t)
+        ts = StoppableThread(target=Server.start, args=[
             self.manager.commander,
         ])
         ts.start()
+        self.__threads.append(ts)
         self.manager.commander.put_nowait((Command.NEWEST, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
 
@@ -169,7 +184,6 @@ class YankoApp(rumps.App):
                 ActionItem.next.hide()
             ActionItem.restart.hide()
         elif resp.status == Status.EXIT:
-            self.lock_file.unlink(missing_ok=True)
             rumps.quit_application()
 
     def _onLastAdded(self, resp: LastAdded):
@@ -183,3 +197,19 @@ class YankoApp(rumps.App):
     def _onArtistAlbums(self, resp: ArtistAlbums):
         albums = resp.albums
         self.__artist_albums.update(albums, self._onAlbumClick)
+
+    def terminate(self):
+        self.manager.commander.put_nowait((Command.QUIT, None))
+        for th in self.__threads:
+            try:
+                th.stop()
+            except Exception as e:
+                print_exc(e)
+                pass
+        try:
+            rumps.quit_application()
+        except Exception as e:
+            print_exc(e)
+
+    def __del__(self):
+        self.terminate()

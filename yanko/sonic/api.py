@@ -8,14 +8,15 @@ import sys
 import time
 from random import SystemRandom
 from subprocess import CalledProcessError, Popen
-from threading import Thread
-
+from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from yanko.sonic import (
     Action,
+    AlbumSearchItem,
     Artist,
     ArtistAlbums,
+    ArtistSearchItem,
     Command,
     NowPlaying,
     Playlist,
@@ -31,7 +32,9 @@ from yanko.sonic import (
     Album,
     Subsonic,
     AlbumType,
-    RESULT_KEYS
+    ArtistInfo,
+    RESULT_KEYS,
+    TrackSearchItem
 )
 import requests
 from queue import LifoQueue
@@ -63,6 +66,8 @@ class Client(object):
     skip_to: str = None
     ffplay = None
     __artist_cache = {}
+    __artistinfo_cache = {}
+    __threads = []
 
     BATCH_SIZE = 20
 
@@ -84,14 +89,16 @@ class Client(object):
         self.invert_random = streaming_config.get('invert_random', False)
 
         self.command_queue = LifoQueue()
-        input_thread = Thread(target=self.add_input)
+        input_thread = StoppableThread(target=self.add_input)
         input_thread.daemon = True
         input_thread.start()
+        self.__threads.append(input_thread)
 
         self.search_queue = LifoQueue()
-        search_thread = Thread(target=self.add_search)
+        search_thread = StoppableThread(target=self.add_search)
         search_thread.daemon = True
         search_thread.start()
+        self.__threads.append(search_thread)
 
         self.playback_queue = LifoQueue()
 
@@ -181,8 +188,8 @@ class Client(object):
                 response = []
                 for artist in results.artist:
                     iconUrl = self.create_url(
-                        Subsonic.COVER_ART, id=artist.id, size=200)
-                    response.append(SearchItem(
+                        Subsonic.ARTIST_INFO, id=artist.id)
+                    response.append(ArtistSearchItem(
                         uid=artist.id,
                         title=artist.name,
                         subtitle=f"Total albums: {artist.albumCount}",
@@ -192,7 +199,7 @@ class Client(object):
                 for album in results.album:
                     iconUrl = self.create_url(
                         Subsonic.COVER_ART, id=album.id, size=200)
-                    response.append(SearchItem(
+                    response.append(AlbumSearchItem(
                         uid=album.id,
                         title=album.title,
                         subtitle=album.artist,
@@ -202,7 +209,7 @@ class Client(object):
                 for track in results.song:
                     iconUrl = self.create_url(
                         Subsonic.COVER_ART, id=track.coverArt, size=200)
-                    response.append(SearchItem(
+                    response.append(TrackSearchItem(
                         uid=track.id,
                         title=track.title,
                         subtitle=f"{track.artist} / {track.album}",
@@ -306,8 +313,18 @@ class Client(object):
             artist_info = self.make_request(
                 self.create_url(Subsonic.ARTIST, id=artist_id))
             if artist_info:
+                artist_info['artist_info'] = self.create_url(Subsonic.ARTIST_INFO, id=artist_id)
                 self.__artist_cache[artist_id] = artist_info.get("album", [])
         return self.__artist_cache[artist_id]
+
+    def get_artist_info(self, artist_id):
+        if artist_id not in self.__artistinfo_cache:
+            artist_info = self.make_request(
+                self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
+            print(artist_info)
+            if artist_info:
+                self.__artistinfo_cache[artist_id] = ArtistInfo.from_dict(artist_info)
+        return self.__artistinfo_cache[artist_id]
 
     def play_artist(self, artist_id):
         songs = []
@@ -500,6 +517,14 @@ class Client(object):
                     self.__exit()
             self.search_queue.task_done()
 
+    def exit(self):
+        self.__terminate()
+        for th in self.__threads:
+            try:
+                th.stop()
+            except:
+                pass
+
     def __toAlbums(self, fnc, *args):
         return [
             Album(
@@ -517,7 +542,7 @@ class Client(object):
         self.playing = False
 
     def __exit(self):
-        self.__terminate()
+        self.exit()
         self.manager_queue.put_nowait(
             Playstatus(status=Status.EXIT)
         )

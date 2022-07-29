@@ -17,4 +17,9 @@ def start():
         cache_dir.parent.mkdir(parents=True)
     Cachable.register(app_config.get(
         "redis", {}).get("url"), cache_dir.as_posix())
-    YankoApp().run()
+    try:
+        app = YankoApp()
+        app.run()
+    except:
+        print('closing app')
+        YankoApp.quit()

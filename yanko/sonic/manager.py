@@ -5,16 +5,19 @@ from yanko.core import perftime
 from yanko.sonic import (
     Action,
     ArtistAlbums,
+    ArtistSearchItem,
     Command,
     NowPlaying,
     Playstatus,
     LastAdded,
     Search,
     Status,
-    RecentlyPlayed
+    RecentlyPlayed,
+    ArtistInfo as ArtistInfoData
 )
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
+from yanko.sonic.artist import ArtistInfo
 import asyncio
 from multiprocessing.pool import ThreadPool
 from itertools import repeat
@@ -41,6 +44,12 @@ async def resolveCoverArt(obj):
 
 
 async def resolveIcon(obj):
+    if isinstance(obj, ArtistSearchItem):
+        url = obj.icon.path
+        ai = ArtistInfo(url)
+        info: ArtistInfoData = await ai.info
+        if info:
+            obj.icon.path = info.largeImageUrl
     ca = CoverArtFile(obj.icon.path)
     res: Path = await ca.path
     obj.icon.path = res.as_posix() if res.exists() else None

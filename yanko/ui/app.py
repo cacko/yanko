@@ -25,6 +25,7 @@ from yanko.ui.items.nowplaying import NowPlayingItem
 import logging
 from yanko.core.string import truncate
 from yanko.api.server import Server
+from yanko.lametric import LaMetric
 
 class YankoAppMeta(type):
 
@@ -136,6 +137,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     def _onNowPlaying(self, resp: NowPlaying):
         track = resp.track
+        LaMetric.nowplaying(f"{track.artist} / {track.title}")
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:

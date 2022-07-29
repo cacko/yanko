@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 import toml
 import os
-import click
+from appdir import get_app_dir
 
 def import_string(import_name: str, silent: bool = False) -> t.Any:
     import_name = import_name.replace(":", ".")
@@ -184,7 +184,7 @@ class app_config_meta(type):
 
     @property
     def app_dir(cls):
-        return Path(click.get_app_dir("Yanko")).expanduser()
+        return Path(get_app_dir("Yanko")).expanduser()
 
 class app_config(object, metaclass=app_config_meta):
 

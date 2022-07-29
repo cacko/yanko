@@ -15,7 +15,8 @@ OPTIONS = {
         'requests',
         'tld',
         'cachable',
-        'PIL'
+        'PIL',
+        'appdir'
     ],
 }
 setup(

@@ -24,7 +24,6 @@ from yanko.sonic import (
     RecentlyPlayed,
     Search,
     Search3Response,
-    SearchItem,
     SearchItemIcon,
     Track,
     Status,
@@ -232,11 +231,18 @@ class Client(object):
             return albums.get('album', [])
         return []
 
-    def get_last_added(self):
-        return self.get_album_list(AlbumType.NEWEST)
+    def get_last_added(self) -> list[Album]:
+        return self.__toAlbums(self.get_album_list, AlbumType.NEWEST)
 
-    def get_recently_played(self):
-        return self.get_album_list(AlbumType.RECENT)
+    def get_recently_played(self) -> list[Album]:
+        return self.__toAlbums(self.get_album_list, AlbumType.RECENT)
+
+    def get_top_songs(self, artist_id):
+        artist_info = self.get_artist(artist_id)
+        top_songs = self.make_request(
+            self.create_url(Subsonic.TOP_SONGS, artist=artist_info.name)
+        )
+        return top_songs.get("song")
 
     def get_album_tracks(self, album_id):
         album_info = self.make_request(
@@ -247,6 +253,29 @@ class Client(object):
             songs.append(song)
 
         return songs
+
+    def get_artist(self, artist_id) -> Artist:
+        if artist_id not in self.__artist_cache:
+            artist_info = self.make_request(
+                self.create_url(Subsonic.ARTIST, id=artist_id))
+            if artist_info:
+                self.__artist_cache[artist_id] = Artist.from_dict(artist_info)
+        return self.__artist_cache[artist_id]
+
+    def get_artist_info(self, artist_id):
+        if artist_id not in self.__artistinfo_cache:
+            artist_info = self.make_request(
+                self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
+            if artist_info:
+                self.__artistinfo_cache[artist_id] = ArtistInfo.from_dict(artist_info)
+        return self.__artistinfo_cache[artist_id]
+
+    def get_artist_albums(self, artist_id) -> list[Album]:
+        artist = self.get_artist(artist_id)
+        albums = artist.album
+        for album in albums:
+            album.coverArt = self.create_url(Subsonic.COVER_ART, id=album.id, size=200)
+        return albums
 
     def play_random_songs(self):
         url = self.create_url(Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE)
@@ -308,28 +337,15 @@ class Client(object):
                     return
                 playing = self.play_stream(dict(radio_track))
 
-    def get_artist(self, artist_id):
-        if artist_id not in self.__artist_cache:
-            artist_info = self.make_request(
-                self.create_url(Subsonic.ARTIST, id=artist_id))
-            if artist_info:
-                artist_info['artist_info'] = self.create_url(Subsonic.ARTIST_INFO, id=artist_id)
-                self.__artist_cache[artist_id] = artist_info.get("album", [])
-        return self.__artist_cache[artist_id]
-
-    def get_artist_info(self, artist_id):
-        if artist_id not in self.__artistinfo_cache:
-            artist_info = self.make_request(
-                self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
-            print(artist_info)
-            if artist_info:
-                self.__artistinfo_cache[artist_id] = ArtistInfo.from_dict(artist_info)
-        return self.__artistinfo_cache[artist_id]
 
     def play_artist(self, artist_id):
-        songs = []
-        for album in self.get_artist(artist_id):
-            songs += self.get_album_tracks(album.get('id'))
+        songs = self.get_top_songs(artist_id)
+        self.manager_queue.put_nowait(
+            Playlist(
+                start=datetime.now(tz=timezone.utc),
+                tracks=[Track(**data) for data in songs]
+            )
+        )
 
         playing = True
 
@@ -487,12 +503,14 @@ class Client(object):
                     self.play_random_songs()
                 case Command.ALBUM:
                     self.play_album(payload)
+                case Command.ARTIST:
+                    self.play_artist(payload)
                 case Command.RECENTLY_PLAYED:
                     self.manager_queue.put_nowait(RecentlyPlayed(
-                        albums=self.__toAlbums(self.get_recently_played)))
+                        albums=self.get_recently_played()))
                 case Command.NEWEST:
                     self.manager_queue.put_nowait(
-                        LastAdded(albums=self.__toAlbums(self.get_last_added)))
+                        LastAdded(albums=self.get_last_added()))
                 case Command.SONG:
                     self.skip_to = payload
                 case Command.SEARCH:
@@ -512,7 +530,7 @@ class Client(object):
                         Search(items=self.search(payload)))
                 case Command.ARTIST_ALBUMS:
                     self.manager_queue.put_nowait(ArtistAlbums(
-                        albums=self.__toAlbums(self.get_artist, payload)))
+                        albums=self.get_artist_albums(payload)))
                 case Command.QUIT:
                     self.__exit()
             self.search_queue.task_done()

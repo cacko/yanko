@@ -21,5 +21,4 @@ def start():
         app = YankoApp()
         app.run()
     except:
-        print('closing app')
         YankoApp.quit()

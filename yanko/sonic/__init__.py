@@ -25,7 +25,8 @@ RESULT_KEYS = [
     'song',
     'album',
     'artist',
-    'artists'
+    'artists',
+    'topSongs'
 ]
 
 class Command(Enum):
@@ -42,6 +43,7 @@ class Command(Enum):
     SONG = 'song'
     SEARCH = 'search'
     ALBUMSONG = 'albumsong'
+    ARTIST = 'artist'
     ARTIST_ALBUMS = 'artist_albums'
 
 
@@ -74,6 +76,7 @@ class Subsonic(Enum):
     COVER_ART = 'getCoverArt'
     PING = 'ping'
     ARTIST_INFO = 'getArtistInfo'
+    TOP_SONGS = 'getTopSongs'
 
 
 class AlbumType(Enum):
@@ -153,6 +156,12 @@ class Artist:
     albumCount: Optional[int] = 0
     artistImageUrl: Optional[str] = None
     artist_info: Optional[str] = None
+    coverArt: Optional[str] = None
+    album: Optional[list[Album]] = None
+
+    def __post_init__(self):
+        if not self.album:
+            self.album = []
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

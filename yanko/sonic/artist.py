@@ -31,7 +31,6 @@ class ArtistInfo(Cachable):
             rq = Request(self._url)
             rq.ENABLE_RANDOM_USER_AGENT = False
             json = await rq.json
-            print(json)
             if json:
                 resp = ArtistInfoResponse.from_dict(json.get("subsonic-response"))
                 self._struct = resp.artistInfo

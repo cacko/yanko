@@ -158,6 +158,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__recently_played()
                 case Command.ALBUM:
                     await self.__album(payload)
+                case Command.ARTIST:
+                    await self.__artist(payload)
                 case Command.SONG:
                     await self.__song(payload)
                 case Command.SEARCH:
@@ -211,6 +213,11 @@ class Manager(object, metaclass=ManagerMeta):
         if self.api.playing:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
+
+    async def __artist(self, artistId):
+        if self.api.playing:
+            self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.command_queue.put_nowait((Command.ARTIST, artistId))
 
     async def __albumsong(self, albumId, songId):
         self.api.skip_to = songId

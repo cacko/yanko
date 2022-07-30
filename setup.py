@@ -17,7 +17,9 @@ OPTIONS = {
         'cachable',
         'PIL',
         'appdir',
-        'pyotp'
+        'pyotp',
+        'cv2',
+        'numpy'
     ],
 }
 setup(

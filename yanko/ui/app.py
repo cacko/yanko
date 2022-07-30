@@ -138,7 +138,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     def _onNowPlaying(self, resp: NowPlaying):
         track = resp.track
-        LaMetric.nowplaying(f"{track.artist} / {track.title}")
+        LaMetric.nowplaying(f"{track.artist} / {track.title}", track.coverArt)
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:

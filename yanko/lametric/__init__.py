@@ -3,7 +3,7 @@ import requests
 from cachable.request import Method
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
-
+from yanko.lametric.pixel import pixelate
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -35,7 +35,12 @@ class LaMetricMeta(type):
             self._instance = super().__call__(*args, **kwds)
         return self._instance
 
-    def nowplaying(cls, text, icon=17668, priority="info"):
+    def nowplaying(cls, text, icon, priority="info"):
+        if not icon:
+            icon = 17668
+        else:
+            icon = pixelate(icon)
+        print(icon)
         cls().do_notification(Notification(
             priority=priority,
             model=NotificationModel(

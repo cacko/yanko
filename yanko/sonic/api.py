@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import hashlib
 import logging
 from nntplib import ArticleInfo
-import os
+from os import environ
 from pathlib import Path
 import string
 import sys
@@ -445,7 +445,11 @@ class Client(object):
                 Playstatus(status=Status.PLAYING)
             )
 
-            self.ffplay = Popen(params, env=self.environment)
+            env = dict(
+                environ,
+                PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
+            )
+            self.ffplay = Popen(params, env=env)
 
             has_finished = None
             self.playing = True

@@ -43,6 +43,13 @@ async def resolveCoverArt(obj):
     return obj
 
 
+async def resolveArtistImage(obj: ArtistInfoData):
+    ca = CoverArtFile(obj.largeImageUrl)
+    res: Path = await ca.path
+    obj.image = res.as_posix() if res.exists() else None
+    return obj
+
+
 async def resolveIcon(obj):
     if isinstance(obj, ArtistSearchItem):
         url = obj.icon.path
@@ -186,6 +193,7 @@ class Manager(object, metaclass=ManagerMeta):
             elif isinstance(cmd, RecentlyPlayed):
                 cmd.albums = await resolveAlbums(cmd.albums)
             elif isinstance(cmd, ArtistAlbums):
+                cmd.artistInfo = await resolveArtistImage(cmd.artistInfo)
                 cmd.albums = await resolveAlbums(cmd.albums)
             self.player_callback(cmd)
             self.__player_queue.task_done()

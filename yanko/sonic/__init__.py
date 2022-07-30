@@ -29,6 +29,7 @@ RESULT_KEYS = [
     'topSongs'
 ]
 
+
 class Command(Enum):
     PLAY = 'play'
     STOP = 'stop'
@@ -173,6 +174,8 @@ class ArtistInfo:
     smallImageUrl: Optional[str] = None
     mediumImageUrl: Optional[str] = None
     largeImageUrl: Optional[str] = None
+    image: Optional[str] = None
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -210,6 +213,7 @@ class RecentlyPlayed:
 @dataclass
 class ArtistAlbums:
     albums: list[Album]
+    artistInfo: Optional[ArtistInfo] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -228,11 +232,14 @@ class SearchItem:
     icon: Optional[SearchItemIcon] = None
     type = "file:skipcheck"
 
+
 class ArtistSearchItem(SearchItem):
     pass
 
+
 class AlbumSearchItem(SearchItem):
     pass
+
 
 class TrackSearchItem(SearchItem):
     pass
@@ -244,8 +251,6 @@ class Search:
     items: list[SearchItem]
 
 
-
-
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Response:
@@ -254,6 +259,7 @@ class Response:
     type: Optional[str] = None
     version: Optional[str] = None
     error: Optional[dict] = None
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -266,6 +272,7 @@ class Search3Response:
         for k in ['artist', 'album', 'song']:
             if not getattr(self, k):
                 setattr(self, k, [])
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass

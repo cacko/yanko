@@ -20,7 +20,7 @@ from yanko.ui.models import (
 )
 from yanko.sonic.manager import Manager
 from yanko.ui.items.playlist import Playlist
-from yanko.ui.items.albumlist import Albumlist
+from yanko.ui.items.albumlist import Albumlist, ArtistAlbumsList
 from yanko.ui.items.nowplaying import NowPlayingItem
 import logging
 from yanko.core.string import truncate
@@ -73,7 +73,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.menu.setAutoenablesItems = False
         self.__playlist = Playlist(self, Label.RANDOM.value)
         self.__last_added = Albumlist(self, Label.NEWEST.value)
-        self.__artist_albums = Albumlist(self, Label.ARTIST.value)
+        self.__artist_albums = ArtistAlbumsList(self, Label.ARTIST.value)
         self.__recent = Albumlist(self, Label.RECENT.value)
         ActionItem.stop.hide()
         ActionItem.play.hide()
@@ -167,6 +167,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onAlbumClick(self, sender: MusicItem):
         self.manager.commander.put_nowait((Command.ALBUM, sender.id))
 
+    def _onArtistClick(self, sender: MusicItem):
+        self.manager.commander.put_nowait((Command.ARTIST, sender.id))
+
     def _onPlaystatus(self, resp: Playstatus):
         if resp.status == Status.PLAYING:
             ActionItem.stop.show()
@@ -198,7 +201,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     def _onArtistAlbums(self, resp: ArtistAlbums):
         albums = resp.albums
-        self.__artist_albums.update(albums, self._onAlbumClick)
+        artistInfo = resp.artistInfo
+        self.__artist_albums.update(artistInfo, albums, self._onAlbumClick, self._onArtistClick)
 
     def terminate(self):
         self.manager.commander.put_nowait((Command.QUIT, None))

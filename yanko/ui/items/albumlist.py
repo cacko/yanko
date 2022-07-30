@@ -1,17 +1,31 @@
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
-from yanko.sonic import Album
+from yanko.sonic import Album, ArtistInfo
 from rumps import Menu
 from yanko.ui.models import MusicItem
-from rumps import App, MenuItem
+from rumps import App
 from AppKit import NSAttributedString
-
+from bs4 import BeautifulSoup
+from textwrap import wrap
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class AlbumItem:
     album: Album
     key: str
+
+
+class ArtistInfoItem(MusicItem):
+    def __init__(self, id, artist: str, info: ArtistInfo, callback=None, key=None, icon=None, dimensions=None, template=None):
+        bio_bs = BeautifulSoup(info.biography, features="html.parser")
+        biography = "\n".join(wrap(bio_bs.get_text(), width=50, max_lines=4))
+        title = f"{artist} - {biography}"
+        dimensions = [70, 70]
+        icon = info.image
+        super().__init__(title, id, callback, key, icon, dimensions, template)
+        tt = NSAttributedString.alloc().initWithString_(
+            f"{artist.upper()}\n{biography}")
+        self._menuitem.setAttributedTitle_(tt)
 
 
 class AlbumMenuItem(MusicItem):
@@ -75,3 +89,21 @@ class Albumlist:
     def reset(self):
         for item in self.__items:
             self.menu.pop(item.key)
+
+
+class ArtistAlbumsList(Albumlist):
+
+    def update(self, info: ArtistInfo, albums: Album, callback, callback_artist):
+        if len(self.menu.keys()):
+            self.menu.clear()
+        menu = []
+        menu.append(ArtistInfoItem(
+            id=albums[0].artistId,
+            artist=albums[0].artist,
+            info=info,
+            callback=callback_artist
+        ))
+        for album in albums:
+            menu.append(AlbumMenuItem(album, callback=callback))
+        self.menu.update(menu)
+        self.menu._menuitem.setEnabled_(True)

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import hashlib
 import logging
+from nntplib import ArticleInfo
 import os
 from pathlib import Path
 import string
@@ -64,8 +65,6 @@ class Client(object):
     playqueue: list[Track] = []
     skip_to: str = None
     ffplay = None
-    __artist_cache = {}
-    __artistinfo_cache = {}
     __threads = []
 
     BATCH_SIZE = 20
@@ -169,7 +168,7 @@ class Client(object):
                 f"Command failed - {error.get('code')} {error.get('message')}")
             return None
 
-        for k,v in subsonic_response.items():
+        for k, v in subsonic_response.items():
             if k in RESULT_KEYS:
                 return v
 
@@ -255,26 +254,23 @@ class Client(object):
         return songs
 
     def get_artist(self, artist_id) -> Artist:
-        if artist_id not in self.__artist_cache:
-            artist_info = self.make_request(
-                self.create_url(Subsonic.ARTIST, id=artist_id))
-            if artist_info:
-                self.__artist_cache[artist_id] = Artist.from_dict(artist_info)
-        return self.__artist_cache[artist_id]
+        artist_info = self.make_request(
+            self.create_url(Subsonic.ARTIST, id=artist_id))
+        return Artist.from_dict(artist_info)
 
-    def get_artist_info(self, artist_id):
-        if artist_id not in self.__artistinfo_cache:
-            artist_info = self.make_request(
-                self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
-            if artist_info:
-                self.__artistinfo_cache[artist_id] = ArtistInfo.from_dict(artist_info)
-        return self.__artistinfo_cache[artist_id]
+    def get_artist_info(self, artist_id) -> ArticleInfo:
+        artist_info = self.make_request(
+            self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
+        if artist_info:
+            return ArtistInfo.from_dict(
+                artist_info)
 
     def get_artist_albums(self, artist_id) -> list[Album]:
         artist = self.get_artist(artist_id)
         albums = artist.album
         for album in albums:
-            album.coverArt = self.create_url(Subsonic.COVER_ART, id=album.id, size=200)
+            album.coverArt = self.create_url(
+                Subsonic.COVER_ART, id=album.id, size=200)
         return albums
 
     def play_random_songs(self):
@@ -299,10 +295,11 @@ class Client(object):
                     )
                 )
             else:
-                selected_song = next(filter(lambda sng: sng.get("id") == self.skip_to, self.playqueue), None)
+                selected_song = next(filter(lambda sng: sng.get(
+                    "id") == self.skip_to, self.playqueue), None)
                 if not selected_song:
                     songs = self.playqueue[:]
-            
+
             for random_song in songs:
                 if not playing:
                     return
@@ -336,7 +333,6 @@ class Client(object):
                 if not playing:
                     return
                 playing = self.play_stream(dict(radio_track))
-
 
     def play_artist(self, artist_id):
         songs = self.get_top_songs(artist_id)
@@ -530,6 +526,7 @@ class Client(object):
                         Search(items=self.search(payload)))
                 case Command.ARTIST_ALBUMS:
                     self.manager_queue.put_nowait(ArtistAlbums(
+                        artistInfo=self.get_artist_info(payload),
                         albums=self.get_artist_albums(payload)))
                 case Command.QUIT:
                     self.__exit()

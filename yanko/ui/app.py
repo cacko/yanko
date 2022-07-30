@@ -193,7 +193,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.play.hide()
                 ActionItem.next.hide()
             ActionItem.restart.hide()
+            LaMetric.onstop()
         elif resp.status == Status.EXIT:
+            LaMetric.onstop()
             rumps.quit_application()
 
     def _onLastAdded(self, resp: LastAdded):

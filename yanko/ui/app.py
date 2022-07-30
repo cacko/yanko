@@ -5,6 +5,7 @@ from yanko.sonic import (
     ArtistAlbums,
     Command,
     Playlist,
+    AlbumPlaylist,
     NowPlaying,
     LastAdded,
     RecentlyPlayed,
@@ -157,6 +158,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onPlaylist(self, resp: Playlist):
         list = resp.tracks
         self.__playlist.update(list, self._onPlaylistItem)
+
+    def _onAlbumPlaylist(self, resp: AlbumPlaylist):
+        list = resp.tracks
+        self.__playlist.update(list, self._onPlaylistItem, True)
 
     def _onPlaylistItem(self, sender):
         self.manager.commander.put_nowait((Command.SONG, sender.id))

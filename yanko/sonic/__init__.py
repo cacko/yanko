@@ -117,11 +117,14 @@ class Track:
     path: Optional[str] = None
     discNumber: Optional[int] = None
 
-    def displayTitle(self, idx=None) -> str:
+    def displayTitle(self, idx=None, isAlbum=False) -> str:
+        parts = [self.artist, truncate(self.title)]
+        if isAlbum:
+            parts = [truncate(self.title, 30)]
         if idx is None:
-            return f"{self.artist} ∕ {truncate(self.title)}"
+            return f"{' / '.join(parts)}"
         nm = idx + 1
-        return f"{nm:02d}. {self.artist} ∕ {truncate(self.title)}"
+        return f"{nm:02d}. {' / '.join(parts)}"
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -189,6 +192,12 @@ class NowPlaying:
 class Playlist:
     tracks: list[Track]
     start: datetime
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class AlbumPlaylist(Playlist):
+    pass
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

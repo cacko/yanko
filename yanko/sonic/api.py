@@ -14,6 +14,7 @@ from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from yanko.sonic import (
     Action,
+    AlbumPlaylist,
     AlbumSearchItem,
     Artist,
     ArtistAlbums,
@@ -356,7 +357,7 @@ class Client(object):
         playing = True
 
         self.manager_queue.put_nowait(
-            Playlist(
+            AlbumPlaylist(
                 start=datetime.now(tz=timezone.utc),
                 tracks=[Track(**data) for data in songs]
             )
@@ -456,7 +457,7 @@ class Client(object):
             self.lock_file.open("w+").close()
 
             while has_finished is None:
-                has_finished = self.ffplay.poll()
+                has_finished = self.ffplay.poll() if self.ffplay else True
                 if self.playback_queue.empty():
                     time.sleep(0.1)
                     continue

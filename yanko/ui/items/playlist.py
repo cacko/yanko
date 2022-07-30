@@ -53,6 +53,7 @@ class Playlist:
     __items: list[PlaylistItem] = []
     __app: App = None
     __insert_before: str = None
+    __isAlbum = False
 
     def __init__(self, app: App, insert_before: str) -> None:
         self.__app = app
@@ -86,9 +87,10 @@ class Playlist:
     def append(self, item: PlaylistItem):
         self.__items.append(item)
 
-    def update(self, tracks: list[Track], callback):
+    def update(self, tracks: list[Track], callback, isAlbum=False):
         self.reset()
         menu = self.__app.menu
+        self.__isAlbum = isAlbum
         insert_before = self.__insert_before
         insert_after = None
         for idx, track in enumerate(tracks):
@@ -96,7 +98,7 @@ class Playlist:
                 insert_after = menu.insert_after(
                     insert_after,
                     PlaylistMenuItem(
-                        track.displayTitle(idx),
+                        track.displayTitle(idx, isAlbum=self.__isAlbum),
                         callback=callback,
                         id=track.id
                     )
@@ -105,7 +107,7 @@ class Playlist:
                 insert_after = menu.insert_before(
                     insert_before,
                     PlaylistMenuItem(
-                        track.displayTitle(idx),
+                        track.displayTitle(idx, isAlbum=self.__isAlbum),
                         callback=callback,
                         id=track.id
                     )
@@ -134,6 +136,6 @@ class Playlist:
             menu_item = menu.get(item.key)
             if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
                 if menu_item.id == track.id:
-                    menu_item.setAttrTitle(f"🔈 {item.track.displayTitle()}")
+                    menu_item.setAttrTitle(f"🔈 {item.track.displayTitle(isAlbum=self.__isAlbum)}")
                 else:
-                    menu_item.setAttrTitle(item.track.displayTitle(idx))
+                    menu_item.setAttrTitle(item.track.displayTitle(idx, isAlbum=self.__isAlbum))

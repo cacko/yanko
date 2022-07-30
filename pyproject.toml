@@ -27,8 +27,7 @@ bottle = "^0.12.21"
 Pillow = "^9.2.0"
 appdir = "^0.2"
 pyotp = "^2.6.0"
-numpy = "^1.23.1"
-opencv-python = "^4.6.0"
+pixelme = "^0.3"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

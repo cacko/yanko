@@ -279,6 +279,23 @@ docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-issues
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "pixelme"
+version = "0.3"
+description = "whatever"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = "*"
+opencv-python = "*"
+
+[package.source]
+type = "legacy"
+url = "https://pypi.cacko.net/simple"
+reference = "cacko"
+
+[[package]]
 name = "py2app"
 version = "0.28.2"
 description = "Create standalone Mac OS X applications with Python"
@@ -2385,7 +2402,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "5aa1bb7ade1f0c92e5eee4ca140c55543033aed34af85393dbc78edb034a9c6d"
+content-hash = "b9f6161e135871eaa0ba90bf173c63cbac70182055ce0c593070c218ca9a867a"
 
 [metadata.files]
 altgraph = [
@@ -2562,6 +2579,9 @@ pillow = [
     {file = "Pillow-9.2.0-pp38-pypy38_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:96b5e6874431df16aee0c1ba237574cb6dff1dcb173798faa6a9d8b399a05d0e"},
     {file = "Pillow-9.2.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:0030fdbd926fb85844b8b92e2f9449ba89607231d3dd597a21ae72dc7fe26927"},
     {file = "Pillow-9.2.0.tar.gz", hash = "sha256:75e636fd3e0fb872693f23ccb8a5ff2cd578801251f3a4f6854c6a5d437d3c04"},
+]
+pixelme = [
+    {file = "pixelme-0.3-py3-none-any.whl", hash = "md5:5ce10d91ea70c9d831ea5051c9556481"},
 ]
 py2app = [
     {file = "py2app-0.28.2-py2.py3-none-any.whl", hash = "sha256:761d5e4b3f587206429367ad0abb629ff98c7b65c5767f60d2b0ed81039ded13"},

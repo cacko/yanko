@@ -53,6 +53,7 @@ class Action(Enum):
     RESTART = 'b'
     EXIT = 'x'
     STOP = 's'
+    TOGGLE = 'p'
 
 
 class Status(Enum):

@@ -1,9 +1,11 @@
+from re import I
 from rumps import MenuItem
 from pathlib import Path
 from enum import Enum
 
 class Label(Enum):
     PLAY = 'Play'
+    PAUSE = 'Pause'
     STOP = 'Stop'
     FIND = 'Find'
     RANDOM = 'Random'
@@ -32,6 +34,7 @@ class Icon(Enum):
     NOWPLAYING = 'nowplaying.png'
     DEFAULT_ART = 'default_art.png'
     RECENT = 'recents.png'
+    PAUSE = 'pause.png'
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"
@@ -51,12 +54,8 @@ class ActionItemMeta(type):
         return cls._instances[name]
 
     @property
-    def play(cls) -> 'ActionItem':
-        return cls("start", Label.PLAY.value, icon=Icon.PLAY.value)
-
-    @property
-    def stop(cls) -> 'ActionItem':
-        return cls("stop", Label.STOP.value, icon=Icon.STOP.value)
+    def toggle(cls) -> 'ActionItem':
+        return cls("start", Label.PLAY.value, icon=Icon.PAUSE.value)
 
     @property
     def next(cls) -> 'ActionItem':
@@ -110,7 +109,10 @@ class MusicItem(MenuItem):
 
 
 class ToggleAction(ActionItem):
-    _states = ['hide', 'show']
+    _icons = [Icon.PAUSE.value, Icon.PLAY.value]
+    _labels = [Label.PAUSE.value, Label.PLAY.value]
+    _state = 0
 
-    def toggle(self, state: bool):
-        getattr(self, self._states[int(state)])()
+    def toggle(self):
+        self._state ^= 1
+        self.icon = self._icons[self._state]

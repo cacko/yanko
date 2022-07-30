@@ -8,7 +8,7 @@ import string
 import sys
 import time
 from random import SystemRandom
-from subprocess import CalledProcessError, Popen
+from subprocess import CalledProcessError, Popen, PIPE
 from yanko.core.thread import StoppableThread, process
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
@@ -82,9 +82,6 @@ class Client(object):
         self.search_results = []
 
         streaming_config = app_config.get('streaming', {})
-        self.format = streaming_config.get('format', 'raw')
-        self.display = streaming_config.get('display', False)
-        self.show_mode = streaming_config.get('show_mode', 0)
         self.invert_random = streaming_config.get('invert_random', False)
 
         self.command_queue = LifoQueue()
@@ -111,6 +108,10 @@ class Client(object):
     @property
     def lock_file(self) -> Path:
         return app_config.app_dir / "play.lock"
+
+    @property
+    def playlist_file(self) -> Path:
+        return app_config.app_dir / "playlist.txt"
 
     @property
     def api_args(self) -> dict[str, str]:
@@ -288,6 +289,12 @@ class Client(object):
                     'song', [])
 
                 self.playqueue = songs[:]
+                stream_url = self.create_url(Subsonic.DOWNLOAD)
+
+                with self.playlist_file.open("w") as pf:
+                    for song in songs:
+                        song_id = song.get("id")
+                        pf.write(f"file '{stream_url}&id={song_id}&format=raw'\n")
 
                 self.manager_queue.put_nowait(
                     Playlist(
@@ -404,29 +411,17 @@ class Client(object):
         params = [
             'ffplay',
             '-i',
-            '{}&id={}&format={}'.format(stream_url, song_id, self.format),
-            '-showmode',
-            '{}'.format(self.show_mode),
-            '-window_title',
-            '{} by {}'.format(
-                track_data.get('title', ''),
-                track_data.get('artist', '')
-            ),
+            '{}&id={}&format=raw'.format(stream_url, song_id),
             '-autoexit',
+            '-nodisp',
+            '-fs',
             '-hide_banner',
-            '-x',
-            '500',
-            '-y',
-            '500',
             '-loglevel',
             'fatal',
             '-infbuf',
         ]
 
         params = self.pre_exe + params if len(self.pre_exe) > 0 else params
-
-        if not self.display:
-            params += ['-nodisp']
 
         try:
             coverArt = track_data.get("coverArt")
@@ -450,7 +445,7 @@ class Client(object):
                 environ,
                 PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
             )
-            self.ffplay = Popen(params, env=env)
+            self.ffplay = Popen(params, env=env, stdin=PIPE)
 
             has_finished = None
             self.playing = True

@@ -4,6 +4,7 @@ from cachable.request import Method
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 from yanko.lametric.pixel import pixelate
+from pathlib import Path
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -39,8 +40,7 @@ class LaMetricMeta(type):
         if not icon:
             icon = 17668
         else:
-            icon = pixelate(icon)
-        print(icon)
+            icon = pixelate(Path(icon))
         cls().do_notification(Notification(
             priority=priority,
             model=NotificationModel(

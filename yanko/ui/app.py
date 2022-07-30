@@ -18,6 +18,7 @@ from yanko.ui.models import (
     Icon,
     Label,
     MusicItem,
+    ToggleAction,
 )
 from yanko.sonic.manager import Manager
 from yanko.ui.items.playlist import Playlist
@@ -61,8 +62,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.newest,
                 None,
                 ActionItem.next,
-                ActionItem.play,
-                ActionItem.stop,
+                ToggleAction.toggle,
                 ActionItem.restart,
                 None,
                 ActionItem.quit
@@ -76,8 +76,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__last_added = Albumlist(self, Label.NEWEST.value)
         self.__artist_albums = ArtistAlbumsList(self, Label.ARTIST.value)
         self.__recent = Albumlist(self, Label.RECENT.value)
-        ActionItem.stop.hide()
-        ActionItem.play.hide()
         ActionItem.next.hide()
         ActionItem.restart.hide()
         self.manager = Manager()
@@ -97,12 +95,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
 
     @rumps.clicked(Label.PLAY.value)
-    def onStart(self, sender):
-        pass
-
-    @rumps.clicked(Label.STOP.value)
-    def onStop(self, sender):
-        pass
+    def onPlay(self, sender):
+        self.manager.commander.put_nowait((Command.RANDOM, None))
 
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):
@@ -176,21 +170,17 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.ARTIST, sender.id))
 
     def _onPlaystatus(self, resp: Playstatus):
+        ToggleAction.toggle.toggle()
         if resp.status == Status.PLAYING:
-            ActionItem.stop.show()
-            ActionItem.play.hide()
             if len(self.__playlist):
                 ActionItem.next.show()
             ActionItem.restart.show()
         elif resp.status == Status.STOPPED:
             self.icon = Icon.STOPPED.value
             self.title = ''
-            ActionItem.stop.hide()
             if len(self.__playlist):
-                ActionItem.play.show()
                 ActionItem.next.show()
             else:
-                ActionItem.play.hide()
                 ActionItem.next.hide()
             ActionItem.restart.hide()
             LaMetric.onstop()

@@ -216,6 +216,3 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             rumps.quit_application()
         except Exception as e:
             print_exc(e)
-
-    def __del__(self):
-        self.terminate()

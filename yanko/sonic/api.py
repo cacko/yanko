@@ -9,7 +9,7 @@ import sys
 import time
 from random import SystemRandom
 from subprocess import CalledProcessError, Popen
-from yanko.core.thread import StoppableThread
+from yanko.core.thread import StoppableThread, process
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from yanko.sonic import (
@@ -390,13 +390,6 @@ class Client(object):
                 if not playing:
                     return
                 playing = self.play_stream(dict(song))
-
-    @property
-    def environment(self):
-        return dict(
-            os.environ,
-            PATH=f"{os.environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{os.environ.get('PATH')}",
-        )
 
     def play_stream(self, track_data):
         stream_url = self.create_url(Subsonic.DOWNLOAD)

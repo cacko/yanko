@@ -26,6 +26,7 @@ rumps = "^0.5.3"
 bottle = "^0.12.21"
 Pillow = "^9.2.0"
 appdir = "^0.2"
+pyotp = "^2.6.0"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

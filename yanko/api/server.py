@@ -4,6 +4,7 @@ from queue import LifoQueue
 from bottle import Bottle, run
 import time
 from yanko.sonic import Command
+from yanko.api.auth import auth_required
 
 app = Bottle()
 
@@ -60,9 +61,11 @@ class Server(object, metaclass=ServerMeta):
             print(e)
 
 @app.route('/search/<query:path>')
+@auth_required
 def search(query):
     return Server.search(query)
 
 @app.route('/command/<query:path>')
+@auth_required
 def command(query):
     return Server.command(query)

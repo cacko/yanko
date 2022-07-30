@@ -16,7 +16,8 @@ OPTIONS = {
         'tld',
         'cachable',
         'PIL',
-        'appdir'
+        'appdir',
+        'pyotp'
     ],
 }
 setup(

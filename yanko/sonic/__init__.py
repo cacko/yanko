@@ -59,6 +59,7 @@ class Action(Enum):
 class Status(Enum):
     PLAYING = 'playing'
     STOPPED = 'stopped'
+    LOADING = 'loadng'
     EXIT = 'exit'
 
 

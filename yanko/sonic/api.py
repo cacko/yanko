@@ -547,8 +547,6 @@ class Client(object):
         if self.ffplay:
             self.ffplay.terminate()
             self.ffplay = None
-        self.manager_queue.put_nowait(
-            Playstatus(status=Status.STOPPED))
         self.playing = False
 
     def __exit(self):
@@ -564,8 +562,14 @@ class Client(object):
 
     def __restart(self, track_data):
         self.__terminate()
+        self.manager_queue.put_nowait(
+            Playstatus(status=Status.LOADING)
+        )
         return self.play_stream(track_data)
 
     def __next(self):
         self.__terminate()
+        self.manager_queue.put_nowait(
+            Playstatus(status=Status.LOADING)
+        )
         return True

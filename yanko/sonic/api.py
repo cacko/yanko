@@ -467,6 +467,8 @@ class Client(object):
                         return self.__next()
                     case Action.STOP:
                         return self.__stop()
+                    case Action.EXIT:
+                        return self.__exit()
 
             self.lock_file.unlink(missing_ok=True)
             return True
@@ -526,7 +528,7 @@ class Client(object):
             self.search_queue.task_done()
 
     def exit(self):
-        self.__terminate()
+        self.__exit()
         for th in self.__threads:
             try:
                 th.stop()
@@ -550,7 +552,7 @@ class Client(object):
         self.playing = False
 
     def __exit(self):
-        self.exit()
+        self.__terminate()
         self.manager_queue.put_nowait(
             Playstatus(status=Status.EXIT)
         )

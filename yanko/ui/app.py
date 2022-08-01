@@ -28,6 +28,7 @@ import logging
 from yanko.core.string import truncate
 from yanko.api.server import Server
 from yanko.lametric import LaMetric
+from pathlib import Path
 
 class YankoAppMeta(type):
 
@@ -132,7 +133,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     def _onNowPlaying(self, resp: NowPlaying):
         track = resp.track
-        LaMetric.nowplaying(f"{track.artist} / {track.title}", track.coverArt)
+        LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:
@@ -170,6 +171,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.ARTIST, sender.id))
 
     def _onPlaystatus(self, resp: Playstatus):
+        LaMetric.status(resp.status)
         ToggleAction.toggle.toggle()
         if resp.status == Status.PLAYING:
             if len(self.__playlist):
@@ -183,9 +185,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             else:
                 ActionItem.next.hide()
             ActionItem.restart.hide()
-            LaMetric.onstop()
         elif resp.status == Status.EXIT:
-            LaMetric.onstop()
             rumps.quit_application()
 
     def _onLastAdded(self, resp: LastAdded):

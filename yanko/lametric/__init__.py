@@ -1,10 +1,15 @@
+import logging
+from os import environ
+from pathlib import Path
 from yanko.core.config import app_config
 import requests
 from cachable.request import Method
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 from yanko.lametric.pixel import pixelate
-from pathlib import Path
+from yanko.lametric.auth import OTP
+from yanko.sonic import Status
+from requests.exceptions import ConnectionError
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -36,80 +41,47 @@ class LaMetricMeta(type):
             self._instance = super().__call__(*args, **kwds)
         return self._instance
 
-    def nowplaying(cls, text, icon, priority="info"):
-        if not icon:
-            icon = 17668
-        else:
-            icon = pixelate(Path(icon))
-        cls().do_notification(Notification(
-            priority=priority,
-            model=NotificationModel(
-                frames=[NotificationFrame(
-                    text=text,
-                    icon=icon
-                )]
-            )
-        ))
-        cls().do_widget_state(NotificationModel(
-            frames=[
-                NotificationFrame(
-                    text=text,
-                    icon=icon,
-                    index=0
-                )
-            ]
-        ))
+    def nowplaying(cls, text, icon: Path):
+        cls().send_nowplaying(text, icon)
 
-    def onstop(cls):
-        cls().do_widget_state(NotificationModel(
-            frames=[
-                NotificationFrame(
-                    text="OFFLINE",
-                    icon=39264,
-                    index=0
-                )
-            ]
-        ))
+    def status(cls, status: Status):
+        cls().send_status(status)
 
 
 class LaMetric(object, metaclass=LaMetricMeta):
 
     def __make_request(self, method: Method, endpoint: str, **args):
         conf = app_config.get("lametric")
-        host = conf.get("host")
-        user = conf.get("user")
-        apikey = conf.get("apikey")
-        response = requests.request(
-            method=method.value,
-            auth=(user, apikey),
-            url=f"{host}/api/v2/{endpoint}",
-            **args
-        )
-        return response.json()
+        host = environ.get("LAMETRIC_CONTROLLER", conf.get("host"))
+        try:
+            response = requests.request(
+                method=method.value,
+                headers=OTP.headers,
+                url=f"{host}/{endpoint}",
+                **args
+            )
+            return response.json()
+        except ConnectionError:
+            logging.debug(f"lametric is off")
 
-    def __widget_request(self, method: Method, **args):
-        conf = app_config.get("lametric")
-        url = conf.get("widget_endpoint")
-        token = conf.get("widget_token")
-        response = requests.request(
-            method=method.value,
-            headers={
-                'x-access-token': token
-            },
-            url=f"{url}",
-            **args
+    def send_nowplaying(self, text, icon: Path):
+        model = NotificationModel(
+            frames=[
+                NotificationFrame(
+                    text=text,
+                    icon=pixelate(icon)
+                )
+            ]
         )
-        return response.status_code
-
-    def do_notification(self, notification: Notification):
         return self.__make_request(
             Method.POST,
-            "device/notifications",
-            json=notification.to_dict()
+            "yanko/nowplaying",
+            json=model.to_dict()
         )
 
-    def do_widget_state(self, model: NotificationModel):
-        return self.__widget_request(
+    def send_status(self, status: Status):
+        return self.__make_request(
             Method.POST,
-            json=model.to_dict()
+            "yanko/status",
+            json={"status": status.value}
         )

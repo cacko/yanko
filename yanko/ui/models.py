@@ -8,7 +8,7 @@ class Label(Enum):
     PAUSE = 'Pause'
     STOP = 'Stop'
     FIND = 'Find'
-    RANDOM = 'Random'
+    RANDOM = 'Random Songs'
     ALBUM = 'Album'
     NEXT = 'Next Song'
     RESTART = 'Replay'
@@ -16,6 +16,8 @@ class Label(Enum):
     NEWEST = 'Last addded'
     RECENT = 'Recently played'
     ARTIST = 'Artist'
+    RESCAN = 'Rescan'
+    RANDOM_ALBUM = "Random Album"
 
 
 class Icon(Enum):
@@ -35,6 +37,8 @@ class Icon(Enum):
     DEFAULT_ART = 'default_art.png'
     RECENT = 'recents.png'
     PAUSE = 'pause.png'
+    RESCAN = 'rescan.png'
+    RANDOM_ALBUM = 'random_album.png'
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"
@@ -74,6 +78,10 @@ class ActionItemMeta(type):
         return cls("random", Label.RANDOM.value, icon=Icon.RANDOM.value)
 
     @property
+    def random_album(cls) -> 'ActionItem':
+        return cls("random_album", Label.RANDOM_ALBUM.value, icon=Icon.RANDOM_ALBUM.value)
+
+    @property
     def newest(cls) -> 'ActionItem':
         return cls("newest", Label.NEWEST.value, icon=Icon.NEWEST.value)
 
@@ -85,12 +93,19 @@ class ActionItemMeta(type):
     def recent(cls) -> 'ActionItem':
         return cls("recent", Label.RECENT.value, icon=Icon.RECENT.value)
 
+    @property
+    def rescan(cls) -> 'ActionItem':
+        return cls("rescan", Label.RESCAN.value, icon=Icon.RESCAN.value)
+
 
 class ActionItem(MenuItem, metaclass=ActionItemMeta):
 
     def __init__(self, title, callback=None, key=None, icon=None, dimensions=None, template=None):
         template = True
         super().__init__(title, callback, key, icon, dimensions, template)
+
+    def setAvailability(self, enabled: bool):
+        self._menuitem.setEnabled_(enabled)
 
 
 class MusicItem(MenuItem):

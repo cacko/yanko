@@ -153,6 +153,8 @@ class Manager(object, metaclass=ManagerMeta):
             match(cmd):
                 case Command.RANDOM:
                     await self.__random()
+                case Command.RANDOM_ALBUM:
+                    await self.__random_album()
                 case Command.QUIT:
                     await self.__quit()
                 case Command.NEXT:
@@ -175,6 +177,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__albumsong(*payload.split('/'))
                 case Command.ARTIST_ALBUMS:
                     await self.__artist_albums(payload)
+                case Command.RESCAN:
+                    await self.__rescan()
             self.commander.task_done()
         except Exception as e:
             logging.exception(e)
@@ -204,6 +208,14 @@ class Manager(object, metaclass=ManagerMeta):
         if self.api.playing:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM, None))
+
+    async def __random_album(self):
+        if self.api.playing:
+            self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
+
+    async def __rescan(self):
+        self.api.search_queue.put_nowait((Command.RESCAN, None))
 
     async def __newest(self):
         self.api.command_queue.put_nowait((Command.NEWEST, None))

@@ -11,7 +11,8 @@ from yanko.sonic import (
     RecentlyPlayed,
     Search,
     Status,
-    Playstatus
+    Playstatus,
+    ScanStatus
 )
 from yanko.ui.models import (
     ActionItem,
@@ -29,6 +30,7 @@ from yanko.core.string import truncate
 from yanko.api.server import Server
 from yanko.lametric import LaMetric
 from pathlib import Path
+
 
 class YankoAppMeta(type):
 
@@ -58,6 +60,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             name="yAnKo",
             menu=[
                 ActionItem.random,
+                ActionItem.random_album,
+                None,
                 ActionItem.artist,
                 ActionItem.recent,
                 ActionItem.newest,
@@ -66,6 +70,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ToggleAction.toggle,
                 ActionItem.restart,
                 None,
+                ActionItem.rescan,
                 ActionItem.quit
             ],
             icon=Icon.STOPPED.value,
@@ -94,7 +99,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.NEWEST, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
 
-
     @rumps.clicked(Label.PLAY.value)
     def onPlay(self, sender):
         self.manager.commander.put_nowait((Command.RANDOM, None))
@@ -102,6 +106,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):
         self.manager.commander.put_nowait((Command.RANDOM, None))
+
+    @rumps.clicked(Label.RANDOM_ALBUM.value)
+    def onRandomAlbum(self, sender):
+        self.manager.commander.put_nowait((Command.RANDOM_ALBUM, None))
 
     @rumps.clicked(Label.QUIT.value)
     def onQuit(self, sender):
@@ -114,6 +122,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     @rumps.clicked(Label.RESTART.value)
     def onRestart(self, sender):
         self.manager.commander.put_nowait((Command.RESTART, None))
+
+    @rumps.clicked(Label.RESCAN.value)
+    def onRescan(self, sender):
+        self.manager.commander.put_nowait((Command.RESCAN, None))
 
     @rumps.events.on_screen_sleep
     def sleep(self):
@@ -133,18 +145,21 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     def _onNowPlaying(self, resp: NowPlaying):
         track = resp.track
-        LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
+        LaMetric.nowplaying(
+            f"{track.artist} / {track.title}", Path(track.coverArt))
         self.title = f"{track.artist} / {truncate(track.title)}"
         self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:
             self._menu.pop(itm)
         top = self.menu.keys()[0]
         self.__nowPlayingSection = [
-            self.menu.insert_before(top, NowPlayingItem(track, callback=self._onNowPlayClick)),
+            self.menu.insert_before(top, NowPlayingItem(
+                track, callback=self._onNowPlayClick)),
             self.menu.insert_before(top, None)
         ]
         self.icon = resp.track.coverArtIcon
-        self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
+        self.manager.commander.put_nowait(
+            (Command.ARTIST_ALBUMS, resp.track.artistId))
         # rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
 
     def _onSearch(self, resp: Search):
@@ -162,13 +177,18 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.SONG, sender.id))
 
     def _onNowPlayClick(self, sender: NowPlayingItem):
-        self.manager.commander.put_nowait((Command.ALBUMSONG, f"{sender.id}/{sender.track.id}"))
+        self.manager.commander.put_nowait(
+            (Command.ALBUMSONG, f"{sender.id}/{sender.track.id}"))
 
     def _onAlbumClick(self, sender: MusicItem):
         self.manager.commander.put_nowait((Command.ALBUM, sender.id))
 
     def _onArtistClick(self, sender: MusicItem):
         self.manager.commander.put_nowait((Command.ARTIST, sender.id))
+
+    def _onScanStatus(self, sender: ScanStatus):
+        item: ActionItem = self.menu.get(Label.RESCAN.value)
+        item.setAvailability(not sender.scanning)
 
     def _onPlaystatus(self, resp: Playstatus):
         LaMetric.status(resp.status)
@@ -190,7 +210,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     def _onLastAdded(self, resp: LastAdded):
         albums = resp.albums
-        self.__last_added.update(albums, self._onAlbumClick)     
+        self.__last_added.update(albums, self._onAlbumClick)
 
     def _onRecentlyPlayed(self, resp: RecentlyPlayed):
         albums = resp.albums
@@ -199,7 +219,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onArtistAlbums(self, resp: ArtistAlbums):
         albums = resp.albums
         artistInfo = resp.artistInfo
-        self.__artist_albums.update(artistInfo, albums, self._onAlbumClick, self._onArtistClick)
+        self.__artist_albums.update(
+            artistInfo, albums, self._onAlbumClick, self._onArtistClick)
 
     def terminate(self):
         self.manager.commander.put_nowait((Command.QUIT, None))

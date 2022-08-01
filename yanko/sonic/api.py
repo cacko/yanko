@@ -1,3 +1,4 @@
+from ast import Sub
 from dataclasses import dataclass
 import hashlib
 import logging
@@ -7,7 +8,7 @@ from pathlib import Path
 import string
 import sys
 import time
-from random import SystemRandom
+from random import SystemRandom, choice
 from subprocess import CalledProcessError, Popen, PIPE
 from yanko.core.thread import StoppableThread, process
 from dataclasses_json import dataclass_json
@@ -24,6 +25,7 @@ from yanko.sonic import (
     Playlist,
     Playstatus,
     RecentlyPlayed,
+    ScanStatus,
     Search,
     Search3Response,
     SearchItemIcon,
@@ -35,7 +37,8 @@ from yanko.sonic import (
     AlbumType,
     ArtistInfo,
     RESULT_KEYS,
-    TrackSearchItem
+    TrackSearchItem,
+    ScanStatusResponse
 )
 import requests
 from queue import LifoQueue
@@ -57,6 +60,19 @@ class ApiArguments:
     f: str = "json"
 
 
+def get_scan_status(url, manager_queue: LifoQueue):
+    while True:
+        time.sleep(2)
+        print(url)
+        res = requests.get(url)
+        data = res.json()
+        response: ScanStatusResponse = ScanStatusResponse.from_dict(data.get("subsonic-response"))
+        status: ScanStatus = response.scanStatus
+        manager_queue.put_nowait(status)
+        if not status.scanning:
+            break
+
+
 class Client(object):
     command_queue: LifoQueue = None
     search_queue: LifoQueue = None
@@ -66,6 +82,7 @@ class Client(object):
     playqueue: list[Track] = []
     skip_to: str = None
     ffplay = None
+    scanning = False
     __threads = []
 
     BATCH_SIZE = 20
@@ -178,6 +195,13 @@ class Client(object):
 
     def scrobble(self, song_id):
         self.make_request(self.create_url(Subsonic.SCROBBLE, id=song_id))
+
+    def startScan(self):
+        self.make_request(self.create_url(Subsonic.START_SCAN))
+        url = self.create_url(Subsonic.GET_SCAN_STATUS)
+        get_status = StoppableThread(target=get_scan_status, args=(url, self.manager_queue))
+        get_status.start()
+
 
     def search(self, query):
         with perftime("search"):
@@ -386,6 +410,12 @@ class Client(object):
 
         return self.play_radio(artist_id)
 
+    def play_random_album(self):
+        albums = self.get_album_list(AlbumType.RANDOM)
+        album = choice(albums)
+        return self.play_album(album.get("id"))
+
+
     def play_playlist(self, playlist_id):
         playlist_info = self.make_request(
             self.create_url(Subsonic.PLAYLIST, id=playlist_id))
@@ -492,6 +522,8 @@ class Client(object):
             match(cmd):
                 case Command.RANDOM:
                     self.play_random_songs()
+                case Command.RANDOM_ALBUM:
+                    self.play_random_album()
                 case Command.ALBUM:
                     self.play_album(payload)
                 case Command.ARTIST:
@@ -525,6 +557,8 @@ class Client(object):
                         albums=self.get_artist_albums(payload)))
                 case Command.QUIT:
                     self.__exit()
+                case Command.RESCAN:
+                    self.startScan()
             self.search_queue.task_done()
 
     def exit(self):

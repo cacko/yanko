@@ -26,7 +26,8 @@ RESULT_KEYS = [
     'album',
     'artist',
     'artists',
-    'topSongs'
+    'topSongs',
+    'scanStatus'
 ]
 
 
@@ -46,6 +47,8 @@ class Command(Enum):
     ALBUMSONG = 'albumsong'
     ARTIST = 'artist'
     ARTIST_ALBUMS = 'artist_albums'
+    RANDOM_ALBUM = 'random_album'
+    RESCAN = 'rescan'
 
 
 class Action(Enum):
@@ -80,11 +83,14 @@ class Subsonic(Enum):
     PING = 'ping'
     ARTIST_INFO = 'getArtistInfo'
     TOP_SONGS = 'getTopSongs'
+    START_SCAN = 'startScan'
+    GET_SCAN_STATUS = 'getScanStatus'
 
 
 class AlbumType(Enum):
     NEWEST = 'newest'
     RECENT = 'recent'
+    RANDOM = 'random'
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -264,6 +270,13 @@ class Search:
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
+class ScanStatus:
+    scanning: bool
+    count: int
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
 class Response:
     status: Optional[str] = None
     serverVersion: Optional[str] = None
@@ -289,3 +302,9 @@ class Search3Response:
 @dataclass
 class ArtistInfoResponse(Response):
     artistInfo: Optional[ArtistInfo] = None
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class ScanStatusResponse(Response):
+    scanStatus: Optional[ScanStatus] = None

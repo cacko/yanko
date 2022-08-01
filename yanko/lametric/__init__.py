@@ -9,7 +9,7 @@ from dataclasses_json import dataclass_json, Undefined
 from yanko.lametric.pixel import pixelate
 from yanko.lametric.auth import OTP
 from yanko.sonic import Status
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, JSONDecodeError
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -63,6 +63,8 @@ class LaMetric(object, metaclass=LaMetricMeta):
             return response.json()
         except ConnectionError:
             logging.debug(f"lametric is off")
+        except JSONDecodeError:
+            pass
 
     def send_nowplaying(self, text, icon: Path):
         model = NotificationModel(

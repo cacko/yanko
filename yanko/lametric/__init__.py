@@ -1,5 +1,5 @@
 import logging
-from os import environ
+from os import environ, stat
 from pathlib import Path
 from yanko.core.config import app_config
 import requests
@@ -11,25 +11,18 @@ from yanko.lametric.auth import OTP
 from yanko.sonic import Status
 from requests.exceptions import ConnectionError, JSONDecodeError
 
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
-class NotificationFrame:
+class NowPlayingFrame:
     text: str
-    icon: int = 17668
+    icon: str
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
-class NotificationModel:
-    frames: list[NotificationFrame]
-
-
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Notification:
-    model: NotificationModel
-    priority: str = "info"
-    icon_type: str = "none"
+class StatusFrame:
+    status: str
 
 
 class LaMetricMeta(type):
@@ -67,14 +60,11 @@ class LaMetric(object, metaclass=LaMetricMeta):
             pass
 
     def send_nowplaying(self, text, icon: Path):
-        model = NotificationModel(
-            frames=[
-                NotificationFrame(
-                    text=text,
-                    icon=pixelate(icon)
-                )
-            ]
+        model = NowPlayingFrame(
+            text=text,
+            icon=pixelate(icon)
         )
+
         return self.__make_request(
             Method.POST,
             "yanko/nowplaying",
@@ -85,5 +75,5 @@ class LaMetric(object, metaclass=LaMetricMeta):
         return self.__make_request(
             Method.POST,
             "yanko/status",
-            json={"status": status.value}
+            json=StatusFrame(status=status.value).to_dict()
         )

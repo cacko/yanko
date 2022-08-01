@@ -36,3 +36,4 @@ tasks:
       - task: push
       - task: build
       - task: install
+

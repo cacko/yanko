@@ -64,10 +64,13 @@ class Server(object, metaclass=ServerMeta):
         self.state_callback()
             
     def do_command(self, query):
-        c, i = query.split("=", 2)
+        queue_item = query.split("=", 2)
+        payload = None
         try:
-            cmd = Command(c)
-            self.api.put_nowait((cmd, i))
+            cmd = Command(queue_item.pop(0))
+            if len(queue_item) > 0:
+                payload = queue_item.pop(0)
+            self.api.put_nowait((cmd, payload))
         except ValueError as e:
             print(e)
 

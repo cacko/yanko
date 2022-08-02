@@ -128,7 +128,7 @@ class Track:
     def displayTitle(self, idx=None, isAlbum=False) -> str:
         parts = [self.artist, truncate(self.title)]
         if isAlbum:
-            parts = [truncate(self.title, 30)]
+            parts = [self.title]
         if idx is None:
             return f"{' / '.join(parts)}"
         nm = idx + 1

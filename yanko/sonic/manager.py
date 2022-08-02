@@ -7,6 +7,7 @@ from yanko.sonic import (
     ArtistAlbums,
     ArtistSearchItem,
     Command,
+    MostPlayed,
     NowPlaying,
     Playstatus,
     LastAdded,
@@ -165,6 +166,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__newest()
                 case Command.RECENTLY_PLAYED:
                     await self.__recently_played()
+                case Command.MOST_PLAYED:
+                    await self.__most_played()
                 case Command.ALBUM:
                     await self.__album(payload)
                 case Command.ARTIST:
@@ -197,6 +200,8 @@ class Manager(object, metaclass=ManagerMeta):
                 cmd.albums = await resolveAlbums(cmd.albums)
             elif isinstance(cmd, RecentlyPlayed):
                 cmd.albums = await resolveAlbums(cmd.albums)
+            elif isinstance(cmd, MostPlayed):
+                cmd.albums = await resolveAlbums(cmd.albums)
             elif isinstance(cmd, ArtistAlbums):
                 cmd.artistInfo = await resolveArtistImage(cmd.artistInfo)
                 cmd.albums = await resolveAlbums(cmd.albums)
@@ -219,10 +224,13 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
 
     async def __newest(self):
-        self.api.command_queue.put_nowait((Command.NEWEST, None))
+        self.api.search_queue.put_nowait((Command.NEWEST, None))
 
     async def __recently_played(self):
-        self.api.command_queue.put_nowait((Command.RECENTLY_PLAYED, None))
+        self.api.search_queue.put_nowait((Command.RECENTLY_PLAYED, None))
+
+    async def __most_played(self):
+        self.api.search_queue.put_nowait((Command.MOST_PLAYED, None))
 
     async def __search(self, query):
         self.api.search_queue.put_nowait((Command.SEARCH, query))

@@ -49,6 +49,7 @@ class Command(Enum):
     ARTIST_ALBUMS = 'artist_albums'
     RANDOM_ALBUM = 'random_album'
     RESCAN = 'rescan'
+    MOST_PLAYED = 'most_played'
 
 
 class Action(Enum):
@@ -91,6 +92,7 @@ class AlbumType(Enum):
     NEWEST = 'newest'
     RECENT = 'recent'
     RANDOM = 'random'
+    FREQUENT = 'frequent'
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -225,6 +227,11 @@ class LastAdded:
 class RecentlyPlayed:
     albums: list[Album]
 
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class MostPlayed:
+    albums: list[Album]
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass

@@ -18,6 +18,7 @@ class Label(Enum):
     ARTIST = 'Artist'
     RESCAN = 'Rescan'
     RANDOM_ALBUM = "Random Album"
+    MOST_PLAYED = 'Most played'
 
 
 class Icon(Enum):
@@ -39,6 +40,7 @@ class Icon(Enum):
     PAUSE = 'pause.png'
     RESCAN = 'rescan.png'
     RANDOM_ALBUM = 'random_album.png'
+    MOST_PLAYED = 'most_played.png'
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"
@@ -92,6 +94,10 @@ class ActionItemMeta(type):
     @property
     def recent(cls) -> 'ActionItem':
         return cls("recent", Label.RECENT.value, icon=Icon.RECENT.value)
+
+    @property
+    def most_played(cls) -> 'ActionItem':
+        return cls("most_played", Label.MOST_PLAYED.value, icon=Icon.MOST_PLAYED.value)
 
     @property
     def rescan(cls) -> 'ActionItem':

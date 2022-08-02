@@ -21,6 +21,7 @@ from yanko.sonic import (
     ArtistAlbums,
     ArtistSearchItem,
     Command,
+    MostPlayed,
     NowPlaying,
     Playlist,
     Playstatus,
@@ -66,7 +67,8 @@ def get_scan_status(url, manager_queue: LifoQueue):
         print(url)
         res = requests.get(url)
         data = res.json()
-        response: ScanStatusResponse = ScanStatusResponse.from_dict(data.get("subsonic-response"))
+        response: ScanStatusResponse = ScanStatusResponse.from_dict(
+            data.get("subsonic-response"))
         status: ScanStatus = response.scanStatus
         manager_queue.put_nowait(status)
         if not status.scanning:
@@ -199,9 +201,9 @@ class Client(object):
     def startScan(self):
         self.make_request(self.create_url(Subsonic.START_SCAN))
         url = self.create_url(Subsonic.GET_SCAN_STATUS)
-        get_status = StoppableThread(target=get_scan_status, args=(url, self.manager_queue))
+        get_status = StoppableThread(
+            target=get_scan_status, args=(url, self.manager_queue))
         get_status.start()
-
 
     def search(self, query):
         with perftime("search"):
@@ -262,6 +264,9 @@ class Client(object):
     def get_recently_played(self) -> list[Album]:
         return self.__toAlbums(self.get_album_list, AlbumType.RECENT)
 
+    def get_most_played(self) -> list[Album]:
+        return self.__toAlbums(self.get_album_list, AlbumType.FREQUENT)
+
     def get_top_songs(self, artist_id):
         artist_info = self.get_artist(artist_id)
         top_songs = self.make_request(
@@ -318,7 +323,8 @@ class Client(object):
                 with self.playlist_file.open("w") as pf:
                     for song in songs:
                         song_id = song.get("id")
-                        pf.write(f"file '{stream_url}&id={song_id}&format=raw'\n")
+                        pf.write(
+                            f"file '{stream_url}&id={song_id}&format=raw'\n")
 
                 self.manager_queue.put_nowait(
                     Playlist(
@@ -414,7 +420,6 @@ class Client(object):
         albums = self.get_album_list(AlbumType.RANDOM)
         album = choice(albums)
         return self.play_album(album.get("id"))
-
 
     def play_playlist(self, playlist_id):
         playlist_info = self.make_request(
@@ -528,12 +533,6 @@ class Client(object):
                     self.play_album(payload)
                 case Command.ARTIST:
                     self.play_artist(payload)
-                case Command.RECENTLY_PLAYED:
-                    self.manager_queue.put_nowait(RecentlyPlayed(
-                        albums=self.get_recently_played()))
-                case Command.NEWEST:
-                    self.manager_queue.put_nowait(
-                        LastAdded(albums=self.get_last_added()))
                 case Command.SONG:
                     self.skip_to = payload
                 case Command.SEARCH:
@@ -559,6 +558,15 @@ class Client(object):
                     self.__exit()
                 case Command.RESCAN:
                     self.startScan()
+                case Command.RECENTLY_PLAYED:
+                    self.manager_queue.put_nowait(RecentlyPlayed(
+                        albums=self.get_recently_played()))
+                case Command.MOST_PLAYED:
+                    self.manager_queue.put_nowait(MostPlayed(
+                        albums=self.get_most_played()))
+                case Command.NEWEST:
+                    self.manager_queue.put_nowait(
+                        LastAdded(albums=self.get_last_added()))
             self.search_queue.task_done()
 
     def exit(self):

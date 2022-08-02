@@ -5,6 +5,7 @@ from yanko.core.thread import StoppableThread
 from yanko.sonic import (
     ArtistAlbums,
     Command,
+    MostPlayed,
     Playlist,
     AlbumPlaylist,
     NowPlaying,
@@ -53,6 +54,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     __last_added: Albumlist = None
     __artist_albums: Albumlist = None
     __recent: Albumlist = None
+    __most_played: Albumlist = None
     __nowPlayingSection = []
     __threads = []
     __status: Status = None
@@ -68,6 +70,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.artist,
                 ActionItem.recent,
                 ActionItem.newest,
+                ActionItem.most_played,
                 None,
                 ActionItem.next,
                 ToggleAction.toggle,
@@ -85,6 +88,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__playlist = Playlist(self, Label.RANDOM.value)
         self.__last_added = Albumlist(self, Label.NEWEST.value)
         self.__artist_albums = ArtistAlbumsList(self, Label.ARTIST.value)
+        self.__most_played = Albumlist(self, Label.MOST_PLAYED.value)
         self.__recent = Albumlist(self, Label.RECENT.value)
         ActionItem.next.hide()
         ActionItem.restart.hide()
@@ -103,6 +107,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__threads.append(ts)
         self.manager.commander.put_nowait((Command.NEWEST, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
+        self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
 
     @rumps.clicked(Label.PLAY.value)
     def onPlay(self, sender):
@@ -231,6 +236,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onRecentlyPlayed(self, resp: RecentlyPlayed):
         albums = resp.albums
         self.__recent.update(albums, self._onAlbumClick)
+
+    def _onMostPlayed(self, resp: MostPlayed):
+        albums = resp.albums
+        self.__most_played.update(albums, self._onAlbumClick)
 
     def _onArtistAlbums(self, resp: ArtistAlbums):
         albums = resp.albums

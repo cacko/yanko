@@ -186,8 +186,9 @@ class Manager(object, metaclass=ManagerMeta):
     async def player_runner(self):
         try:
             cmd = self.__player_queue.get_nowait()
-            if isinstance(cmd, Playstatus) and cmd == Status.EXIT:
-                self.__running = False
+            if isinstance(cmd, Playstatus):
+                if cmd == Status.EXIT:
+                    self.__running = False
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
                 cmd.track = await resolveCoverArt(cmd.track)
             elif isinstance(cmd, Search) and len(cmd.items):

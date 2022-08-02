@@ -1,5 +1,6 @@
 from traceback import print_exc
 import rumps
+from yanko import lametric
 from yanko.core.thread import StoppableThread
 from yanko.sonic import (
     ArtistAlbums,
@@ -54,6 +55,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     __recent: Albumlist = None
     __nowPlayingSection = []
     __threads = []
+    __status: Status = None
+    __nowplaying: NowPlaying = None
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -78,6 +81,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             template=False
         )
         self.menu.setAutoenablesItems = False
+        self.__status = Status.STOPPED
         self.__playlist = Playlist(self, Label.RANDOM.value)
         self.__last_added = Albumlist(self, Label.NEWEST.value)
         self.__artist_albums = ArtistAlbumsList(self, Label.ARTIST.value)
@@ -93,6 +97,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__threads.append(t)
         ts = StoppableThread(target=Server.start, args=[
             self.manager.commander,
+            self._onLaMetricInit
         ])
         ts.start()
         self.__threads.append(ts)
@@ -145,6 +150,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     def _onNowPlaying(self, resp: NowPlaying):
         track = resp.track
+        self.__nowplaying = resp
         LaMetric.nowplaying(
             f"{track.artist} / {track.title}", Path(track.coverArt))
         self.title = f"{track.artist} / {truncate(track.title)}"
@@ -161,6 +167,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait(
             (Command.ARTIST_ALBUMS, resp.track.artistId))
         # rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
+
+    def _onLaMetricInit(self):
+        if self.__status in [Status.PLAYING] and self.__nowplaying:
+            track = self.__nowplaying.track
+            LaMetric.nowplaying(
+                f"{track.artist} / {track.title}", Path(track.coverArt))
+        LaMetric.send_status(self.__status)
 
     def _onSearch(self, resp: Search):
         Server.queue.put_nowait(resp.to_dict())
@@ -193,6 +206,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             self.manager.commander.put_nowait((Command.NEWEST, None))
 
     def _onPlaystatus(self, resp: Playstatus):
+        self.__status = resp.status
         LaMetric.status(resp.status)
         ToggleAction.toggle.toggle()
         if resp.status == Status.PLAYING:

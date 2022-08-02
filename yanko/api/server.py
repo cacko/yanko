@@ -1,10 +1,13 @@
 from sys import api_version
+
+import yaml
 from yanko.core.config import app_config
 from queue import LifoQueue
 from bottle import Bottle, run
 import time
 from yanko.sonic import Command
 from yanko.api.auth import auth_required
+from yanko.lametric import LaMetric
 
 app = Bottle()
 
@@ -19,11 +22,14 @@ class ServerMeta(type):
             self._instance = super().__call__(*args, **kwds)
         return self._instance
 
-    def start(cls, queue: LifoQueue):
-        cls().start_server(queue)
+    def start(cls, queue: LifoQueue, state_callback):
+        cls().start_server(queue, state_callback)
 
     def search(cls, query):
         return  cls().do_search(query)
+
+    def state(cls):
+        return  cls().do_state()
 
     def command(cls, query):
         return cls().do_command(query)
@@ -37,9 +43,11 @@ class ServerMeta(type):
 class Server(object, metaclass=ServerMeta):
 
     api: LifoQueue = None
+    state_callback = None
     
-    def start_server(self, queue):
+    def start_server(self, queue, state_callback):
         self.api = queue
+        self.state_callback = state_callback
         conf = app_config.get("api")
         run(app, **conf)
 
@@ -51,6 +59,9 @@ class Server(object, metaclass=ServerMeta):
             else:
                 res = __class__.queue.get_nowait()
                 return res
+
+    def do_state(self):
+        self.state_callback()
             
     def do_command(self, query):
         c, i = query.split("=", 2)
@@ -59,6 +70,11 @@ class Server(object, metaclass=ServerMeta):
             self.api.put_nowait((cmd, i))
         except ValueError as e:
             print(e)
+
+@app.route('/state')
+@auth_required
+def state():
+    return Server.state()
 
 @app.route('/search/<query:path>')
 @auth_required

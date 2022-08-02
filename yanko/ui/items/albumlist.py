@@ -8,6 +8,7 @@ from AppKit import NSAttributedString
 from bs4 import BeautifulSoup
 from textwrap import wrap
 
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class AlbumItem:
@@ -43,13 +44,13 @@ class AlbumMenuItem(MusicItem):
 
 class Albumlist:
 
-    __items: list[AlbumItem] = []
-    __app: App = None
-    __menu_key: str = None
+    items: list[AlbumItem] = []
+    app: App = None
+    menu_key: str = None
 
     def __init__(self, app: App, menu_key: str) -> None:
-        self.__app = app
-        self.__menu_key = menu_key
+        self.app = app
+        self.menu_key = menu_key
 
     def __len__(self):
         return len(self.__items)
@@ -72,7 +73,7 @@ class Albumlist:
 
     @property
     def menu(self) -> Menu:
-        return self.__app.menu.get(self.__menu_key)
+        return self.app.menu.get(self.menu_key)
 
     def append(self, item: AlbumItem):
         self.__items.append(item)
@@ -94,16 +95,16 @@ class Albumlist:
 class ArtistAlbumsList(Albumlist):
 
     def update(self, info: ArtistInfo, albums: Album, callback, callback_artist):
-        if len(self.menu.keys()):
-            self.menu.clear()
-        menu = []
-        menu.append(ArtistInfoItem(
+        try:
+            self.menu._menu.removeAllItems()
+        except AttributeError:
+            pass
+        self.menu.add(ArtistInfoItem(
             id=albums[0].artistId,
             artist=albums[0].artist,
             info=info,
             callback=callback_artist
         ))
         for album in albums:
-            menu.append(AlbumMenuItem(album, callback=callback))
-        self.menu.update(menu)
+            self.menu.add(AlbumMenuItem(album, callback=callback))
         self.menu._menuitem.setEnabled_(True)

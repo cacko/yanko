@@ -189,6 +189,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onScanStatus(self, sender: ScanStatus):
         item: ActionItem = self.menu.get(Label.RESCAN.value)
         item.setAvailability(not sender.scanning)
+        if not sender.scanning:
+            self.manager.commander.put_nowait((Command.NEWEST, None))
 
     def _onPlaystatus(self, resp: Playstatus):
         LaMetric.status(resp.status)

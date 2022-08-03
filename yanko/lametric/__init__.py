@@ -67,13 +67,13 @@ class LaMetric(object, metaclass=LaMetricMeta):
 
         return self.__make_request(
             Method.POST,
-            "yanko/nowplaying",
+            "api/nowplaying",
             json=model.to_dict()
         )
 
     def send_status(self, status: Status):
         return self.__make_request(
             Method.POST,
-            "yanko/status",
+            "api/status",
             json=StatusFrame(status=status.value).to_dict()
         )

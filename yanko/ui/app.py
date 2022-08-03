@@ -31,21 +31,7 @@ from yanko.core.string import truncate
 from yanko.api.server import Server
 from yanko.lametric import LaMetric
 from pathlib import Path
-from AppKit import NSImage
-from AppKit import NSMakeRect
-from AppKit import NSCompositingOperationSourceOver
-from Foundation import NSMutableDictionary
-from MediaPlayer import MPNowPlayingInfoCenter
-from MediaPlayer import MPRemoteCommandCenter
-from MediaPlayer import MPMediaItemArtwork
-from MediaPlayer import MPMediaItemPropertyTitle
-from MediaPlayer import MPMediaItemPropertyArtist
-from MediaPlayer import MPMediaItemPropertyPlaybackDuration
-from MediaPlayer import MPMediaItemPropertyArtwork
-from MediaPlayer import MPMusicPlaybackState
-from MediaPlayer import MPMusicPlaybackStatePlaying
-from MediaPlayer import MPMusicPlaybackStatePaused
-from MediaPlayer import MPMusicPlaybackStateStopped
+
 
 
 class YankoAppMeta(type):
@@ -122,19 +108,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
 
-        self.cmd_center = MPRemoteCommandCenter.sharedCommandCenter()
-
-        # Get the Now Playing Info Center
-        # ... which is how this application notifies MacOS of what is playing
-        self.info_center = MPNowPlayingInfoCenter.defaultCenter()
-
-        # Enable Commands
-        self.cmd_center.playCommand()           .addTargetWithHandler_(self.hPlay)
-        self.cmd_center.pauseCommand()          .addTargetWithHandler_(self.hPause)
-        self.cmd_center.togglePlayPauseCommand().addTargetWithHandler_(self.hTogglePause)
-        self.cmd_center.nextTrackCommand()      .addTargetWithHandler_(self.hNextTrack)
-        self.cmd_center.previousTrackCommand()  .addTargetWithHandler_(self.hPrevTrack)
-
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):
         self.manager.commander.put_nowait((Command.RANDOM, None))
@@ -193,8 +166,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.icon = resp.track.coverArtIcon
         self.manager.commander.put_nowait(
             (Command.ARTIST_ALBUMS, resp.track.artistId))
-        self.onPlaying(track)
-        # rumps.notification(track.title, track.artist, track.album, icon=track.coverArt)
 
     def _onLaMetricInit(self):
         if self.__status in [Status.PLAYING] and self.__nowplaying:
@@ -284,103 +255,3 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             rumps.quit_application()
         except Exception as e:
             print_exc(e)
-
-    def hPlay(self, event):
-        """
-        Handle an external 'playCommand' event
-        """
-        logging.info("on play")
-
-        return 0
-
-    def hPause(self, event):
-        """
-        Handle an external 'pauseCommand' event
-        """
-        logging.info("on pause")
-
-        return 0
-
-    def hTogglePause(self, event):
-        """
-        Handle an external 'togglePlayPauseCommand' event
-        """
-        logging.info("on toggle pause")
-
-        return 0
-
-    def hNextTrack(self, event):
-        """
-        Handle an external 'nextTrackCommand' event
-        """
-        logging.info("next")
-
-        return 0
-
-    def hPrevTrack(self, event):
-        """
-        Handle an external 'previousTrackCommand' event
-        """
-        logging.info("on prev")
-
-        return 0
-
-    def onStopped(self):
-        """
-        Call this method to update 'Now Playing' state to: stopped
-        """
-        self.info_center.setPlaybackState_(MPMusicPlaybackStateStopped)
-        logging.info("on stopped")
-        return 0
-
-    def onPaused(self):
-        """
-        Call this method to update 'Now Playing' state to: paused
-        """
-        self.info_center.setPlaybackState_(MPMusicPlaybackStatePaused)
-        return 0
-
-    def onPlaying(self, track: Track):
-        """
-        Call this method to update 'Now Playing' state to: playing
-
-        :param title: Track Title
-        :param artist: Track Artist
-        :param length: Track Length
-        :param cover: Track cover art as byte array
-        """
-
-        title = track.title
-        artist = track.artist
-        length = track.duration
-
-
-        logging.info("on now play")
-
-
-        nowplaying_info = NSMutableDictionary.dictionary()
-
-        # # Set basic track information
-        nowplaying_info[MPMediaItemPropertyTitle]            = title
-        nowplaying_info[MPMediaItemPropertyArtist]           = artist
-        nowplaying_info[MPMediaItemPropertyPlaybackDuration] = length
-
-        # # Set the cover art
-        # # ... which requires creation of a proper MPMediaItemArtwork object
-        # cover = ptr.record.cover
-        # if cover is not None:
-        #     # Apple documentation on how to load and set cover artwork is less than clear
-        #     # The below code was cobbled together from numerous sources
-        #     # ... REF: https://stackoverflow.com/questions/11949250/how-to-resize-nsimage/17396521#17396521
-        #     # ... REF: https://developer.apple.com/documentation/mediaplayer/mpmediaitemartwork?language=objc
-        #     # ... REF: https://developer.apple.com/documentation/mediaplayer/mpmediaitemartwork/1649704-initwithboundssize?language=objc
-
-        #     img = NSImage.alloc().initWithData_(cover)
-
-        #     def resize(size):
-        #         new = NSImage.alloc().initWithSize_(size)
-        #         new.lockFocus()
-        #         img.drawInRect_fromRect_operation_fraction_(
-        #             NSMakeRect(0, 0, size.width, size.height),
-        #             NSMakeRect(0, 0, img.size().width, img.size().height),
-        #             NSCompositingOperationSourceOver,

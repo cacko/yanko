@@ -2309,7 +2309,7 @@ requests = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "rumps"
-version = "0.5.3"
+version = "0.5.7"
 description = "Ridiculously Uncomplicated MacOS Python Statusbar apps."
 category = "main"
 optional = false
@@ -2402,7 +2402,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "b9f6161e135871eaa0ba90bf173c63cbac70182055ce0c593070c218ca9a867a"
+content-hash = "3ee294443330be5064aa8cd185d553a52b96dba9e5aa555fdb7342b299fb408f"
 
 [metadata.files]
 altgraph = [
@@ -3442,7 +3442,7 @@ requests-toolbelt = [
     {file = "requests_toolbelt-0.9.1-py2.py3-none-any.whl", hash = "sha256:380606e1d10dc85c3bd47bf5a6095f815ec007be7a8b69c878507068df059e6f"},
 ]
 rumps = [
-    {file = "rumps-0.5.3-py3-none-any.whl", hash = "md5:be2802eb8c343b388327f8fa64301dfe"},
+    {file = "rumps-0.5.7-py3-none-any.whl", hash = "md5:33405b5d55950bc68a132a4e5a7c1c1b"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},

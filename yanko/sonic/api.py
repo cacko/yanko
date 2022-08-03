@@ -6,14 +6,11 @@ from os import environ
 from pathlib import Path
 import string
 import sys
-import os
 import time
 from random import SystemRandom, choice
 from subprocess import CalledProcessError, Popen
 from signal import SIGSTOP, SIGCONT
-
-from setuptools import sic
-from yanko.core.thread import StoppableThread, process
+from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from yanko.sonic import (

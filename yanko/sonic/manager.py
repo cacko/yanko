@@ -117,14 +117,14 @@ class Manager(object, metaclass=ManagerMeta):
     player_callback = None
     api = None
     __running = False
-    __player_queue: LifoQueue = None
+    player_queue: LifoQueue = None
 
     def __init__(self) -> None:
         self.eventLoop = asyncio.new_event_loop()
         self.commander = LifoQueue()
         self.api = Client()
-        self.__player_queue = LifoQueue()
-        self.api.manager_queue = self.__player_queue
+        self.player_queue = LifoQueue()
+        self.api.manager_queue = self.player_queue
 
     def start(self, manager_callback, player_callback):
         self.manager_callback = manager_callback
@@ -143,7 +143,7 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def player_processor(self):
         while self.__running:
-            if self.__player_queue.empty():
+            if self.player_queue.empty():
                 await asyncio.sleep(0.1)
                 continue
             await self.player_runner()
@@ -190,7 +190,7 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def player_runner(self):
         try:
-            cmd = self.__player_queue.get_nowait()
+            cmd = self.player_queue.get_nowait()
             if isinstance(cmd, Playstatus):
                 if cmd == Status.EXIT:
                     self.__running = False
@@ -208,25 +208,22 @@ class Manager(object, metaclass=ManagerMeta):
                 cmd.artistInfo = await resolveArtistImage(cmd.artistInfo)
                 cmd.albums = await resolveAlbums(cmd.albums)
             self.player_callback(cmd)
-            self.__player_queue.task_done()
+            self.player_queue.task_done()
         except Exception as e:
             logging.exception(e)
 
     async def __random(self):
-        if self.api.playing:
+        if self.api.status != Status.STOPPED:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     async def __random_album(self):
-        if self.api.playing:
+        if self.api.status != Status.STOPPED:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
 
     async def __toggle(self):
-        if self.api.ffplay:
-            self.api.playback_queue.put_nowait(Action.TOGGLE)
-        else:
-            self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))       
+        self.api.search_queue.put_nowait((Command.TOGGLE, None))     
 
     async def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
@@ -252,19 +249,19 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
     async def __artist(self, artistId):
-        if self.api.playing:
+        if self.api.status != Status.STOPPED:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ARTIST, artistId))
 
     async def __albumsong(self, albumId, songId):
         self.api.skip_to = songId
-        if self.api.playing:
+        if self.api.status != Status.STOPPED:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
     async def __song(self, songId):
         self.api.skip_to = songId
-        if self.api.playing:
+        if self.api.status != Status.STOPPED:
             self.api.playback_queue.put_nowait(Action.NEXT)
 
     async def __quit(self):

@@ -81,7 +81,7 @@ class Client(object):
     search_queue: LifoQueue = None
     playback_queue: LifoQueue = None
     manager_queue: LifoQueue = None
-    playing: bool = False
+    status: Status = Status.STOPPED
     playqueue: list[Track] = []
     skip_to: str = None
     ffplay = None
@@ -484,7 +484,7 @@ class Client(object):
             self.ffplay = Popen(params, env=env)
 
             has_finished = None
-            self.playing = True
+            self.status = Status.PLAYING
             self.lock_file.open("w+").close()
 
             while has_finished is None:
@@ -505,8 +505,6 @@ class Client(object):
                         return self.__stop()
                     case Action.EXIT:
                         return self.__exit()
-                    case Action.TOGGLE:
-                        self.__toggle()
 
             self.lock_file.unlink(missing_ok=True)
             return True
@@ -561,6 +559,8 @@ class Client(object):
                     self.__exit()
                 case Command.RESCAN:
                     self.startScan()
+                case Command.TOGGLE:
+                    self.togglePlay()
                 case Command.RECENTLY_PLAYED:
                     self.manager_queue.put_nowait(RecentlyPlayed(
                         albums=self.get_recently_played()))
@@ -592,7 +592,7 @@ class Client(object):
         if self.ffplay:
             self.ffplay.terminate()
             self.ffplay = None
-        self.playing = False
+        self.status = Status.STOPPED
 
     def __exit(self):
         self.__terminate()
@@ -605,17 +605,17 @@ class Client(object):
         self.__terminate()
         return False
 
-    def __toggle(self):
-        if self.ffplay:
-            if self.playing:
-                self.ffplay.send_signal(SIGSTOP)
-                self.playing = False
-                self.manager_queue.put_nowait(Playstatus(status=Status.PAUSED))
-            else:
-                self.ffplay.send_signal(SIGCONT)
-                self.playing = True
-                self.manager_queue.put_nowait(Playstatus(status=Status.RESUMED))
-        return True
+    def togglePlay(self):
+        if not self.ffplay:
+            return
+        if self.status == Status.PLAYING:
+            self.ffplay.send_signal(SIGSTOP)
+            self.status = Status.PAUSED
+            self.manager_queue.put_nowait(Playstatus(status=Status.PAUSED))
+        elif self.status == Status.PAUSED:
+            self.ffplay.send_signal(SIGCONT)
+            self.status = Status.PLAYING
+            self.manager_queue.put_nowait(Playstatus(status=Status.RESUMED))
 
     def __restart(self, track_data):
         self.__terminate()

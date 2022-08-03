@@ -64,7 +64,6 @@ class ApiArguments:
 def get_scan_status(url, manager_queue: LifoQueue):
     while True:
         time.sleep(2)
-        print(url)
         res = requests.get(url)
         data = res.json()
         response: ScanStatusResponse = ScanStatusResponse.from_dict(

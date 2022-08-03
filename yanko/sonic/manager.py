@@ -16,6 +16,7 @@ from yanko.sonic import (
     RecentlyPlayed,
     ArtistInfo as ArtistInfoData
 )
+from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
@@ -118,12 +119,14 @@ class Manager(object, metaclass=ManagerMeta):
     api = None
     __running = False
     player_queue: LifoQueue = None
+    announce_queue: LifoQueue = None
 
     def __init__(self) -> None:
         self.eventLoop = asyncio.new_event_loop()
         self.commander = LifoQueue()
         self.api = Client()
         self.player_queue = LifoQueue()
+        self.announce_queue = LifoQueue()
         self.api.manager_queue = self.player_queue
 
     def start(self, manager_callback, player_callback):
@@ -131,7 +134,7 @@ class Manager(object, metaclass=ManagerMeta):
         self.player_callback = player_callback
         self.__running = True
         tasks = asyncio.wait(
-            [self.command_processor(), self.player_processor()])
+            [self.command_processor(), self.player_processor(), self.announce_processor()])
         self.eventLoop.run_until_complete(tasks)
 
     async def command_processor(self):
@@ -140,6 +143,13 @@ class Manager(object, metaclass=ManagerMeta):
                 await asyncio.sleep(0.1)
                 continue
             await self.commander_runner()
+
+    async def announce_processor(self):
+        while self.__running:
+            if self.announce_queue.empty():
+                await asyncio.sleep(0.1)
+                continue
+            await self.announce_runner()
 
     async def player_processor(self):
         while self.__running:
@@ -196,6 +206,7 @@ class Manager(object, metaclass=ManagerMeta):
                     self.__running = False
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
                 cmd.track = await resolveCoverArt(cmd.track)
+                self.announce_queue.put_nowait(cmd.track)
             elif isinstance(cmd, Search) and len(cmd.items):
                 cmd.items = await resolveSearch(cmd.items)
             elif isinstance(cmd, LastAdded):
@@ -211,6 +222,11 @@ class Manager(object, metaclass=ManagerMeta):
             self.player_queue.task_done()
         except Exception as e:
             logging.exception(e)
+
+    async def announce_runner(self):
+        payload = self.announce_queue.get_nowait()
+        Announce.announce(payload)
+        self.announce_queue.task_done()
 
     async def __random(self):
         if self.api.status != Status.STOPPED:

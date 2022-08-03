@@ -239,7 +239,10 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
 
     async def __toggle(self):
-        self.api.search_queue.put_nowait((Command.TOGGLE, None))     
+        if self.api.status == Status.STOPPED:
+            self.api.command_queue.put_nowait((Command.RANDOM, None))
+        else:
+            self.api.search_queue.put_nowait((Command.TOGGLE, None))     
 
     async def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))

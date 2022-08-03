@@ -1,13 +1,9 @@
-from sys import api_version
-
-import yaml
 from yanko.core.config import app_config
 from queue import LifoQueue
 from bottle import Bottle, run
 import time
 from yanko.sonic import Command
 from yanko.api.auth import auth_required
-from yanko.lametric import LaMetric
 
 app = Bottle()
 

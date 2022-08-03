@@ -79,8 +79,8 @@ class Client(object):
     search_queue: LifoQueue = None
     playback_queue: LifoQueue = None
     manager_queue: LifoQueue = None
-    status: Status = Status.STOPPED
-    playqueue: list[Track] = []
+    __status: Status = Status.STOPPED
+    __playqueue = []
     skip_to: str = None
     ffplay = None
     scanning = False
@@ -140,6 +140,31 @@ class Client(object):
             s=salt,
             v=self.api
         ).to_dict()
+
+    @property
+    def status(self) -> Status:
+        return self.__status
+
+    @status.setter
+    def status(self, val: Status):
+        self.__status = val
+        self.manager_queue.put_nowait(
+            Playstatus(status=val)
+        )
+
+    @property
+    def playqueue(self):
+        return self.__playqueue
+
+    @playqueue.setter
+    def playqueue(self, songs):
+        self.__playqueue = songs
+        self.manager_queue.put_nowait(
+            Playlist(
+                start=datetime.now(tz=timezone.utc),
+                tracks=[Track(**data) for data in songs]
+            )
+        )
 
     def test_config(self):
         return self.make_request(url=self.create_url(Subsonic.PING)) is not None
@@ -317,20 +342,7 @@ class Client(object):
                     'song', [])
 
                 self.playqueue = songs[:]
-                stream_url = self.create_url(Subsonic.DOWNLOAD)
 
-                with self.playlist_file.open("w") as pf:
-                    for song in songs:
-                        song_id = song.get("id")
-                        pf.write(
-                            f"file '{stream_url}&id={song_id}&format=raw'\n")
-
-                self.manager_queue.put_nowait(
-                    Playlist(
-                        start=datetime.now(tz=timezone.utc),
-                        tracks=[Track(**data) for data in songs]
-                    )
-                )
             else:
                 selected_song = next(filter(lambda sng: sng.get(
                     "id") == self.skip_to, self.playqueue), None)
@@ -373,15 +385,8 @@ class Client(object):
 
     def play_artist(self, artist_id):
         songs = self.get_top_songs(artist_id)
-        self.manager_queue.put_nowait(
-            Playlist(
-                start=datetime.now(tz=timezone.utc),
-                tracks=[Track(**data) for data in songs]
-            )
-        )
-
+        self.playqueue = songs[:]
         playing = True
-
         while playing:
             for song in songs:
                 if not playing:
@@ -390,14 +395,8 @@ class Client(object):
 
     def play_album(self, album_id):
         songs = self.get_album_tracks(album_id)
+        self.playqueue = songs[:]
         playing = True
-
-        self.manager_queue.put_nowait(
-            AlbumPlaylist(
-                start=datetime.now(tz=timezone.utc),
-                tracks=[Track(**data) for data in songs]
-            )
-        )
 
         artist_id = songs[0].get("artistId")
 
@@ -469,9 +468,6 @@ class Client(object):
                 NowPlaying(
                     start=datetime.now(tz=timezone.utc),
                     track=Track(**{**track_data, "coverArt": coverArtUrl}))
-            )
-            self.manager_queue.put_nowait(
-                Playstatus(status=Status.PLAYING)
             )
 
             env = dict(
@@ -593,9 +589,7 @@ class Client(object):
 
     def __exit(self):
         self.__terminate()
-        self.manager_queue.put_nowait(
-            Playstatus(status=Status.EXIT)
-        )
+        self.status = Status.EXIT
         return False
 
     def __stop(self):
@@ -608,22 +602,16 @@ class Client(object):
         if self.status == Status.PLAYING:
             self.ffplay.send_signal(SIGSTOP)
             self.status = Status.PAUSED
-            self.manager_queue.put_nowait(Playstatus(status=Status.PAUSED))
         elif self.status == Status.PAUSED:
             self.ffplay.send_signal(SIGCONT)
             self.status = Status.PLAYING
-            self.manager_queue.put_nowait(Playstatus(status=Status.RESUMED))
 
     def __restart(self, track_data):
         self.__terminate()
-        self.manager_queue.put_nowait(
-            Playstatus(status=Status.LOADING)
-        )
+        self.status = Status.LOADING
         return self.play_stream(track_data)
 
     def __next(self):
         self.__terminate()
-        self.manager_queue.put_nowait(
-            Playstatus(status=Status.LOADING)
-        )
+        self.status = Status.LOADING
         return True

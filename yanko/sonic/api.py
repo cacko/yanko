@@ -9,7 +9,8 @@ import string
 import sys
 import time
 from random import SystemRandom, choice
-from subprocess import CalledProcessError, Popen, PIPE
+from subprocess import CalledProcessError, Popen
+from signal import SIGSTOP, SIGCONT
 from yanko.core.thread import StoppableThread, process
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
@@ -480,7 +481,7 @@ class Client(object):
                 environ,
                 PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
             )
-            self.ffplay = Popen(params, env=env, stdin=PIPE)
+            self.ffplay = Popen(params, env=env)
 
             has_finished = None
             self.playing = True
@@ -504,6 +505,8 @@ class Client(object):
                         return self.__stop()
                     case Action.EXIT:
                         return self.__exit()
+                    case Action.TOGGLE:
+                        self.__toggle()
 
             self.lock_file.unlink(missing_ok=True)
             return True
@@ -601,6 +604,18 @@ class Client(object):
     def __stop(self):
         self.__terminate()
         return False
+
+    def __toggle(self):
+        if self.ffplay:
+            if self.playing:
+                self.ffplay.send_signal(SIGSTOP)
+                self.playing = False
+                self.manager_queue.put_nowait(Playstatus(status=Status.PAUSED))
+            else:
+                self.ffplay.send_signal(SIGCONT)
+                self.playing = True
+                self.manager_queue.put_nowait(Playstatus(status=Status.RESUMED))
+        return True
 
     def __restart(self, track_data):
         self.__terminate()

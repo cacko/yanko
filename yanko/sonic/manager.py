@@ -152,6 +152,8 @@ class Manager(object, metaclass=ManagerMeta):
         try:
             cmd, payload = self.commander.get_nowait()
             match(cmd):
+                case Command.TOGGLE:
+                    await self.__toggle()
                 case Command.RANDOM:
                     await self.__random()
                 case Command.RANDOM_ALBUM:
@@ -219,6 +221,12 @@ class Manager(object, metaclass=ManagerMeta):
         if self.api.playing:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
+
+    async def __toggle(self):
+        if self.api.ffplay:
+            self.api.playback_queue.put_nowait(Action.TOGGLE)
+        else:
+            self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))       
 
     async def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))

@@ -32,6 +32,7 @@ RESULT_KEYS = [
 
 
 class Command(Enum):
+    TOGGLE = 'toggle'
     PLAY = 'play'
     STOP = 'stop'
     NEXT = 'next'
@@ -62,9 +63,11 @@ class Action(Enum):
 
 class Status(Enum):
     PLAYING = 'playing'
+    PAUSED = 'paused'
     STOPPED = 'stopped'
     LOADING = 'loadng'
     EXIT = 'exit'
+    RESUMED = 'resumed'
 
 
 class Subsonic(Enum):

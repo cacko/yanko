@@ -3,6 +3,7 @@ from rumps import MenuItem
 from pathlib import Path
 from enum import Enum
 
+
 class Label(Enum):
     PLAY = 'Play'
     PAUSE = 'Pause'
@@ -58,10 +59,6 @@ class ActionItemMeta(type):
         if name not in cls._instances:
             cls._instances[name] = super().__call__(*args, **kwds)
         return cls._instances[name]
-
-    @property
-    def toggle(cls) -> 'ActionItem':
-        return cls("start", Label.PLAY.value, icon=Icon.PAUSE.value)
 
     @property
     def next(cls) -> 'ActionItem':
@@ -123,17 +120,6 @@ class MusicItem(MenuItem):
         super().__init__(title, callback=callback, key=key,
                          icon=icon, dimensions=dimensions, template=template)
 
-
     @property
     def id(self):
         return self.__id
-
-
-class ToggleAction(ActionItem):
-    _icons = [Icon.PAUSE.value, Icon.PLAY.value]
-    _labels = [Label.PAUSE.value, Label.PLAY.value]
-    _state = 0
-
-    def toggle(self):
-        self._state ^= 1
-        self.icon = self._icons[self._state]

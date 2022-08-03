@@ -1,4 +1,3 @@
-from ast import Sub
 from dataclasses import dataclass
 import hashlib
 import logging
@@ -7,10 +6,13 @@ from os import environ
 from pathlib import Path
 import string
 import sys
+import os
 import time
 from random import SystemRandom, choice
 from subprocess import CalledProcessError, Popen
 from signal import SIGSTOP, SIGCONT
+
+from setuptools import sic
 from yanko.core.thread import StoppableThread, process
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
@@ -450,11 +452,10 @@ class Client(object):
             '{}&id={}&format=raw'.format(stream_url, song_id),
             '-autoexit',
             '-nodisp',
-            '-fs',
+            '-nostats',
             '-hide_banner',
             '-loglevel',
             'fatal',
-            '-infbuf',
         ]
 
         params = self.pre_exe + params if len(self.pre_exe) > 0 else params

@@ -1,3 +1,4 @@
+import tarfile
 from traceback import print_exc
 import rumps
 from yanko.core.thread import StoppableThread
@@ -108,7 +109,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
         self.manager.commander.put_nowait((Command.LOAD_LASTPLAYLIST, None))
-        HotKeys.start(self.manager.commander)
+
+        tk = StoppableThread(target=HotKeys.start, args=[self.manager.commander])
+        tk.start()
+        self.__threads.append(tk)
 
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):

@@ -4,9 +4,21 @@ import logging
 from queue import Queue
 from traceback import print_exc
 from pynput import keyboard
-from pynput.keyboard import Key
+from pynput.keyboard import Key, HotKey
+from pynput.keyboard._darwin import (
+    NX_KEYTYPE_PLAY,
+    NX_KEYTYPE_MUTE,
+    NX_KEYTYPE_SOUND_DOWN,
+    NX_KEYTYPE_SOUND_UP,
+    NX_KEYTYPE_NEXT,
+    NX_KEYTYPE_PREVIOUS,
+)
 from yanko.sonic import Command
 import Quartz
+
+from pynput import keyboard
+
+
 
 class HotKeysMeta(type):
 
@@ -25,45 +37,48 @@ class HotKeysMeta(type):
     def stop(cls):
         return cls().stop_listen()
 
+
 class HotKeys(object, metaclass=HotKeysMeta):
 
-    __cmd_pressed = False
-    __listener = None
-
     def listen(self):
-        try:
-            self.__listener = keyboard.Listener(
-                on_press=self.on_press,
-                on_release=self.on_release,
-                )
-            self.__listener.start()
-        except Exception as e:
-            print_exc(e)
+        print(HotKey.parse('<media_play_pause>'))
+        with keyboard.GlobalHotKeys({
+                f'<{NX_KEYTYPE_PLAY}>': self.on_media_play_pause,
+                f'<cmd>+<{NX_KEYTYPE_PLAY}>': self.on_cmd_media_play_pause,
+                f'<{NX_KEYTYPE_NEXT}>': self.on_media_next,
+                f'<cmd>+<{NX_KEYTYPE_NEXT}>': self.on_cmd_media_next,
+                f'<{NX_KEYTYPE_PREVIOUS}>': self.on_media_prev,
+                f'<cmd>+<{NX_KEYTYPE_PREVIOUS}>': self.on_cmd_media_prev,
 
-    def stop_listen(self):
-        try:
-            self.__listener.stop()
-        except Exception as e:
-            print_exc(e)
+        }) as h:
+            h.join()
 
-    def on_press(self, key):
-        if key == Key.cmd:
-            self.__cmd_pressed = True
+    def on_media_play_pause(self):
+        __class__._queue.put_nowait(
+            (Command.TOGGLE, None)
+        )
 
-    def on_release(self, key):
-        logging.warn(key)
-        match(key):
-            case Key.cmd:
-                self.__cmd_pressed = False
-            case Key.media_play_pause:
-                __class__._queue.put_nowait(
-                    (Command.RANDOM if self.__cmd_pressed else Command.TOGGLE, None)
-                )
-            case Key.media_next:
-                __class__._queue.put_nowait(
-                    (Command.RANDOM_ALBUM if self.__cmd_pressed else Command.NEXT, None)
-                )
-            case Key.media_previous:
-                __class__._queue.put_nowait(
-                    (Command.RESTART if self.__cmd_pressed else Command.PREV, None)
-                )
+    def on_cmd_media_play_pause(self):
+        __class__._queue.put_nowait(
+            (Command.RANDOM, None)
+        )
+
+    def on_media_next(self):
+        __class__._queue.put_nowait(
+            (Command.NEXT, None)
+        )
+
+    def on_cmd_media_next(self):
+        __class__._queue.put_nowait(
+            (Command.RANDOM_ALBUM, None)
+        )
+
+    def on_media_prev(self):
+        __class__._queue.put_nowait(
+            (Command.PREV, None)
+        )
+
+    def on_cmd_media_prev(self):
+        __class__._queue.put_nowait(
+            (Command.RESTART, None)
+        )

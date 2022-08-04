@@ -1,0 +1,110 @@
+{
+  "title": "Yanko hotkeys",
+  "rules": [
+    {
+      "description": "play",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "play_or_pause"
+          },
+          "to": [
+            {
+              "shell_command": "curl http://127.0.0.1:7988/command/toggle"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "cmd+play",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "play_or_pause",
+            "modifiers": {
+              "mandatory": ["command"]
+            }
+          },
+          "to": [
+            {
+              "shell_command": "curl http://127.0.0.1:7988/command/random"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "next",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "consumer_key_code": "scan_next_track"
+          },
+          "to": [
+            {
+              "shell_command": "curl http://127.0.0.1:7988/command/next"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "cmd+next",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "consumer_key_code": "scan_next_track",
+            "modifiers": {
+              "mandatory": ["command"]
+            }
+          },
+          "to": [
+            {
+              "shell_command": "curl http://127.0.0.1:7988/command/random_album"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "scan_previous_track",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "consumer_key_code": "scan_previous_track"
+          },
+          "to": [
+            {
+              "shell_command": "curl http://127.0.0.1:7988/command/prev"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "cmd+scan_previous_track",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "consumer_key_code": "scan_previous_track",
+            "modifiers": {
+              "mandatory": ["command"]
+            }
+          },
+          "to": [
+            {
+              "shell_command": "curl http://127.0.0.1:7988/command/restart"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

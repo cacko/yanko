@@ -19,7 +19,8 @@ OPTIONS = {
         'appdir',
         'pyotp',
         'cv2',
-        'numpy'
+        'numpy',
+        'pynput'
     ],
 }
 setup(

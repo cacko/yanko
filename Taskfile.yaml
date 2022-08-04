@@ -11,6 +11,11 @@ tasks:
       - poetry run python app.py
     silent: true
 
+  notunes:
+    desc: disable hotkey handling
+    cmds:
+      - launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist
+
   push:
     desc: commit and pushes current changes
     cmds:

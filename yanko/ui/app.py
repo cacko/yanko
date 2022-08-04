@@ -31,7 +31,8 @@ from yanko.core.string import truncate
 from yanko.api.server import Server
 from yanko.lametric import LaMetric
 from pathlib import Path
-
+from pynput import keyboard
+from pynput.keyboard import Key
 
 class YankoAppMeta(type):
 
@@ -107,6 +108,19 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
         self.manager.commander.put_nowait((Command.LOAD_LASTPLAYLIST, None))
+        listener = keyboard.Listener(
+            on_release=self.on_release)
+        listener.start()
+
+    def on_release(self, key):
+        match(key):
+            case keyboard.Key.media_play_pause:
+                self.manager.commander.put_nowait((Command.TOGGLE, None))
+            case keyboard.Key.media_next:
+                self.manager.commander.put_nowait((Command.NEXT, None))
+            case keyboard.Key.media_previous:
+                self.manager.commander.put_nowait((Command.PREV, None))
+
 
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):

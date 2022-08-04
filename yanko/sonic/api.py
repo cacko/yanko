@@ -82,6 +82,7 @@ class Client(object):
     manager_queue: LifoQueue = None
     __status: Status = Status.STOPPED
     __playqueue = []
+    playidx = 0
     skip_to: str = None
     ffplay: FFPlay = None
     scanning = False
@@ -167,8 +168,7 @@ class Client(object):
         with self.playlist_file.open("r") as fp:
             try:
                 last_playlist = json.load(fp)
-                if last_playlist:
-                    return self.play_random_songs(last_playlist)
+                self.playqueue = last_playlist
             except json.decoder.JSONDecodeError:
                 pass
 
@@ -356,7 +356,7 @@ class Client(object):
                 if not selected_song:
                     songs = self.playqueue[:]
 
-            for random_song in songs:
+            for idx, random_song in enumerate(songs):
                 if not playing:
                     return
                 if self.skip_to:
@@ -364,6 +364,7 @@ class Client(object):
                         continue
                     else:
                         self.skip_to = None
+                self.playidx = idx
                 playing = self.play_stream(dict(random_song))
 
     def play_radio(self, radio_id):
@@ -385,9 +386,10 @@ class Client(object):
                 )
             )
 
-            for radio_track in songs:
+            for idx, radio_track in enumerate(songs):
                 if not playing:
                     return
+                self.playidx = idx
                 playing = self.play_stream(dict(radio_track))
 
     def play_artist(self, artist_id):
@@ -407,7 +409,7 @@ class Client(object):
 
         artist_id = songs[0].get("artistId")
 
-        for song in songs:
+        for idx, song in enumerate(songs):
             if not playing:
                 return
             if self.skip_to:
@@ -415,6 +417,7 @@ class Client(object):
                     continue
                 else:
                     self.skip_to = None
+            self.playidx = idx
             playing = self.play_stream(dict(song))
             if self.skip_to:
                 return self.play_album(album_id)
@@ -487,6 +490,8 @@ class Client(object):
             match(cmd):
                 case Command.RANDOM:
                     self.play_random_songs()
+                case Command.PLAYLIST:
+                    self.play_random_songs(self.playqueue)
                 case Command.RANDOM_ALBUM:
                     self.play_random_album()
                 case Command.ALBUM:

@@ -172,6 +172,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__quit()
                 case Command.NEXT:
                     await self.__next()
+                case Command.PREV:
+                    await self.__prev()
                 case Command.RESTART:
                     await self.__restart()
                 case Command.NEWEST:
@@ -236,8 +238,6 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     async def __load_lastplaylist(self):
-        if self.api.status != Status.STOPPED:
-            self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.LOAD_LASTPLAYLIST, None))      
 
     async def __random_album(self):
@@ -247,7 +247,10 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def __toggle(self):
         if self.api.status == Status.STOPPED:
-            self.api.command_queue.put_nowait((Command.RANDOM, None))
+            if len(self.api.playqueue) > 0:
+                self.api.command_queue.put_nowait((Command.PLAYLIST, None))
+            else:
+                self.api.command_queue.put_nowait((Command.RANDOM, None))
         else:
             self.api.search_queue.put_nowait((Command.TOGGLE, None))     
 
@@ -294,6 +297,13 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.QUIT, None))
 
     async def __next(self):
+        self.api.playback_queue.put_nowait(Action.NEXT)
+
+    async def __prev(self):
+        idx = self.api.playidx
+        if not idx:
+            return
+        self.api.skip_to = self.playqueue[idx - 1].get("id")
         self.api.playback_queue.put_nowait(Action.NEXT)
 
     async def __restart(self):

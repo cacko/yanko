@@ -36,6 +36,7 @@ class Command(Enum):
     PLAY = 'play'
     STOP = 'stop'
     NEXT = 'next'
+    PREV = 'previous'
     RANDOM = 'random'
     NEWEST = 'newest'
     QUIT = 'quit'
@@ -52,6 +53,7 @@ class Command(Enum):
     RESCAN = 'rescan'
     MOST_PLAYED = 'most_played'
     LOAD_LASTPLAYLIST = 'load_lastplaylist'
+    PLAYLIST = 'playlist'
 
 
 class Action(Enum):
@@ -60,6 +62,7 @@ class Action(Enum):
     EXIT = 'x'
     STOP = 's'
     TOGGLE = 'p'
+    PREV = 'pre'
 
 
 class Status(Enum):

@@ -448,8 +448,6 @@ class Client(object):
 
         self.scrobble(song_id)
 
-
-
         try:
             self.status = Status.PLAYING
             coverArt = track_data.get("coverArt")
@@ -558,6 +556,6 @@ class Client(object):
             self.status = Status.PAUSED
         elif self.status == Status.PAUSED:
             self.ffplay.send_signal(SIGCONT)
-            self.status = Status.PLAYING
+            self.status = Status.RESUMED
 
 

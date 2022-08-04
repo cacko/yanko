@@ -33,7 +33,6 @@ from yanko.lametric import LaMetric
 from pathlib import Path
 
 
-
 class YankoAppMeta(type):
 
     _instance = None
@@ -167,6 +166,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.icon = resp.track.coverArtIcon
         self.manager.commander.put_nowait(
             (Command.ARTIST_ALBUMS, resp.track.artistId))
+        self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
 
     def _onLaMetricInit(self):
         if self.__status in [Status.PLAYING] and self.__nowplaying:

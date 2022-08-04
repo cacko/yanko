@@ -303,7 +303,7 @@ class Manager(object, metaclass=ManagerMeta):
         idx = self.api.playidx
         if not idx:
             return
-        self.api.skip_to = self.playqueue[idx - 1].get("id")
+        self.api.skip_to = self.api.playqueue[idx - 1].get("id")
         self.api.playback_queue.put_nowait(Action.NEXT)
 
     async def __restart(self):

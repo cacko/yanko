@@ -51,6 +51,7 @@ class Command(Enum):
     RANDOM_ALBUM = 'random_album'
     RESCAN = 'rescan'
     MOST_PLAYED = 'most_played'
+    LOAD_LASTPLAYLIST = 'load_lastplaylist'
 
 
 class Action(Enum):

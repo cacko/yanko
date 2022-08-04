@@ -107,6 +107,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.NEWEST, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
+        self.manager.commander.put_nowait((Command.LOAD_LASTPLAYLIST, None))
 
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):

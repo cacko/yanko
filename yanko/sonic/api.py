@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import json
 import hashlib
 import logging
 from nntplib import ArticleInfo
@@ -129,7 +130,7 @@ class Client(object):
 
     @property
     def playlist_file(self) -> Path:
-        return app_config.app_dir / "playlist.txt"
+        return app_config.app_dir / "playlist.dat"
 
     @property
     def api_args(self) -> dict[str, str]:
@@ -165,6 +166,19 @@ class Client(object):
                 tracks=[Track(**data) for data in songs]
             )
         )
+        with self.playlist_file.open("w") as fp:
+            json.dump(songs, fp)
+
+    def load_lastplaylist(self):
+        if not self.playlist_file.exists():
+            return
+        with self.playlist_file.open("r") as fp:
+            try:
+                last_playlist = json.load(fp)
+                if last_playlist:
+                    return self.play_random_songs(last_playlist)
+            except json.decoder.JSONDecodeError:
+                pass
 
     def test_config(self):
         return self.make_request(url=self.create_url(Subsonic.PING)) is not None
@@ -328,18 +342,19 @@ class Client(object):
                 Subsonic.COVER_ART, id=album.id, size=200)
         return albums
 
-    def play_random_songs(self):
+    def play_random_songs(self, songs=None):
         url = self.create_url(Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE)
         playing = True
         while playing:
             if not self.skip_to:
-                random_songs = self.make_request(url)
+                if not songs:
+                    random_songs = self.make_request(url)
 
-                if not random_songs:
-                    return
+                    if not random_songs:
+                        return
 
-                songs = random_songs.get(
-                    'song', [])
+                    songs = random_songs.get(
+                        'song', [])
 
                 self.playqueue = songs[:]
 
@@ -451,6 +466,7 @@ class Client(object):
             '-hide_banner',
             '-loglevel',
             'fatal',
+            '-infbuf'
         ]
 
         params = self.pre_exe + params if len(self.pre_exe) > 0 else params
@@ -527,6 +543,8 @@ class Client(object):
                     self.play_album(payload)
                 case Command.ARTIST:
                     self.play_artist(payload)
+                case Command.LOAD_LASTPLAYLIST:
+                    self.load_lastplaylist()
                 case Command.SONG:
                     self.skip_to = payload
                 case Command.SEARCH:

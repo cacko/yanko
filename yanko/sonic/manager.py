@@ -194,6 +194,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__artist_albums(payload)
                 case Command.RESCAN:
                     await self.__rescan()
+                case Command.LOAD_LASTPLAYLIST:
+                    await self.__load_lastplaylist()
             self.commander.task_done()
         except Exception as e:
             logging.exception(e)
@@ -232,6 +234,11 @@ class Manager(object, metaclass=ManagerMeta):
         if self.api.status != Status.STOPPED:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM, None))
+
+    async def __load_lastplaylist(self):
+        if self.api.status != Status.STOPPED:
+            self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.command_queue.put_nowait((Command.LOAD_LASTPLAYLIST, None))      
 
     async def __random_album(self):
         if self.api.status != Status.STOPPED:

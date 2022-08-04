@@ -41,7 +41,6 @@ class HotKeysMeta(type):
 class HotKeys(object, metaclass=HotKeysMeta):
 
     def listen(self):
-        print(HotKey.parse('<media_play_pause>'))
         with keyboard.GlobalHotKeys({
                 f'<{NX_KEYTYPE_PLAY}>': self.on_media_play_pause,
                 f'<cmd>+<{NX_KEYTYPE_PLAY}>': self.on_cmd_media_play_pause,
@@ -50,7 +49,7 @@ class HotKeys(object, metaclass=HotKeysMeta):
                 f'<{NX_KEYTYPE_PREVIOUS}>': self.on_media_prev,
                 f'<cmd>+<{NX_KEYTYPE_PREVIOUS}>': self.on_cmd_media_prev,
 
-        }) as h:
+        }, force_hotkeys=True) as h:
             try:
                 h.join()
                 print("ended")

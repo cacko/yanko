@@ -7,7 +7,7 @@ OPTIONS = {
     'iconfile': 'icon.icns',
     'argv_emulation': True,
     'plist': {
-        'LSBackgroundOnly': True,
+        'LSUIElement': True,
     },
     'packages': [
         'rumps',

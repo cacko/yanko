@@ -6,9 +6,9 @@ DATA_FILES = []
 OPTIONS = {
     'iconfile': 'icon.icns',
     'argv_emulation': True,
-    # 'plist': {
-    #     'LSUIElement': True,
-    # },
+    'plist': {
+        'LSBackgroundOnly': True,
+    },
     'packages': [
         'rumps',
         'dataclasses_json',

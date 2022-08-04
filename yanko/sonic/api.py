@@ -3,20 +3,18 @@ import json
 import hashlib
 import logging
 from nntplib import ArticleInfo
-from os import environ
 from pathlib import Path
 import string
 import sys
 import time
 from random import SystemRandom, choice
-from subprocess import CalledProcessError, Popen
+from subprocess import CalledProcessError
 from signal import SIGSTOP, SIGCONT
 from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from yanko.sonic import (
     Action,
-    AlbumPlaylist,
     AlbumSearchItem,
     Artist,
     ArtistAlbums,
@@ -48,6 +46,8 @@ from datetime import datetime, timezone
 from yanko.core.config import app_config
 import urllib3
 from urllib.parse import urlencode
+
+from yanko.sonic.ffplay import FFPlay
 urllib3.disable_warnings()
 
 
@@ -83,7 +83,7 @@ class Client(object):
     __status: Status = Status.STOPPED
     __playqueue = []
     skip_to: str = None
-    ffplay = None
+    ffplay: FFPlay = None
     scanning = False
     __threads = []
 
@@ -116,17 +116,9 @@ class Client(object):
         self.__threads.append(search_thread)
 
         self.playback_queue = LifoQueue()
+        self.ffplay = FFPlay(self.playback_queue)
 
-        # remove the lock file if one exists
-        if self.lock_file.is_file():
-            self.lock_file.unlink()
-        client_config = app_config.get('client', {})
-        self.pre_exe = client_config.get('pre_exe', '')
-        self.pre_exe = self.pre_exe.split(' ') if self.pre_exe != '' else []
 
-    @property
-    def lock_file(self) -> Path:
-        return app_config.app_dir / "play.lock"
 
     @property
     def playlist_file(self) -> Path:
@@ -456,34 +448,10 @@ class Client(object):
 
         self.scrobble(song_id)
 
-        params = [
-            'ffplay',
-            '-i',
-            '{}&id={}&format=raw'.format(stream_url, song_id),
-            '-autoexit',
-            '-nodisp',
-            '-nostats',
-            '-hide_banner',
-            '-loglevel',
-            'fatal',
-            '-infbuf'
-        ]
 
-        params = self.pre_exe + params if len(self.pre_exe) > 0 else params
 
         try:
-
-            env = dict(
-                environ,
-                PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
-            )
-            self.ffplay = Popen(params, env=env)
-
-            has_finished = None
             self.status = Status.PLAYING
-            self.lock_file.open("w+").close()
-
-
             coverArt = track_data.get("coverArt")
             coverArtUrl = coverArt
             if coverArt:
@@ -498,28 +466,9 @@ class Client(object):
                     track=Track(**{**track_data, "coverArt": coverArtUrl}))
             )
 
+            self.status = self.ffplay.play(stream_url, track_data)
 
-            while has_finished is None:
-                has_finished = self.ffplay.poll() if self.ffplay else True
-                if self.playback_queue.empty():
-                    time.sleep(0.1)
-                    continue
-
-                command = self.playback_queue.get_nowait()
-                self.playback_queue.task_done()
-
-                match (command):
-                    case Action.RESTART:
-                        return self.__restart(track_data)
-                    case Action.NEXT:
-                        return self.__next()
-                    case Action.STOP:
-                        return self.__stop()
-                    case Action.EXIT:
-                        return self.__exit()
-
-            self.lock_file.unlink(missing_ok=True)
-            return True
+            return self.status not in [Status.EXIT, Status.STOPPED]
 
         except OSError as err:
             logging.error(
@@ -570,7 +519,7 @@ class Client(object):
                         artistInfo=self.get_artist_info(payload),
                         albums=self.get_artist_albums(payload)))
                 case Command.QUIT:
-                    self.__exit()
+                    self.playback_queue.put_nowait(Action.EXIT)
                 case Command.RESCAN:
                     self.startScan()
                 case Command.TOGGLE:
@@ -587,7 +536,7 @@ class Client(object):
             self.search_queue.task_done()
 
     def exit(self):
-        self.__exit()
+        self.ffplay.exit()
         for th in self.__threads:
             try:
                 th.stop()
@@ -601,22 +550,6 @@ class Client(object):
             for data in fnc(*args)
         ]
 
-    def __terminate(self):
-        self.lock_file.unlink(missing_ok=True)
-        if self.ffplay:
-            self.ffplay.terminate()
-            self.ffplay = None
-        self.status = Status.STOPPED
-
-    def __exit(self):
-        self.__terminate()
-        self.status = Status.EXIT
-        return False
-
-    def __stop(self):
-        self.__terminate()
-        return False
-
     def togglePlay(self):
         if not self.ffplay:
             return
@@ -627,12 +560,4 @@ class Client(object):
             self.ffplay.send_signal(SIGCONT)
             self.status = Status.PLAYING
 
-    def __restart(self, track_data):
-        self.__terminate()
-        self.status = Status.LOADING
-        return self.play_stream(track_data)
 
-    def __next(self):
-        self.__terminate()
-        self.status = Status.LOADING
-        return True

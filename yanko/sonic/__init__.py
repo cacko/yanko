@@ -69,6 +69,7 @@ class Status(Enum):
     LOADING = 'loadng'
     EXIT = 'exit'
     RESUMED = 'resumed'
+    NEXT = 'next'
 
 
 class Subsonic(Enum):

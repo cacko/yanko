@@ -379,15 +379,8 @@ class Client(object):
             if not similar_songs:
                 return
 
-            songs = similar_songs.get('song', [
-            ])
-
-            self.manager_queue.put_nowait(
-                Playlist(
-                    start=datetime.now(tz=timezone.utc),
-                    tracks=[Track(**data) for data in songs]
-                )
-            )
+            songs = similar_songs.get('song', [])
+            self.playqueue = songs[:]
 
             for idx, radio_track in enumerate(songs):
                 if not playing:
@@ -400,9 +393,10 @@ class Client(object):
         self.playqueue = songs[:]
         playing = True
         while playing:
-            for song in songs:
+            for idx, song in enumerate(songs):
                 if not playing:
                     return
+                self.playidx = idx
                 playing = self.play_stream(dict(song))
 
     def play_album(self, album_id):

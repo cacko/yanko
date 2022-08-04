@@ -120,6 +120,7 @@ class Manager(object, metaclass=ManagerMeta):
     __running = False
     player_queue: Queue = None
     announce_queue: Queue = None
+    playing_now: NowPlaying = None
 
     def __init__(self) -> None:
         self.eventLoop = asyncio.new_event_loop()
@@ -198,9 +199,14 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__rescan()
                 case Command.LOAD_LASTPLAYLIST:
                     await self.__load_lastplaylist()
-            self.commander.task_done()
+                case Command.CURRENT_ALBUM:
+                    await self.__album(self.playing_now.track.albumId)
+                case Command.CURRENT_ARTIST:
+                    await self.__artist(self.playing_now.track.artistId)
         except Exception as e:
             logging.exception(e)
+        finally:
+            self.commander.task_done()
 
     async def player_runner(self):
         try:
@@ -211,6 +217,7 @@ class Manager(object, metaclass=ManagerMeta):
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
                 cmd.track = await resolveCoverArt(cmd.track)
                 self.announce_queue.put_nowait(cmd.track)
+                self.playing_now = cmd
             elif isinstance(cmd, Search) and len(cmd.items):
                 cmd.items = await resolveSearch(cmd.items)
             elif isinstance(cmd, LastAdded):
@@ -238,7 +245,7 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     async def __load_lastplaylist(self):
-        self.api.command_queue.put_nowait((Command.LOAD_LASTPLAYLIST, None))      
+        self.api.command_queue.put_nowait((Command.LOAD_LASTPLAYLIST, None))
 
     async def __random_album(self):
         if self.api.status != Status.STOPPED:
@@ -252,7 +259,7 @@ class Manager(object, metaclass=ManagerMeta):
             else:
                 self.api.command_queue.put_nowait((Command.RANDOM, None))
         else:
-            self.api.search_queue.put_nowait((Command.TOGGLE, None))     
+            self.api.search_queue.put_nowait((Command.TOGGLE, None))
 
     async def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))

@@ -54,6 +54,10 @@ class Command(Enum):
     MOST_PLAYED = 'most_played'
     LOAD_LASTPLAYLIST = 'load_lastplaylist'
     PLAYLIST = 'playlist'
+    CURRENT_ARTIST = 'current_artist'
+    CURRENT_ALBUM = 'current_album'
+    PLAY_LAST_ADDED = 'play_last_added'
+    PLAY_MOST_PLAYED = 'play_most_played'
 
 
 class Action(Enum):

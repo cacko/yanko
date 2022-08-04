@@ -134,13 +134,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def onRescan(self, sender):
         self.manager.commander.put_nowait((Command.RESCAN, None))
 
-    @rumps.events.on_screen_sleep
-    def sleep(self):
-        pass
+    # @rumps.events.on_screen_sleep
+    # def sleep(self):
+    #     HotKeys.stop()
 
-    @rumps.events.on_screen_wake
-    def wake(self):
-        pass
+    # @rumps.events.on_screen_wake
+    # def wake(self):
+    #     HotKeys.start(self.manager.commander)
 
     def onManagerResult(self, resp):
         logging.debug(resp)

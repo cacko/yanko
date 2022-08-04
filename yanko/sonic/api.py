@@ -41,7 +41,7 @@ from yanko.sonic import (
     ScanStatusResponse
 )
 import requests
-from queue import LifoQueue
+from queue import Queue
 from datetime import datetime, timezone
 from yanko.core.config import app_config
 import urllib3
@@ -62,7 +62,7 @@ class ApiArguments:
     f: str = "json"
 
 
-def get_scan_status(url, manager_queue: LifoQueue):
+def get_scan_status(url, manager_queue: Queue):
     while True:
         time.sleep(2)
         res = requests.get(url)
@@ -76,10 +76,10 @@ def get_scan_status(url, manager_queue: LifoQueue):
 
 
 class Client(object):
-    command_queue: LifoQueue = None
-    search_queue: LifoQueue = None
-    playback_queue: LifoQueue = None
-    manager_queue: LifoQueue = None
+    command_queue: Queue = None
+    search_queue: Queue = None
+    playback_queue: Queue = None
+    manager_queue: Queue = None
     __status: Status = Status.STOPPED
     __playqueue = []
     playidx = 0
@@ -104,19 +104,19 @@ class Client(object):
         streaming_config = app_config.get('streaming', {})
         self.invert_random = streaming_config.get('invert_random', False)
 
-        self.command_queue = LifoQueue()
+        self.command_queue = Queue()
         input_thread = StoppableThread(target=self.add_input)
         input_thread.daemon = True
         input_thread.start()
         self.__threads.append(input_thread)
 
-        self.search_queue = LifoQueue()
+        self.search_queue = Queue()
         search_thread = StoppableThread(target=self.add_search)
         search_thread.daemon = True
         search_thread.start()
         self.__threads.append(search_thread)
 
-        self.playback_queue = LifoQueue()
+        self.playback_queue = Queue()
         self.ffplay = FFPlay(self.playback_queue)
 
 
@@ -145,6 +145,8 @@ class Client(object):
         self.manager_queue.put_nowait(
             Playstatus(status=val)
         )
+        if val == Status.RESUMED:
+            self.status = Status.PLAYING
 
     @property
     def playqueue(self):
@@ -161,6 +163,7 @@ class Client(object):
         )
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
+
 
     def load_lastplaylist(self):
         if not self.playlist_file.exists():

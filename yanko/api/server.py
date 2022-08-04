@@ -1,5 +1,5 @@
 from yanko.core.config import app_config
-from queue import LifoQueue
+from queue import Queue
 from bottle import Bottle, run
 import time
 from yanko.sonic import Command
@@ -10,15 +10,15 @@ app = Bottle()
 class ServerMeta(type):
 
     _instance: 'Server' = None
-    _manager: LifoQueue = None
-    _queue: LifoQueue = None
+    _manager: Queue = None
+    _queue: Queue = None
 
     def __call__(self, *args, **kwds):
         if not self._instance:
             self._instance = super().__call__(*args, **kwds)
         return self._instance
 
-    def start(cls, queue: LifoQueue, state_callback):
+    def start(cls, queue: Queue, state_callback):
         cls().start_server(queue, state_callback)
 
     def search(cls, query):
@@ -33,12 +33,12 @@ class ServerMeta(type):
     @property
     def queue(cls):
         if not cls._queue:
-            cls._queue = LifoQueue()
+            cls._queue = Queue()
         return cls._queue
 
 class Server(object, metaclass=ServerMeta):
 
-    api: LifoQueue = None
+    api: Queue = None
     state_callback = None
     
     def start_server(self, queue, state_callback):

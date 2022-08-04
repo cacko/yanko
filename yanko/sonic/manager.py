@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from queue import LifoQueue
+from queue import Queue
 from yanko.core import perftime
 from yanko.sonic import (
     Action,
@@ -111,22 +111,22 @@ class ManagerMeta(type):
 
 class Manager(object, metaclass=ManagerMeta):
 
-    commander: LifoQueue = None
-    alfred: LifoQueue = None
+    commander: Queue = None
+    alfred: Queue = None
     eventLoop: asyncio.AbstractEventLoop = None
     manager_callback = None
     player_callback = None
     api = None
     __running = False
-    player_queue: LifoQueue = None
-    announce_queue: LifoQueue = None
+    player_queue: Queue = None
+    announce_queue: Queue = None
 
     def __init__(self) -> None:
         self.eventLoop = asyncio.new_event_loop()
-        self.commander = LifoQueue()
+        self.commander = Queue()
         self.api = Client()
-        self.player_queue = LifoQueue()
-        self.announce_queue = LifoQueue()
+        self.player_queue = Queue()
+        self.announce_queue = Queue()
         self.api.manager_queue = self.player_queue
 
     def start(self, manager_callback, player_callback):

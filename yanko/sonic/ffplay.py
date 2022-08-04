@@ -1,5 +1,5 @@
 from subprocess import Popen
-from queue import LifoQueue
+from queue import Queue
 from yanko.sonic import Status, Action
 from pathlib import Path
 from yanko.core.config import app_config
@@ -10,7 +10,7 @@ import time
 class FFPlay(object):
 
     __proc: Popen = None
-    __queue: LifoQueue = None
+    __queue: Queue = None
 
     def __init__(self, queue):
         self.lock_file.unlink(missing_ok=True)

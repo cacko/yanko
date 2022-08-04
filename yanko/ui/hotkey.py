@@ -1,5 +1,6 @@
 
 
+import logging
 from queue import Queue
 from traceback import print_exc
 from pynput import keyboard
@@ -50,6 +51,7 @@ class HotKeys(object, metaclass=HotKeysMeta):
             self.__cmd_pressed = True
 
     def on_release(self, key):
+        logging.warn(key)
         match(key):
             case Key.cmd:
                 self.__cmd_pressed = False

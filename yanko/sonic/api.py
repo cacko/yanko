@@ -472,6 +472,18 @@ class Client(object):
         params = self.pre_exe + params if len(self.pre_exe) > 0 else params
 
         try:
+
+            env = dict(
+                environ,
+                PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
+            )
+            self.ffplay = Popen(params, env=env)
+
+            has_finished = None
+            self.status = Status.PLAYING
+            self.lock_file.open("w+").close()
+
+
             coverArt = track_data.get("coverArt")
             coverArtUrl = coverArt
             if coverArt:
@@ -486,15 +498,6 @@ class Client(object):
                     track=Track(**{**track_data, "coverArt": coverArtUrl}))
             )
 
-            env = dict(
-                environ,
-                PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
-            )
-            self.ffplay = Popen(params, env=env)
-
-            has_finished = None
-            self.status = Status.PLAYING
-            self.lock_file.open("w+").close()
 
             while has_finished is None:
                 has_finished = self.ffplay.poll() if self.ffplay else True

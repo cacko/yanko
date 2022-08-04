@@ -51,7 +51,10 @@ class HotKeys(object, metaclass=HotKeysMeta):
                 f'<cmd>+<{NX_KEYTYPE_PREVIOUS}>': self.on_cmd_media_prev,
 
         }) as h:
-            h.join()
+            try:
+                h.join()
+            except Exception as e:
+                print_exc(e)
 
     def on_media_play_pause(self):
         __class__._queue.put_nowait(

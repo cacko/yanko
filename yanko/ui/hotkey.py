@@ -53,6 +53,7 @@ class HotKeys(object, metaclass=HotKeysMeta):
         }) as h:
             try:
                 h.join()
+                print("ended")
             except Exception as e:
                 print_exc(e)
 

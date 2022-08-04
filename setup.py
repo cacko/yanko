@@ -20,7 +20,6 @@ OPTIONS = {
         'pyotp',
         'cv2',
         'numpy',
-        'pynput'
     ],
 }
 setup(

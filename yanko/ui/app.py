@@ -34,7 +34,6 @@ from yanko.lametric import LaMetric
 from pathlib import Path
 from yanko.ui.hotkey import HotKeys
 
-
 class YankoAppMeta(type):
 
     _instance = None

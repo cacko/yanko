@@ -14,7 +14,6 @@ from pynput.keyboard._darwin import (
     NX_KEYTYPE_PREVIOUS,
 )
 from yanko.sonic import Command
-import Quartz
 
 from pynput import keyboard
 

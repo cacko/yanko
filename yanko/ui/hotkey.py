@@ -5,7 +5,7 @@ from traceback import print_exc
 from pynput import keyboard
 from pynput.keyboard import Key
 from yanko.sonic import Command
-
+import Quartz
 
 class HotKeysMeta(type):
 
@@ -33,10 +33,18 @@ class HotKeys(object, metaclass=HotKeysMeta):
         try:
             self.__listener = keyboard.Listener(
                 on_press=self.on_press,
-                on_release=self.on_release)
+                on_release=self.on_release,
+                darwin_intercept=self.darwin_intercept
+                )
             self.__listener.start()
         except Exception as e:
             print_exc(e)
+
+    def darwin_intercept(self, event_type, event):
+
+        if self.__listener._event_to_key(event) == Key.media_volume_up:
+            return None
+        return event
 
     def stop_listen(self):
         try:

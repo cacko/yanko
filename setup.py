@@ -18,8 +18,6 @@ OPTIONS = {
         'PIL',
         'appdir',
         'pyotp',
-        'cv2',
-        'numpy',
     ],
 }
 setup(

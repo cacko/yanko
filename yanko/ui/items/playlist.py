@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-import logging
 from dataclasses_json import dataclass_json, Undefined
 from yanko.sonic import Track
-from rumps import Menu, App
-from yanko.ui.models import Icon, MusicItem
+from rumps import App
+from yanko.ui.models import MusicItem
 from Cocoa import NSFont, NSFontAttributeName
 from PyObjCTools.Conversion import propertyListFromPythonCollection
 from AppKit import NSAttributedString

@@ -34,7 +34,9 @@ class FFPlay(object):
             '-hide_banner',
             '-loglevel',
             'fatal',
-            '-infbuf'
+            '-infbuf',
+            '-filter:a',
+            'loudnorm'
         ]
         env = dict(
             environ,

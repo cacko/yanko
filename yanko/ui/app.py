@@ -106,6 +106,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
         self.manager.commander.put_nowait((Command.LOAD_LASTPLAYLIST, None))
+    
+    @property
+    def threads(self):
+        return self.__threads
 
     @rumps.clicked(Label.RANDOM.value)
     def onRandom(self, sender):
@@ -243,6 +247,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__artist_albums.update(
             artistInfo, albums, self._onAlbumClick, self._onArtistClick)
 
+    @rumps.events.before_quit
     def terminate(self):
         self.manager.commander.put_nowait((Command.QUIT, None))
         for th in self.__threads:

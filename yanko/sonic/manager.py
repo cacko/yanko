@@ -277,7 +277,8 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.SEARCH, query))
 
     async def __artist_albums(self, query):
-        self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
+        if query:
+            self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
 
     async def __album(self, albumId):
         if self.api.status != Status.STOPPED:

@@ -35,12 +35,12 @@ class FFPlay(object):
             '-loglevel',
             'fatal',
             '-infbuf',
-            '-filter:a',
-            'loudnorm'
+            '-af',
+            'stereowiden'
         ]
         env = dict(
             environ,
-            PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
+            PATH=f"/opt/homebrew/bin/:{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
         )
         self.__proc = Popen(params, env=env)
 

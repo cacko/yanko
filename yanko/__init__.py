@@ -20,6 +20,11 @@ def start():
         "redis", {}).get("url"), cache_dir.as_posix())
     try:
         app = YankoApp()
+        threads = app.threads
         app.run()
-    except:
-        YankoApp.quit()
+    except KeyboardInterrupt:
+        for th in threads:
+            try:
+                th.stop()
+            except:
+                pass

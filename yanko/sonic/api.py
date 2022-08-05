@@ -4,6 +4,7 @@ import hashlib
 import logging
 from nntplib import ArticleInfo
 from pathlib import Path
+from pprint import pprint
 import string
 import sys
 import time
@@ -318,8 +319,12 @@ class Client(object):
         return songs
 
     def get_artist(self, artist_id) -> Artist:
+        if not artist_id:
+            return 
         artist_info = self.make_request(
             self.create_url(Subsonic.ARTIST, id=artist_id))
+        if not artist_info:
+            return
         return Artist.from_dict(artist_info)
 
     def get_artist_info(self, artist_id) -> ArticleInfo:
@@ -551,8 +556,6 @@ class Client(object):
         ]
 
     def togglePlay(self):
-        if not self.ffplay:
-            return
         if self.status == Status.PLAYING:
             self.ffplay.send_signal(SIGSTOP)
             self.status = Status.PAUSED

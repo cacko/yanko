@@ -23,7 +23,7 @@ class CoverArtFile(CachableFile):
                 id = self._url
             h = blake2b(digest_size=20)
             h.update(id.encode())
-            self.__filename = f"{h.hexdigest()}.png"
+            self.__filename = f"{h.hexdigest()}.webp"
         return self.__filename
 
     @property

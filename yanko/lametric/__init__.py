@@ -1,15 +1,15 @@
 import logging
-from os import environ, stat
+from os import environ
 from pathlib import Path
 from yanko.core.config import app_config
 import requests
 from cachable.request import Method
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
-from yanko.lametric.pixel import pixelate
 from yanko.lametric.auth import OTP
 from yanko.sonic import Status
 from requests.exceptions import ConnectionError, JSONDecodeError
+from base64 import b64encode
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -56,13 +56,13 @@ class LaMetric(object, metaclass=LaMetricMeta):
             return response.json()
         except ConnectionError:
             logging.debug(f"lametric is off")
-        except JSONDecodeError:
+        except JSONDecodeError as e:
             pass
 
     def send_nowplaying(self, text, icon: Path):
         model = NowPlayingFrame(
             text=text,
-            icon=pixelate(icon)
+            icon=b64encode(icon.read_bytes()).decode()
         )
 
         return self.__make_request(

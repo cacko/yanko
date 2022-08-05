@@ -38,10 +38,11 @@ class FFPlay(object):
             '-sn',
             '-af',
             'loudnorm=I=-16:TP=-1.5:LRA=11:measured_I=-27.2:measured_TP=-14.4:measured_LRA=0.1:measured_thresh=-37.7:offset=-0.7:linear=true',
-            '-af',
-            'stereowiden'
-
+            # '-af',
+            # 'stereowiden'
         ]
+
+
         env = dict(
             environ,
             PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",

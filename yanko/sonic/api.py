@@ -404,7 +404,17 @@ class Client(object):
                 self.playidx = idx
                 playing = self.play_stream(dict(song))
 
-    def play_album(self, album_id):
+    def play_last_added(self):
+        albums = list(reversed(self.get_last_added()))
+        while album := albums.pop():
+            self.play_album(album.id, len(albums) == 0)
+
+    def play_most_played(self):
+        albums = list(reversed(self.get_most_played()))
+        while album := albums.pop():
+            self.play_album(album.id, len(albums) == 0)
+
+    def play_album(self, album_id, endless=True):
         songs = self.get_album_tracks(album_id)
         self.playqueue = songs[:]
         playing = True
@@ -423,8 +433,8 @@ class Client(object):
             playing = self.play_stream(dict(song))
             if self.skip_to:
                 return self.play_album(album_id)
-
-        return self.play_radio(artist_id)
+        if endless:
+            return self.play_radio(artist_id)
 
     def play_random_album(self):
         albums = self.get_album_list(AlbumType.RANDOM)
@@ -500,6 +510,10 @@ class Client(object):
                     self.play_album(payload)
                 case Command.ARTIST:
                     self.play_artist(payload)
+                case Command.PLAY_LAST_ADDED:
+                    self.play_last_added()
+                case Command.PLAY_MOST_PLAYED:
+                    self.play_most_played()
                 case Command.LOAD_LASTPLAYLIST:
                     self.load_lastplaylist()
                 case Command.SONG:

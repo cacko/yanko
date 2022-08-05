@@ -203,6 +203,10 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__album(self.playing_now.track.albumId)
                 case Command.CURRENT_ARTIST:
                     await self.__artist(self.playing_now.track.artistId)
+                case Command.PLAY_LAST_ADDED:
+                    await self.__play_last_added()
+                case Command.PLAY_MOST_PLAYED:
+                    await self.__play_most_played()
         except Exception as e:
             logging.exception(e)
         finally:
@@ -284,6 +288,16 @@ class Manager(object, metaclass=ManagerMeta):
         if self.api.status != Status.STOPPED:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
+
+    async def __play_last_added(self):
+        if self.api.status != Status.STOPPED:
+            self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.command_queue.put_nowait((Command.PLAY_LAST_ADDED, None))
+
+    async def __play_most_played(self):
+        if self.api.status != Status.STOPPED:
+            self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.command_queue.put_nowait((Command.PLAY_MOST_PLAYED, None))
 
     async def __artist(self, artistId):
         if self.api.status != Status.STOPPED:

@@ -49,6 +49,7 @@ import urllib3
 from urllib.parse import urlencode
 
 from yanko.sonic.ffplay import FFPlay
+from yanko.sonic.playqueue import PlayQueue
 urllib3.disable_warnings()
 
 
@@ -82,16 +83,15 @@ class Client(object):
     playback_queue: Queue = None
     manager_queue: Queue = None
     __status: Status = Status.STOPPED
-    __playqueue = []
+    playqueue: PlayQueue = None
     playidx = 0
-    skip_to: str = None
     ffplay: FFPlay = None
     scanning = False
     __threads = []
 
     BATCH_SIZE = 20
 
-    def __init__(self):
+    def __init__(self, manager_queue):
         server_config = app_config.get('server', {})
         self.host = server_config.get('host')
         self.username = server_config.get('username', '')
@@ -119,12 +119,8 @@ class Client(object):
 
         self.playback_queue = Queue()
         self.ffplay = FFPlay(self.playback_queue)
-
-
-
-    @property
-    def playlist_file(self) -> Path:
-        return app_config.app_dir / "playlist.dat"
+        self.manager_queue = manager_queue
+        self.playqueue = PlayQueue(manager_queue)
 
     @property
     def api_args(self) -> dict[str, str]:
@@ -148,33 +144,6 @@ class Client(object):
         )
         if val == Status.RESUMED:
             self.status = Status.PLAYING
-
-    @property
-    def playqueue(self):
-        return self.__playqueue
-
-    @playqueue.setter
-    def playqueue(self, songs):
-        self.__playqueue = songs
-        self.manager_queue.put_nowait(
-            Playlist(
-                start=datetime.now(tz=timezone.utc),
-                tracks=[Track(**data) for data in songs]
-            )
-        )
-        with self.playlist_file.open("w") as fp:
-            json.dump(songs, fp)
-
-
-    def load_lastplaylist(self):
-        if not self.playlist_file.exists():
-            return
-        with self.playlist_file.open("r") as fp:
-            try:
-                last_playlist = json.load(fp)
-                self.playqueue = last_playlist
-            except json.decoder.JSONDecodeError:
-                pass
 
     def test_config(self):
         return self.make_request(url=self.create_url(Subsonic.PING)) is not None
@@ -311,16 +280,12 @@ class Client(object):
     def get_album_tracks(self, album_id):
         album_info = self.make_request(
             self.create_url(Subsonic.ALBUM, id=album_id))
-        songs = []
-
-        for song in album_info.get('song', []):
-            songs.append(song)
-
+        songs = album_info.get('song', [])
         return songs
 
     def get_artist(self, artist_id) -> Artist:
         if not artist_id:
-            return 
+            return
         artist_info = self.make_request(
             self.create_url(Subsonic.ARTIST, id=artist_id))
         if not artist_info:
@@ -342,67 +307,49 @@ class Client(object):
                 Subsonic.COVER_ART, id=album.id, size=200)
         return albums
 
-    def play_random_songs(self, songs=None):
-        url = self.create_url(Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE)
-        playing = True
-        while playing:
-            if not self.skip_to:
-                if not songs:
-                    random_songs = self.make_request(url)
+    def play_random_songs(self, fetch=True):
+        if fetch:
+            random_songs = self.make_request(
+                self.create_url(
+                    Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE
+                )
+            )
 
-                    if not random_songs:
-                        return
-
-                    songs = random_songs.get(
-                        'song', [])
-
-                self.playqueue = songs[:]
-
-            else:
-                selected_song = next(filter(lambda sng: sng.get(
-                    "id") == self.skip_to, self.playqueue), None)
-                if not selected_song:
-                    songs = self.playqueue[:]
-
-            for idx, random_song in enumerate(songs):
-                if not playing:
-                    return
-                if self.skip_to:
-                    if self.skip_to != random_song.get("id"):
-                        continue
-                    else:
-                        self.skip_to = None
-                self.playidx = idx
-                playing = self.play_stream(dict(random_song))
-
-    def play_radio(self, radio_id):
-        playing = True
-        while playing:
-            similar_songs = self.make_request(self.create_url(
-                Subsonic.SIMILAR_SONGS2, id=radio_id, count=self.BATCH_SIZE))
-
-            if not similar_songs:
+            if not random_songs:
                 return
 
+            self.playqueue.load(random_songs.get(
+                'song', []))
+
+        for song in self.playqueue:
+            playing = self.play_stream(dict(song))
+            if not playing:
+                return
+        return self.play_random_songs(not self.playqueue.skip_to)
+
+    def play_radio(self, radio_id, fetch=True):
+        if fetch:
+            similar_songs = self.make_request(self.create_url(
+                Subsonic.SIMILAR_SONGS2, id=radio_id, count=self.BATCH_SIZE))
+            if not similar_songs:
+                return
             songs = similar_songs.get('song', [])
-            self.playqueue = songs[:]
+            self.playqueue.load(songs)
+        for radio_track in self.playqueue:
+            playing = self.play_stream(dict(radio_track))
+            if not playing:
+                return
+        return self.play_radio(radio_id, not self.playqueue.skip_to)
 
-            for idx, radio_track in enumerate(songs):
-                if not playing:
-                    return
-                self.playidx = idx
-                playing = self.play_stream(dict(radio_track))
+    def play_artist(self, artist_id, fetch=True):
+        if fetch:
+            self.playqueue.load(self.get_top_songs(artist_id))
 
-    def play_artist(self, artist_id):
-        songs = self.get_top_songs(artist_id)
-        self.playqueue = songs[:]
-        playing = True
-        while playing:
-            for idx, song in enumerate(songs):
-                if not playing:
-                    return
-                self.playidx = idx
-                playing = self.play_stream(dict(song))
+        for song in self.playqueue:
+            playing = self.play_stream(dict(song))
+            if not playing:
+                return
+        return self.play_artist(artist_id, not self.playqueue.skip_to)
 
     def play_last_added(self):
         albums = list(reversed(self.get_last_added()))
@@ -414,27 +361,21 @@ class Client(object):
         while album := albums.pop():
             self.play_album(album.id, len(albums) == 0)
 
-    def play_album(self, album_id, endless=True):
-        songs = self.get_album_tracks(album_id)
-        self.playqueue = songs[:]
-        playing = True
+    def play_album(self, album_id, endless=True, fetch=True):
+        if fetch:
+            songs = self.get_album_tracks(album_id)
+            self.playqueue.load(songs)
 
-        artist_id = songs[0].get("artistId")
+        artist_id = None
 
-        for idx, song in enumerate(songs):
+        for song in self.playqueue:
+            artist_id = song.get("artistId")
+            playing = self.play_stream(dict(song))
             if not playing:
                 return
-            if self.skip_to:
-                if self.skip_to != song.get("id"):
-                    continue
-                else:
-                    self.skip_to = None
-            self.playidx = idx
-            playing = self.play_stream(dict(song))
-            if self.skip_to:
-                return self.play_album(album_id)
-        if endless:
-            return self.play_radio(artist_id)
+        if self.playqueue.skip_to:
+            return self.play_album(album_id=album_id, endless=endless, fetch=True)
+        return self.play_radio(artist_id)
 
     def play_random_album(self):
         albums = self.get_album_list(AlbumType.RANDOM)
@@ -503,7 +444,7 @@ class Client(object):
                 case Command.RANDOM:
                     self.play_random_songs()
                 case Command.PLAYLIST:
-                    self.play_random_songs(self.playqueue)
+                    self.play_random_songs(fetch=False)
                 case Command.RANDOM_ALBUM:
                     self.play_random_album()
                 case Command.ALBUM:
@@ -514,10 +455,8 @@ class Client(object):
                     self.play_last_added()
                 case Command.PLAY_MOST_PLAYED:
                     self.play_most_played()
-                case Command.LOAD_LASTPLAYLIST:
-                    self.load_lastplaylist()
                 case Command.SONG:
-                    self.skip_to = payload
+                    self.playqueue.skip_to = payload
                 case Command.SEARCH:
                     self.manager_queue.put_nowait(
                         Search(items=self.search(payload)))
@@ -576,5 +515,3 @@ class Client(object):
         elif self.status == Status.PAUSED:
             self.ffplay.send_signal(SIGCONT)
             self.status = Status.RESUMED
-
-

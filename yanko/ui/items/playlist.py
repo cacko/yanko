@@ -7,6 +7,11 @@ from Cocoa import NSFont, NSFontAttributeName
 from PyObjCTools.Conversion import propertyListFromPythonCollection
 from AppKit import NSAttributedString
 from typing import Optional
+from enum import Enum
+
+class Font(Enum):
+    REGULAR = NSFont.fontWithName_size_("MesloLGS NF", 12)
+    BOLD = NSFont.fontWithName_size_("MesloLGS NF Bold", 12)
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -18,32 +23,24 @@ class PlaylistItem:
 
 class PlaylistMenuItem(MusicItem):
 
-    __font: NSFont = None
     __attributes = None
 
     def __init__(self, title, id, callback=None, key=None, icon=None, dimensions=None, template=None):
         super().__init__(title, id, callback, key, icon, dimensions, template)
         self.setAttrTitle()
 
-    @property
-    def font(self):
-        if not self.__font:
-            self.__font = NSFont.fontWithName_size_("MesloLGS NF", 12)
-        return self.__font
-
-    @property
-    def string_attributes(self):
-        if not self.__attributes:
-            self.__attributes = propertyListFromPythonCollection({
-                NSFontAttributeName: self.font,
+    def string_attributes(self, font: Font):
+        return propertyListFromPythonCollection({
+                NSFontAttributeName: font.value,
             }, conversionHelper=lambda x: x)
-        return self.__attributes
 
-    def setAttrTitle(self, title=None):
+    def setAttrTitle(self, title=None, font: Font = None):
         if not title:
             title = self.title
+        if not font:
+            font = Font.REGULAR
         tt = NSAttributedString.alloc().initWithString_attributes_(
-            title, self.string_attributes)
+            title, self.string_attributes(font))
         self._menuitem.setAttributedTitle_(tt)
 
 
@@ -135,6 +132,6 @@ class Playlist:
             menu_item = menu.get(item.key)
             if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
                 if menu_item.id == track.id:
-                    menu_item.setAttrTitle(f"🔈 {item.track.displayTitle(isAlbum=self.__isAlbum)}")
+                    menu_item.setAttrTitle(f"🔈 {item.track.displayTitle(isAlbum=self.__isAlbum)}", Font.BOLD)
                 else:
                     menu_item.setAttrTitle(item.track.displayTitle(idx, isAlbum=self.__isAlbum))

@@ -8,6 +8,8 @@ OPTIONS = {
     'argv_emulation': True,
     'plist': {
         'LSUIElement': True,
+        'CFBundleIdentifier': 'net.cacko.yanko',
+        'CFBundleVersion': '0.1.0'
     },
     'packages': [
         'rumps',
@@ -18,7 +20,7 @@ OPTIONS = {
         'PIL',
         'appdir',
         'pyotp',
-        'click'
+        
     ],
 }
 setup(

@@ -38,7 +38,7 @@ class Command(Enum):
     NEXT = 'next'
     PREV = 'previous'
     RANDOM = 'random'
-    NEWEST = 'newest'
+    LAST_ADDED = 'last_added'
     QUIT = 'quit'
     RESTART = 'restart'
     ALBUM = 'album'

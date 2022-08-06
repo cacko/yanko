@@ -161,6 +161,7 @@ class Manager(object, metaclass=ManagerMeta):
     async def commander_runner(self):
         try:
             cmd, payload = self.commander.get_nowait()
+            print(cmd, payload)
             self.commander.task_done()
             match(cmd):
                 case Command.TOGGLE:
@@ -177,7 +178,7 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__prev()
                 case Command.RESTART:
                     await self.__restart()
-                case Command.NEWEST:
+                case Command.LAST_ADDED:
                     await self.__newest()
                 case Command.RECENTLY_PLAYED:
                     await self.__recently_played()
@@ -240,12 +241,13 @@ class Manager(object, metaclass=ManagerMeta):
         self.announce_queue.task_done()
 
     async def __random(self):
-        if self.api.status != Status.STOPPED:
+        print('random', self.api.isPlaying)
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     async def __random_album(self):
-        if self.api.status != Status.STOPPED:
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
 
@@ -260,7 +262,7 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
 
     async def __newest(self):
-        self.api.search_queue.put_nowait((Command.NEWEST, None))
+        self.api.search_queue.put_nowait((Command.LAST_ADDED, None))
 
     async def __recently_played(self):
         self.api.search_queue.put_nowait((Command.RECENTLY_PLAYED, None))

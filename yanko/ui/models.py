@@ -14,7 +14,7 @@ class Label(Enum):
     NEXT = 'Next Song'
     RESTART = 'Replay'
     QUIT = 'Quit'
-    NEWEST = 'Last addded'
+    LAST_ADDED = 'Last addded'
     RECENT = 'Recently played'
     ARTIST = 'Artist'
     RESCAN = 'Rescan'
@@ -33,7 +33,7 @@ class Icon(Enum):
     RESTART = 'restart.png'
     PLAYING = 'playing.png'
     STOPPED = 'stopped.png'
-    NEWEST = 'newest.png'
+    LAST_ADDED = 'newest.png'
     ARTIST = 'artist.png'
     NOWPLAYING = 'nowplaying.png'
     DEFAULT_ART = 'default_art.png'
@@ -81,8 +81,8 @@ class ActionItemMeta(type):
         return cls("random_album", Label.RANDOM_ALBUM.value, icon=Icon.RANDOM_ALBUM.value)
 
     @property
-    def newest(cls) -> 'ActionItem':
-        return cls("newest", Label.NEWEST.value, icon=Icon.NEWEST.value)
+    def last_added(cls) -> 'ActionItem':
+        return cls("newest", Label.LAST_ADDED.value, icon=Icon.LAST_ADDED.value)
 
     @property
     def artist(cls) -> 'ActionItem':

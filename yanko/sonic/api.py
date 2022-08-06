@@ -310,6 +310,7 @@ class Client(object):
         return albums
 
     def play_random_songs(self, fetch=True):
+        print('random songs', fetch)
         if fetch:
             random_songs = self.make_request(
                 self.create_url(
@@ -355,12 +356,12 @@ class Client(object):
     def play_last_added(self):
         albums = list(reversed(self.get_last_added()))
         while album := albums.pop():
-            self.play_album(album.id, len(albums) == 0)
+            self.play_album(album.id, endless=len(albums) == 0)
 
     def play_most_played(self):
         albums = list(reversed(self.get_most_played()))
         while album := albums.pop():
-            self.play_album(album.id, len(albums) == 0)
+            self.play_album(album.id, endless=len(albums) == 0)
 
     def play_album(self, album_id, endless=True, fetch=True):
         if fetch:
@@ -489,7 +490,7 @@ class Client(object):
                 case Command.MOST_PLAYED:
                     self.manager_queue.put_nowait(MostPlayed(
                         albums=self.get_most_played()))
-                case Command.NEWEST:
+                case Command.LAST_ADDED:
                     self.manager_queue.put_nowait(
                         LastAdded(albums=self.get_last_added()))
             self.search_queue.task_done()

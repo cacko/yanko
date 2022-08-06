@@ -67,7 +67,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 None,
                 ActionItem.artist,
                 ActionItem.recent,
-                ActionItem.newest,
+                ActionItem.last_added,
                 ActionItem.most_played,
                 None,
                 ActionItem.next,
@@ -83,7 +83,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.menu.setAutoenablesItems = False
         self.__status = Status.STOPPED
         self.__playlist = Playlist(self, Label.RANDOM.value)
-        self.__last_added = Albumlist(self, Label.NEWEST.value)
+        self.__last_added = Albumlist(self, Label.LAST_ADDED.value)
         self.__artist_albums = ArtistAlbumsList(self, Label.ARTIST.value)
         self.__most_played = Albumlist(self, Label.MOST_PLAYED.value)
         self.__recent = Albumlist(self, Label.RECENT.value)
@@ -102,7 +102,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         ])
         ts.start()
         self.__threads.append(ts)
-        self.manager.commander.put_nowait((Command.NEWEST, None))
+        self.manager.commander.put_nowait((Command.LAST_ADDED, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
     
@@ -204,7 +204,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         item: ActionItem = self.menu.get(Label.RESCAN.value)
         item.setAvailability(not sender.scanning)
         if not sender.scanning:
-            self.manager.commander.put_nowait((Command.NEWEST, None))
+            self.manager.commander.put_nowait((Command.LAST_ADDED, None))
 
     def _onPlaystatus(self, resp: Playstatus):
         self.__status = resp.status

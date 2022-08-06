@@ -39,10 +39,11 @@ def cli_search(query: str):
 
         search_query = ' '.join(query)
         resp = get(f"http://127.0.0.1:{port}/search/{search_query}")
-        click.echo(resp.content, err=True)
+        click.echo(resp.content)
     except ValueError:
         click.echo(click.style("not valid command", fg='red'))
-    except ConnectionError:
+    except ConnectionError as e:
+        print(e)
         click.echo(click.style("yanko is not running", fg='red'))
 
 

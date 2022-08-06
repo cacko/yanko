@@ -20,7 +20,7 @@ OPTIONS = {
         'PIL',
         'appdir',
         'pyotp',
-        
+        'click'
     ],
 }
 setup(

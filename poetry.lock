@@ -2305,6 +2305,14 @@ url = "https://pypi.cacko.net/simple"
 reference = "cacko"
 
 [[package]]
+name = "semver"
+version = "2.13.0"
+description = "Python helper for Semantic Versioning (http://semver.org/)"
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -2380,7 +2388,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "e53b768289a46aab332ec82f372f0ba53c0bdbeb331e63d5322b07558bb810a0"
+content-hash = "aa40a6ab35b74084734dc38501c2a15d043eea6717cbd98a862d53b6c9254ca8"
 
 [metadata.files]
 altgraph = [
@@ -3393,6 +3401,10 @@ requests-toolbelt = [
 ]
 rumps = [
     {file = "rumps-0.5.9-py3-none-any.whl", hash = "md5:aa4f5d997016066b3be210e252e272bf"},
+]
+semver = [
+    {file = "semver-2.13.0-py2.py3-none-any.whl", hash = "sha256:ced8b23dceb22134307c1b8abfa523da14198793d9787ac838e70e29e77458d4"},
+    {file = "semver-2.13.0.tar.gz", hash = "sha256:fa0fe2722ee1c3f57eac478820c3a5ae2f624af8264cbdf9000c980ff7f75e3f"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},

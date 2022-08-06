@@ -1,3 +1,8 @@
+from yanko.cli import cli
 from yanko import start
+from sys import argv
 
-start()
+if len(argv) > 1:
+    cli()
+else:
+    start()

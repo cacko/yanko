@@ -23,7 +23,6 @@ from yanko.sonic import (
     Command,
     MostPlayed,
     NowPlaying,
-    Playlist,
     Playstatus,
     RecentlyPlayed,
     ScanStatus,
@@ -136,6 +135,10 @@ class Client(object):
     def status(self) -> Status:
         return self.__status
 
+    @property
+    def isPlaying(self) -> bool:
+        return self.status not in [Status.STOPPED, Status.EXIT]
+
     @status.setter
     def status(self, val: Status):
         self.__status = val
@@ -183,7 +186,6 @@ class Client(object):
             }
 
         subsonic_response = response.get('subsonic-response', {})
-
         status = subsonic_response.get('status', 'failed')
 
         if status == 'failed':
@@ -320,7 +322,6 @@ class Client(object):
 
             self.playqueue.load(random_songs.get(
                 'song', []))
-
         for song in self.playqueue:
             playing = self.play_stream(dict(song))
             if not playing:

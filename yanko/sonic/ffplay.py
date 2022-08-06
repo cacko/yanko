@@ -3,6 +3,7 @@ from queue import Queue
 from yanko.sonic import Status, Action
 from pathlib import Path
 from yanko.core.config import app_config
+from urllib.parse import urlparse, parse_qs, urlencode
 from os import environ
 import time
 
@@ -11,6 +12,7 @@ class FFPlay(object):
 
     __proc: Popen = None
     __queue: Queue = None
+    __url = None
 
     def __init__(self, queue):
         self.lock_file.unlink(missing_ok=True)
@@ -20,14 +22,23 @@ class FFPlay(object):
     def lock_file(self) -> Path:
         return app_config.app_dir / "play.lock"
 
+    @property
+    def hasFinished(self):
+        if not self.__proc:
+            return True
+        return self.__proc.poll() is None
+
+
     def play(self, stream_url, track_data):
-
         song_id = track_data.get("id")
-
+        url = urlparse(stream_url)
+        query = parse_qs(url.query)
+        query = {"id": song_id, "format": "raw", **query}
+        self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
             'ffplay',
             '-i',
-            '{}&id={}&format=raw'.format(stream_url, song_id),
+            self.__url,
             '-autoexit',
             '-nodisp',
             '-nostats',
@@ -39,30 +50,27 @@ class FFPlay(object):
             '-af',
             'loudnorm=I=-16:LRA=11:TP=-1.5',
         ]
-
         env = dict(
             environ,
             PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
         )
         self.__proc = Popen(params, env=env)
-
-        has_finished = None
         self.lock_file.open("w+").close()
 
-        while has_finished is None:
-            has_finished = self.__proc.poll() if self.__proc else True
+        while self.hasFinished:
             if self.__queue.empty():
                 time.sleep(0.1)
                 continue
 
             command = self.__queue.get_nowait()
             self.__queue.task_done()
-
             match (command):
                 case Action.RESTART:
                     return self.__restart(stream_url, track_data)
                 case Action.NEXT:
                     return self.__next()
+                case Action.PREV:
+                    return self.__prev()
                 case Action.STOP:
                     return self.__stop()
                 case Action.EXIT:
@@ -96,3 +104,7 @@ class FFPlay(object):
     def __next(self):
         self.__terminate()
         return Status.NEXT
+
+    def __prev(self):
+        self.__terminate()
+        return Status.PREVIOUS

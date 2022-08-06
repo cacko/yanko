@@ -55,14 +55,14 @@ class PlayQueue:
             yield song
 
     def previous(self):
-        if any([not self.__idx, not len(self.__songs)]):
-            return None
-        return self.__songs[self.__idx - 1]
+        res = self.__songs[min(0, self.__idx - 1)]
+        self.skip_to = res.get("id")
+        return res
 
     def next(self):
-        if len(self.__songs) > self.__idx:
-            return self.__songs[self.__idx + 1]
-        return None
+        res = self.__songs[min(len(self.__songs), self.__idx + 1)]
+        self.skip_to = res.get("id")
+        return res
 
     @property
     def playqueue(self):

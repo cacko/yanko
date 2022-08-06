@@ -77,6 +77,7 @@ class Status(Enum):
     EXIT = 'exit'
     RESUMED = 'resumed'
     NEXT = 'next'
+    PREVIOUS = 'previous'
 
 
 class Subsonic(Enum):

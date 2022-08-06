@@ -161,6 +161,7 @@ class Manager(object, metaclass=ManagerMeta):
     async def commander_runner(self):
         try:
             cmd, payload = self.commander.get_nowait()
+            self.commander.task_done()
             match(cmd):
                 case Command.TOGGLE:
                     await self.__toggle()
@@ -206,8 +207,6 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__play_most_played()
         except Exception as e:
             logging.exception(e)
-        finally:
-            self.commander.task_done()
 
     async def player_runner(self):
         try:
@@ -251,13 +250,11 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
 
     async def __toggle(self):
-        if self.api.status == Status.STOPPED:
-            if len(self.api.playqueue) > 0:
-                self.api.command_queue.put_nowait((Command.PLAYLIST, None))
-            else:
-                self.api.command_queue.put_nowait((Command.RANDOM, None))
-        else:
+        if self.api.isPlaying:
             self.api.search_queue.put_nowait((Command.TOGGLE, None))
+        else:
+            self.api.command_queue.put_nowait((Command.PLAYLIST, None))
+
 
     async def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
@@ -279,34 +276,34 @@ class Manager(object, metaclass=ManagerMeta):
             self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
 
     async def __album(self, albumId):
-        if self.api.status != Status.STOPPED:
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
     async def __play_last_added(self):
-        if self.api.status != Status.STOPPED:
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.PLAY_LAST_ADDED, None))
 
     async def __play_most_played(self):
-        if self.api.status != Status.STOPPED:
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.PLAY_MOST_PLAYED, None))
 
     async def __artist(self, artistId):
-        if self.api.status != Status.STOPPED:
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ARTIST, artistId))
 
     async def __albumsong(self, albumId, songId):
         self.api.playqueue.skip_to = songId
-        if self.api.status != Status.STOPPED:
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
     async def __song(self, songId):
         self.api.playqueue.skip_to = songId
-        if self.api.status != Status.STOPPED:
+        if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.NEXT)
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
@@ -315,14 +312,16 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.QUIT, None))
 
     async def __next(self):
-        self.api.playback_queue.put_nowait(Action.NEXT)
+        if self.api.isPlaying:
+            await self.api.playback_queue.put(Action.NEXT)
+        else:
+            await self.api.command_queue.put((Command.PLAYLIST, None))
 
     async def __prev(self):
-        idx = self.api.playidx
-        if not idx:
-            return
-        self.api.playqueue.skip_to = self.api.playqueue[idx - 1].get("id")
-        self.api.playback_queue.put_nowait(Action.NEXT)
+        if self.api.isPlaying:
+            self.api.playback_queue.put_nowait(Action.PREV)
+        else:
+            self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
     async def __restart(self):
         self.api.playback_queue.put_nowait(Action.RESTART)

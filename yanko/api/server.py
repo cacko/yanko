@@ -61,6 +61,7 @@ class Server(object, metaclass=ServerMeta):
             
     def do_command(self, query):
         queue_item = query.split("=", 2)
+        print(queue_item)
         payload = None
         try:
             cmd = Command(queue_item.pop(0))

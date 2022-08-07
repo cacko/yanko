@@ -178,7 +178,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         LaMetric.send_status(self.__status)
 
     def _onSearch(self, resp: Search):
-        Server.queue.put_nowait(resp.to_dict())
+        Server.queue(resp.queue_id).put_nowait(resp.to_dict())
 
     def _onPlaylist(self, resp: Playlist):
         list = resp.tracks

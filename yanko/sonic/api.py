@@ -47,6 +47,7 @@ from datetime import datetime, timezone
 from yanko.core.config import app_config
 import urllib3
 from urllib.parse import urlencode
+from yanko.core.string import string_hash
 
 from yanko.sonic.ffplay import FFPlay
 from yanko.sonic.playqueue import PlayQueue
@@ -466,7 +467,7 @@ class Client(object):
                     self.playqueue.skip_to = payload
                 case Command.SEARCH:
                     self.manager_queue.put_nowait(
-                        Search(items=self.search(payload)))
+                        Search(queue_id=string_hash(payload), items=self.search(payload)))
 
     def add_search(self):
         while True:
@@ -477,7 +478,7 @@ class Client(object):
             match(cmd):
                 case Command.SEARCH:
                     self.manager_queue.put_nowait(
-                        Search(items=self.search(payload)))
+                        Search(queue_id=string_hash(payload), items=self.search(payload)))
                 case Command.ARTIST_ALBUMS:
                     self.manager_queue.put_nowait(ArtistAlbums(
                         artistInfo=self.get_artist_info(payload),

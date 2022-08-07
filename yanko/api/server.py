@@ -4,6 +4,7 @@ from bottle import Bottle, run
 import time
 from yanko.sonic import Command
 from yanko.api.auth import auth_required
+from yanko.core.string import string_hash
 
 app = Bottle()
 
@@ -11,7 +12,7 @@ class ServerMeta(type):
 
     _instance: 'Server' = None
     _manager: Queue = None
-    _queue: Queue = None
+    _queue: dict[str, Queue] = {}
 
     def __call__(self, *args, **kwds):
         if not self._instance:
@@ -30,11 +31,10 @@ class ServerMeta(type):
     def command(cls, query):
         return cls().do_command(query)
 
-    @property
-    def queue(cls):
-        if not cls._queue:
-            cls._queue = Queue()
-        return cls._queue
+    def queue(cls, queue_id):
+        if queue_id not in cls._queue:
+            cls._queue[queue_id] = Queue()
+        return cls._queue[queue_id]
 
 class Server(object, metaclass=ServerMeta):
 
@@ -48,13 +48,15 @@ class Server(object, metaclass=ServerMeta):
         run(app, **conf)
 
     def do_search(self, query):
+        queue_id = string_hash(query)
+        queue = __class__.queue(queue_id)
         self.api.put_nowait((Command.SEARCH, query))
         while True:
-            if __class__.queue.empty():
+            if queue.empty():
                 time.sleep(0.1)
             else:
-                res = __class__.queue.get_nowait()
-                return res
+                res = queue.get_nowait()
+                return {"items": res.get("items", [])}
 
     def do_state(self):
         self.state_callback()

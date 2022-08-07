@@ -285,6 +285,7 @@ class TrackSearchItem(SearchItem):
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Search:
+    queue_id: str
     items: list[SearchItem]
 
 

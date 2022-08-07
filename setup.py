@@ -20,7 +20,10 @@ OPTIONS = {
         'PIL',
         'appdir',
         'pyotp',
-        'click'
+        'click',
+        'pixelme',
+        'cv2',
+        'numpy'
     ],
 }
 setup(

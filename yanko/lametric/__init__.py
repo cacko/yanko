@@ -1,6 +1,7 @@
 import logging
 from os import environ
 from pathlib import Path
+from traceback import print_exc
 from yanko.core.config import app_config
 import requests
 from cachable.request import Method
@@ -9,14 +10,15 @@ from dataclasses_json import dataclass_json, Undefined
 from yanko.lametric.auth import OTP
 from yanko.sonic import Status
 from requests.exceptions import ConnectionError, JSONDecodeError
-from base64 import b64encode
+from typing import Optional
+from pixelme import Pixelate
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class NowPlayingFrame:
     text: str
-    icon: str
+    icon: Optional[str] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -60,17 +62,17 @@ class LaMetric(object, metaclass=LaMetricMeta):
             pass
 
     def send_nowplaying(self, text, icon: Path):
+        pix = Pixelate(icon, padding=200, block_size=25)
+        pix.resize((8, 8))
         model = NowPlayingFrame(
             text=text,
-            icon=b64encode(icon.read_bytes()).decode()
+            icon=pix.base64
         )
-
         return self.__make_request(
             Method.POST,
             "api/nowplaying",
             json=model.to_dict()
         )
-
     def send_status(self, status: Status):
         return self.__make_request(
             Method.POST,

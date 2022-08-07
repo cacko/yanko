@@ -220,7 +220,7 @@ class Client(object):
                         Subsonic.ARTIST_INFO, id=artist.id)
                     response.append(ArtistSearchItem(
                         uid=artist.id,
-                        title=artist.name,
+                        title=artist.name.upper(),
                         subtitle=f"Total albums: {artist.albumCount}",
                         arg=f"artist={artist.id}",
                         icon=SearchItemIcon(path=iconUrl)
@@ -230,7 +230,7 @@ class Client(object):
                         Subsonic.COVER_ART, id=album.id, size=200)
                     response.append(AlbumSearchItem(
                         uid=album.id,
-                        title=album.title,
+                        title=album.title.upper(),
                         subtitle=album.artist,
                         arg=f"album={album.id}",
                         icon=SearchItemIcon(path=iconUrl)
@@ -351,14 +351,18 @@ class Client(object):
         return self.play_artist(artist_id, not self.playqueue.skip_to)
 
     def play_last_added(self):
-        albums = list(reversed(self.get_last_added()))
+        last_added = self.get_last_added()
+        self.manager_queue.put_nowait(LastAdded(albums=last_added))
+        albums = list(reversed(last_added))
         while album := albums.pop():
             play_next = self.play_album(album.id, endless=len(albums) == 0)
             if not play_next:
-                    break
+                break
 
     def play_most_played(self):
-        albums = list(reversed(self.get_most_played()))
+        most_player = self.get_most_played()
+        self.manager_queue.put_nowait(MostPlayed(albums=most_player))
+        albums = list(reversed(most_player))
         while album := albums.pop():
             play_next = self.play_album(album.id, endless=len(albums) == 0)
             if not play_next:

@@ -165,6 +165,8 @@ class Manager(object, metaclass=ManagerMeta):
             match(cmd):
                 case Command.TOGGLE:
                     await self.__toggle()
+                case Command.STOP:
+                    await self.__stop()
                 case Command.RANDOM:
                     await self.__random()
                 case Command.RANDOM_ALBUM:
@@ -310,6 +312,9 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def __quit(self):
         self.api.search_queue.put_nowait((Command.QUIT, None))
+
+    async def __stop(self):
+        self.api.playback_queue.put_nowait(Action.STOP)
 
     async def __next(self):
         if self.api.isPlaying:

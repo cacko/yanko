@@ -1,17 +1,13 @@
 from dataclasses import dataclass
-import json
 import hashlib
 import logging
 from nntplib import ArticleInfo
-from pathlib import Path
-from pprint import pprint
 import string
 import sys
 import time
 from random import SystemRandom, choice
 from subprocess import CalledProcessError
 from signal import SIGSTOP, SIGCONT
-import traceback
 from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime

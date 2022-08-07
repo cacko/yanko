@@ -161,7 +161,6 @@ class Manager(object, metaclass=ManagerMeta):
     async def commander_runner(self):
         try:
             cmd, payload = self.commander.get_nowait()
-            print(cmd, payload)
             self.commander.task_done()
             match(cmd):
                 case Command.TOGGLE:
@@ -241,7 +240,6 @@ class Manager(object, metaclass=ManagerMeta):
         self.announce_queue.task_done()
 
     async def __random(self):
-        print('random', self.api.isPlaying)
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM, None))

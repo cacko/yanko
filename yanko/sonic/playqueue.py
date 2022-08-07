@@ -34,7 +34,7 @@ class PlayQueue:
 
     def load(self, songs):
         self.__idx = 0
-        self.__songs = songs
+        self.__songs = songs[:]
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
         self.__queue.put_nowait(
@@ -63,11 +63,3 @@ class PlayQueue:
         res = self.__songs[min(len(self.__songs), self.__idx + 1)]
         self.skip_to = res.get("id")
         return res
-
-    @property
-    def playqueue(self):
-        return self.__playqueue
-
-    @playqueue.setter
-    def playqueue(self, songs):
-        self.__playqueue = songs

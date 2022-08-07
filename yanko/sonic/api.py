@@ -11,6 +11,7 @@ import time
 from random import SystemRandom, choice
 from subprocess import CalledProcessError
 from signal import SIGSTOP, SIGCONT
+import traceback
 from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
@@ -310,7 +311,6 @@ class Client(object):
         return albums
 
     def play_random_songs(self, fetch=True):
-        print('random songs', fetch)
         if fetch:
             random_songs = self.make_request(
                 self.create_url(
@@ -356,12 +356,16 @@ class Client(object):
     def play_last_added(self):
         albums = list(reversed(self.get_last_added()))
         while album := albums.pop():
-            self.play_album(album.id, endless=len(albums) == 0)
+            play_next = self.play_album(album.id, endless=len(albums) == 0)
+            if not play_next:
+                    break
 
     def play_most_played(self):
         albums = list(reversed(self.get_most_played()))
         while album := albums.pop():
-            self.play_album(album.id, endless=len(albums) == 0)
+            play_next = self.play_album(album.id, endless=len(albums) == 0)
+            if not play_next:
+                break
 
     def play_album(self, album_id, endless=True, fetch=True):
         if fetch:
@@ -376,7 +380,7 @@ class Client(object):
             if not playing:
                 return
         if self.playqueue.skip_to:
-            return self.play_album(album_id=album_id, endless=endless, fetch=True)
+            return self.play_album(album_id, endless=endless, fetch=True)
         return self.play_radio(artist_id)
 
     def play_random_album(self):
@@ -442,6 +446,7 @@ class Client(object):
                 time.sleep(0.1)
                 continue
             cmd, payload = self.command_queue.get_nowait()
+            self.command_queue.task_done()
             match(cmd):
                 case Command.RANDOM:
                     self.play_random_songs()
@@ -462,7 +467,6 @@ class Client(object):
                 case Command.SEARCH:
                     self.manager_queue.put_nowait(
                         Search(items=self.search(payload)))
-            self.command_queue.task_done()
 
     def add_search(self):
         while True:

@@ -1,4 +1,4 @@
-from subprocess import Popen
+from subprocess import Popen, run
 from queue import Queue
 from yanko.sonic import Status, Action
 from pathlib import Path
@@ -36,10 +36,6 @@ class FFPlay(object):
         query = {"id": song_id, "format": "raw", **query}
         self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
-            'sudo',
-            'nice',
-            '-n',
-            '-5',
             'ffplay',
             '-i',
             self.__url,
@@ -62,6 +58,7 @@ class FFPlay(object):
         )
         self.__proc = Popen(params, env=env)
         self.lock_file.open("w+").close()
+        run(['sudo', 'renice', '-5', f"{self.__proc.pid}"])
 
         while self.hasFinished:
             if self.__queue.empty():

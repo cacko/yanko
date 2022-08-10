@@ -67,7 +67,7 @@ lxml = ["lxml"]
 
 [[package]]
 name = "bottle"
-version = "0.12.21"
+version = "0.12.23"
 description = "Fast and simple WSGI-framework for small web-applications."
 category = "main"
 optional = false
@@ -75,7 +75,7 @@ python-versions = "*"
 
 [[package]]
 name = "cachable"
-version = "0.3.7"
+version = "0.3.10"
 description = "whatever"
 category = "main"
 optional = false
@@ -361,7 +361,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "pygobject"
-version = "3.42.1"
+version = "3.42.2"
 description = "Python bindings for GObject Introspection"
 category = "main"
 optional = false
@@ -2407,11 +2407,11 @@ typing-extensions = ">=3.7.4"
 
 [[package]]
 name = "urllib3"
-version = "1.26.9"
+version = "1.26.11"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "main"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, <4"
 
 [package.extras]
 brotli = ["brotlicffi (>=0.8.0)", "brotli (>=1.0.9)", "brotlipy (>=0.6.0)"]
@@ -2456,11 +2456,11 @@ beautifulsoup4 = [
     {file = "beautifulsoup4-4.11.1.tar.gz", hash = "sha256:ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693"},
 ]
 bottle = [
-    {file = "bottle-0.12.21-py3-none-any.whl", hash = "sha256:6e1c9817019dae3a8c20adacaf09035251798d2ae2fcc8ce43157ee72965f257"},
-    {file = "bottle-0.12.21.tar.gz", hash = "sha256:787c61b6cc02b9c229bf2663011fac53dd8fc197f7f8ad2eeede29d888d7887e"},
+    {file = "bottle-0.12.23-py3-none-any.whl", hash = "sha256:9f1c363257c590bd34db5fad4693a7f06ff4217e9ad18337451de69c25137127"},
+    {file = "bottle-0.12.23.tar.gz", hash = "sha256:683de3aa399fb26e87b274dbcf70b1a651385d459131716387abdc3792e04167"},
 ]
 cachable = [
-    {file = "cachable-0.3.7-py3-none-any.whl", hash = "md5:907d3c12ebd8e6990d45b544762980d3"},
+    {file = "cachable-0.3.10-py3-none-any.whl", hash = "md5:fa5f09caa5f5d5c746c7335d3714337d"},
 ]
 certifi = [
     {file = "certifi-2022.6.15-py3-none-any.whl", hash = "sha256:fe86415d55e84719d75f8b69414f6438ac3547d2078ab91b67e779ef69378412"},
@@ -2646,7 +2646,7 @@ pyflakes = [
     {file = "pyflakes-2.4.0.tar.gz", hash = "sha256:05a85c2872edf37a4ed30b0cce2f6093e1d0581f8c19d7393122da7e25b2b24c"},
 ]
 pygobject = [
-    {file = "PyGObject-3.42.1.tar.gz", hash = "sha256:80d6a3ad1630e9d1edf31b9e9fad9a894c57e18545a3c95ef0044ac4042b8620"},
+    {file = "PyGObject-3.42.2.tar.gz", hash = "sha256:21524cef33100c8fd59dc135948b703d79d303e368ce71fa60521cc971cd8aa7"},
 ]
 pyobjc = [
     {file = "pyobjc-8.5-py3-none-any.whl", hash = "sha256:72917dfb2cf138c06464c25ccf0b528877b997bbf0fd9854ce0523e7e739d955"},
@@ -3514,8 +3514,8 @@ typing-inspect = [
     {file = "typing_inspect-0.7.1.tar.gz", hash = "sha256:047d4097d9b17f46531bf6f014356111a1b6fb821a24fe7ac909853ca2a782aa"},
 ]
 urllib3 = [
-    {file = "urllib3-1.26.9-py2.py3-none-any.whl", hash = "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14"},
-    {file = "urllib3-1.26.9.tar.gz", hash = "sha256:aabaf16477806a5e1dd19aa41f8c2b7950dd3c746362d7e3223dbe6de6ac448e"},
+    {file = "urllib3-1.26.11-py2.py3-none-any.whl", hash = "sha256:c33ccba33c819596124764c23a97d25f32b28433ba0dedeb77d873a38722c9bc"},
+    {file = "urllib3-1.26.11.tar.gz", hash = "sha256:ea6e8fb210b19d950fab93b60c9009226c63a28808bc8386e05301e25883ac0a"},
 ]
 wrapt = [
     {file = "wrapt-1.14.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:1b376b3f4896e7930f1f772ac4b064ac12598d1c38d04907e696cc4d794b43d3"},

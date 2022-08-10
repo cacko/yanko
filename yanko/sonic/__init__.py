@@ -93,6 +93,7 @@ class Subsonic(Enum):
     ARTIST = 'getArtist'
     PLAYLIST = 'getPlaylist'
     DOWNLOAD = 'download'
+    STREAM = 'stream'
     COVER_ART = 'getCoverArt'
     PING = 'ping'
     ARTIST_INFO = 'getArtistInfo'

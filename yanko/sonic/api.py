@@ -403,9 +403,8 @@ class Client(object):
                 playing = self.play_stream(dict(song))
 
     def play_stream(self, track_data):
-        stream_url = self.create_url(Subsonic.DOWNLOAD)
+        stream_url = self.create_url(Subsonic.STREAM)
         song_id = track_data.get('id')
-
         if not song_id:
             return False
 

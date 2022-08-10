@@ -36,6 +36,10 @@ class FFPlay(object):
         query = {"id": song_id, "format": "raw", **query}
         self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
+            'sudo',
+            'nice',
+            '-n',
+            '-5',
             'ffplay',
             '-i',
             self.__url,

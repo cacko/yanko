@@ -47,7 +47,7 @@ class FFPlay(object):
             'fatal',
             '-seekable',
             'false',
-            '-noinfbuf',
+            '-infbuf',
             '-sn',
             '-af',
             'loudnorm=I=-16:LRA=11:TP=-1.5',

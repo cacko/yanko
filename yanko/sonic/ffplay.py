@@ -37,7 +37,7 @@ class FFPlay(object):
         self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
             'ffplay',
-            '-i',
+            '-i',ffpl   
             self.__url,
             '-autoexit',
             '-nodisp',
@@ -49,6 +49,10 @@ class FFPlay(object):
             '-sn',
             '-af',
             'loudnorm=I=-16:LRA=11:TP=-1.5',
+            '-af',
+            'virtualbass',
+            '-af',
+            'stereowiden'
         ]
         env = dict(
             environ,

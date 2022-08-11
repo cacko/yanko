@@ -45,8 +45,6 @@ class FFPlay(object):
             '-hide_banner',
             '-loglevel',
             'fatal',
-            '-seekable',
-            'false',
             '-infbuf',
             '-sn',
             '-af',

@@ -53,8 +53,6 @@ class FFPlay(object):
             'loudnorm=I=-16:LRA=11:TP=-1.5',
             '-af',
             'virtualbass',
-            '-af',
-            'stereowiden'
         ]
         env = dict(
             environ,

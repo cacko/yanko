@@ -37,8 +37,10 @@ class FFPlay(object):
         self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
             'ffplay',
-            '-i',ffpl   
+            '-i',   
             self.__url,
+            '-t',
+            f'{track_data.get("duration")}',
             '-autoexit',
             '-nodisp',
             '-nostats',

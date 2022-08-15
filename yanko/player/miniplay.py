@@ -35,7 +35,7 @@ class Miniplay(BasePlayer):
 
     def stream_progress_callback(self, framecount: int) -> None:
         while self.__paused:
-            sleep(0.01)
+            sleep(0.05)
 
     def play(self, stream_url, track_data):
         stream_url = self.get_stream_url(stream_url, track_data, format="flac")
@@ -53,7 +53,7 @@ class Miniplay(BasePlayer):
                     if self.__has_finished:
                         break
                     elif self._queue.empty():
-                        sleep(0.01)
+                        sleep(0.05)
                     else:
                         command = self._queue.get_nowait()
                         self._queue.task_done()

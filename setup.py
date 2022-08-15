@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 APP = ['app.py']
-DATA_FILES = []
+DATA_FILES = ["./bin/ffplay"]
 OPTIONS = {
     'iconfile': 'icon.icns',
     'argv_emulation': True,

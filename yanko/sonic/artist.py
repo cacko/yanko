@@ -1,9 +1,8 @@
-from cachable.request import Request
-from cachable import Cachable
 from urllib.parse import urlparse, parse_qs
 from hashlib import blake2b
 from yanko.sonic import ArtistInfo, ArtistInfoResponse
-
+from yanko.core.cachable import Cachable
+import requests
 class ArtistInfo(Cachable):
 
     _url = None
@@ -25,12 +24,11 @@ class ArtistInfo(Cachable):
         return self._id
 
     @property
-    async def info(self)-> ArtistInfo:
-        isLoaded = await self.load()
+    def info(self)-> ArtistInfo:
+        isLoaded = self.load()
         if not isLoaded:
-            rq = Request(self._url)
-            rq.ENABLE_RANDOM_USER_AGENT = False
-            json = await rq.json
+            rq = requests.get(self._url)
+            json = rq.json()
             if json:
                 resp = ArtistInfoResponse.from_dict(json.get("subsonic-response"))
                 self._struct = resp.artistInfo

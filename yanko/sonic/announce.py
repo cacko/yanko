@@ -17,7 +17,6 @@ class AnnounceMeta(type):
             self._instance = super().__call__(*args, **kwds)
         return self._instance
 
-
     def announce(cls, track: Track):
         return cls().post(track)
 
@@ -28,8 +27,10 @@ class Announce(object, metaclass=AnnounceMeta):
 
     def __init__(self):
         self.__to = [v for v in app_config.get("announce", {}).values()]
-    
+
     def post(self, track: Track):
+        if not len(self.__to):
+            return
         track.coverArt = b64encode(Path(track.coverArt).read_bytes()).decode()
         for url in self.__to:
             try:

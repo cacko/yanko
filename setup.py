@@ -16,14 +16,14 @@ OPTIONS = {
         'dataclasses_json',
         'requests',
         'tld',
-        'cachable',
         'PIL',
         'appdir',
         'pyotp',
         'click',
         'pixelme',
         'cv2',
-        'numpy'
+        'numpy',
+        'bs4'
     ],
 }
 setup(

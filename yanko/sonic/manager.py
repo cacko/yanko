@@ -25,19 +25,11 @@ from multiprocessing.pool import ThreadPool
 from itertools import repeat
 
 
-def run_async(args):
-    fn, obj = args
-    loop = asyncio.new_event_loop()
-    task = fn(obj)
-    res = loop.run_until_complete(task)
-    return res
-
-
-async def resolveCoverArt(obj):
+def resolveCoverArt(obj):
     ca = CoverArtFile(obj.coverArt)
-    res: Path = await ca.path
+    res: Path = ca.path
     obj.coverArt = res.as_posix() if res.exists() else None
-    icon: Path = await ca.icon_path
+    icon: Path = ca.icon_path
     if icon:
         obj.coverArtIcon = icon.as_posix()
     else:
@@ -45,22 +37,22 @@ async def resolveCoverArt(obj):
     return obj
 
 
-async def resolveArtistImage(obj: ArtistInfoData):
+def resolveArtistImage(obj: ArtistInfoData):
     ca = CoverArtFile(obj.largeImageUrl)
-    res: Path = await ca.path
+    res: Path = ca.path
     obj.image = res.as_posix() if res.exists() else None
     return obj
 
 
-async def resolveIcon(obj):
+def resolveIcon(obj):
     if isinstance(obj, ArtistSearchItem):
         url = obj.icon.path
         ai = ArtistInfo(url)
-        info: ArtistInfoData = await ai.info
+        info: ArtistInfoData = ai.info
         if info:
             obj.icon.path = info.largeImageUrl
     ca = CoverArtFile(obj.icon.path)
-    res: Path = await ca.path
+    res: Path = ca.path
     obj.icon.path = res.as_posix() if res.exists() else None
     return obj
 
@@ -71,9 +63,9 @@ def find_idx_by_id(items, item, k='id'):
             return idx
 
 
-async def resolveSearch(items):
+def resolveSearch(items):
     with ThreadPool(10) as pool:
-        jobs = pool.map(run_async, zip(repeat(resolveIcon, len(items)), items))
+        jobs = pool.map(resolveIcon, items)
         for res in jobs:
             try:
                 items[find_idx_by_id(items, res, 'uid')] = res
@@ -84,11 +76,10 @@ async def resolveSearch(items):
     return items
 
 
-async def resolveAlbums(albums):
+def resolveAlbums(albums):
     with perftime("resolve albums"):
         with ThreadPool(10) as pool:
-            jobs = pool.map(run_async, zip(
-                repeat(resolveCoverArt, len(albums)), albums))
+            jobs = pool.map(resolveCoverArt, albums)
             for res in jobs:
                 try:
                     albums[find_idx_by_id(albums, res)] = res
@@ -217,20 +208,20 @@ class Manager(object, metaclass=ManagerMeta):
                 if cmd == Status.EXIT:
                     self.__running = False
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
-                cmd.track = await resolveCoverArt(cmd.track)
+                cmd.track = resolveCoverArt(cmd.track)
                 self.announce_queue.put_nowait(cmd.track)
                 self.playing_now = cmd
             elif isinstance(cmd, Search) and len(cmd.items):
-                cmd.items = await resolveSearch(cmd.items)
+                cmd.items = resolveSearch(cmd.items)
             elif isinstance(cmd, LastAdded):
-                cmd.albums = await resolveAlbums(cmd.albums)
+                cmd.albums = resolveAlbums(cmd.albums)
             elif isinstance(cmd, RecentlyPlayed):
-                cmd.albums = await resolveAlbums(cmd.albums)
+                cmd.albums = resolveAlbums(cmd.albums)
             elif isinstance(cmd, MostPlayed):
-                cmd.albums = await resolveAlbums(cmd.albums)
+                cmd.albums = resolveAlbums(cmd.albums)
             elif isinstance(cmd, ArtistAlbums):
-                cmd.artistInfo = await resolveArtistImage(cmd.artistInfo)
-                cmd.albums = await resolveAlbums(cmd.albums)
+                cmd.artistInfo = resolveArtistImage(cmd.artistInfo)
+                cmd.albums = resolveAlbums(cmd.albums)
             self.player_callback(cmd)
             self.player_queue.task_done()
         except Exception as e:

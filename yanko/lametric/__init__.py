@@ -1,10 +1,9 @@
 import logging
 from os import environ
 from pathlib import Path
-from traceback import print_exc
 from yanko.core.config import app_config
 import requests
-from cachable.request import Method
+from yanko.core.cachable import Method
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 from yanko.lametric.auth import OTP
@@ -12,6 +11,9 @@ from yanko.sonic import Status
 from requests.exceptions import ConnectionError, JSONDecodeError
 from typing import Optional
 from pixelme import Pixelate
+
+
+
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -47,6 +49,8 @@ class LaMetric(object, metaclass=LaMetricMeta):
 
     def __make_request(self, method: Method, endpoint: str, **args):
         conf = app_config.get("lametric")
+        if not conf:
+            return
         host = environ.get("LAMETRIC_CONTROLLER", conf.get("host"))
         try:
             response = requests.request(

@@ -1,4 +1,4 @@
-from cachable import CachableFile
+from yanko.core.cachable import CachableFile
 from urllib.parse import parse_qs, urlparse
 from hashlib import blake2b
 from PIL import Image
@@ -31,8 +31,8 @@ class CoverArtFile(CachableFile):
         return self._url
 
     @property
-    async def icon_path(self):
-        await self._init()
+    def icon_path(self):
+        self._init()
         stem = self.storage_path.stem
         icon_path = self.storage_path.with_stem(f"{stem}_icon")
         if not icon_path.exists():

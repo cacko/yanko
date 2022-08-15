@@ -9,7 +9,7 @@ OPTIONS = {
     'plist': {
         'LSUIElement': True,
         'CFBundleIdentifier': 'net.cacko.yanko',
-        'CFBundleVersion': '0.1.0'
+        'CFBundleVersion': '0.2.0'
     },
     'packages': [
         'rumps',

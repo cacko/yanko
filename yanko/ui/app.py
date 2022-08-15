@@ -181,6 +181,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             LaMetric.nowplaying(
                 f"{track.artist} / {track.title}", Path(track.coverArt))
         LaMetric.send_status(self.__status)
+        return "OK"
 
     def _onSearch(self, resp: Search):
         Server.queue(resp.queue_id).put_nowait(resp.to_dict())

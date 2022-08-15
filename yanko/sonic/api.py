@@ -116,7 +116,7 @@ class Client(object):
         self.__threads.append(search_thread)
 
         self.playback_queue = Queue()
-        self.ffplay = Miniplay(self.playback_queue)
+        self.ffplay = FFPlay(self.playback_queue)
         self.manager_queue = manager_queue
         self.playqueue = PlayQueue(manager_queue)
 

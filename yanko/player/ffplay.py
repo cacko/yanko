@@ -1,9 +1,30 @@
-from subprocess import Popen, run
+from http.cookiejar import DefaultCookiePolicy
+from subprocess import Popen, run, PIPE
 from yanko.sonic import Status, Action
 from os import environ
 from signal import SIGSTOP, SIGCONT
 from yanko.player.base import BasePlayer
 from time import sleep
+import requests
+
+
+class FFStream():
+
+    __req = None
+
+    def __init__(self, url):
+        self.__req = requests.get(url, stream=True)
+
+    def __enter__(self):
+        print('enter method called')
+        return self.gen()
+
+    def gen(self):
+        for frag in self.__req.iter_content(192000):
+            yield frag
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.__req.close()
 
 
 class FFPlay(BasePlayer):
@@ -21,7 +42,7 @@ class FFPlay(BasePlayer):
         params = [
             'ffplay',
             '-i',
-            stream_url,
+            'pipe:0',
             '-t',
             f'{track_data.get("duration")}',
             '-autoexit',
@@ -41,28 +62,30 @@ class FFPlay(BasePlayer):
             environ,
             PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
         )
-        self.__proc = Popen(params, env=env)
+        self.__proc = Popen(params, stdin=PIPE, env=env)
         self.lock_file.open("w+").close()
         run(['sudo', 'renice', '-5', f"{self.__proc.pid}"])
 
-        while self.hasFinished:
-            if self._queue.empty():
-                sleep(0.1)
-                continue
+        with FFStream(stream_url) as stream:
+            for frag in stream:
+                self.__proc.stdin.write(frag)
+                if self._queue.empty():
+                    sleep(0.05)
+                    continue
 
-            command = self._queue.get_nowait()
-            self._queue.task_done()
-            match (command):
-                case Action.RESTART:
-                    return self._restart(stream_url, track_data)
-                case Action.NEXT:
-                    return self._next()
-                case Action.PREVIOUS:
-                    return self._previous()
-                case Action.STOP:
-                    return self._stop()
-                case Action.EXIT:
-                    return self.exit()
+                command = self._queue.get_nowait()
+                self._queue.task_done()
+                match (command):
+                    case Action.RESTART:
+                        return self._restart(stream_url, track_data)task DefaultCookiePolicy
+                    case Action.NEXT:
+                        return self._next()
+                    case Action.PREVIOUS:
+                        return self._previous()
+                    case Action.STOP:
+                        return self._stop()
+                    case Action.EXIT:
+                        return self.exit()
 
         return Status.PLAYING
 

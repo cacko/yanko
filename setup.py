@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 APP = ['app.py']
-DATA_FILES = ["./bin/ffplay"]
+DATA_FILES = []
 OPTIONS = {
     'iconfile': 'icon.icns',
     'argv_emulation': True,
@@ -23,7 +23,8 @@ OPTIONS = {
         'pixelme',
         'cv2',
         'numpy',
-        'bs4'
+        'bs4',
+        'miniaudio'
     ],
 }
 setup(

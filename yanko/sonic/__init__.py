@@ -67,6 +67,8 @@ class Action(Enum):
     STOP = 's'
     TOGGLE = 'p'
     PREVIOUS = 'previous'
+    PAUSE = 'pause'
+    RESUME = 'resumt'
 
 
 class Status(Enum):

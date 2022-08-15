@@ -7,10 +7,11 @@ import sys
 import time
 from random import SystemRandom, choice
 from subprocess import CalledProcessError
-from signal import SIGSTOP, SIGCONT
 from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
+from ..player.miniplay import Miniplay
+from ..player.base import BasePlayer
 from yanko.sonic import (
     Action,
     AlbumSearchItem,
@@ -45,7 +46,7 @@ import urllib3
 from urllib.parse import urlencode
 from yanko.core.string import string_hash
 
-from yanko.sonic.ffplay import FFPlay
+from yanko.player.ffplay import FFPlay
 from yanko.sonic.playqueue import PlayQueue
 urllib3.disable_warnings()
 
@@ -82,7 +83,7 @@ class Client(object):
     __status: Status = Status.STOPPED
     playqueue: PlayQueue = None
     playidx = 0
-    ffplay: FFPlay = None
+    ffplay: BasePlayer = None
     scanning = False
     __threads = []
 
@@ -115,7 +116,7 @@ class Client(object):
         self.__threads.append(search_thread)
 
         self.playback_queue = Queue()
-        self.ffplay = FFPlay(self.playback_queue)
+        self.ffplay = Miniplay(self.playback_queue)
         self.manager_queue = manager_queue
         self.playqueue = PlayQueue(manager_queue)
 
@@ -522,8 +523,8 @@ class Client(object):
 
     def togglePlay(self):
         if self.status == Status.PLAYING:
-            self.ffplay.send_signal(SIGSTOP)
+            self.playback_queue.put_nowait(Action.PAUSE)
             self.status = Status.PAUSED
         elif self.status == Status.PAUSED:
-            self.ffplay.send_signal(SIGCONT)
+            self.playback_queue.put_nowait(Action.RESUME)
             self.status = Status.RESUMED

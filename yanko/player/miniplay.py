@@ -45,7 +45,6 @@ class Miniplay(BasePlayer):
                 stream = miniaudio.stream_any(
                     source,
                     source_format=FileFormat.FLAC,
-                    sample_rate=48000
                 )
                 callbacks_stream = miniaudio.stream_with_callbacks(
                     stream, progress_callback=self.stream_progress_callback, end_callback=self.stream_stop_callback)

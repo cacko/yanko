@@ -43,8 +43,7 @@ class Miniplay(BasePlayer):
         with SubsonicSource(stream_url) as source:
             try:
                 stream = miniaudio.stream_any(
-                    source,
-                    source_format=FileFormat.FLAC,
+                    source, source_format=FileFormat.FLAC
                 )
                 callbacks_stream = miniaudio.stream_with_callbacks(
                     stream, progress_callback=self.stream_progress_callback, end_callback=self.stream_stop_callback)

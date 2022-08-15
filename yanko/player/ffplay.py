@@ -1,4 +1,3 @@
-from http.cookiejar import DefaultCookiePolicy
 from subprocess import Popen, run, PIPE
 from yanko.sonic import Status, Action
 from os import environ
@@ -77,7 +76,7 @@ class FFPlay(BasePlayer):
                 self._queue.task_done()
                 match (command):
                     case Action.RESTART:
-                        return self._restart(stream_url, track_data)task DefaultCookiePolicy
+                        return self._restart(stream_url, track_data)
                     case Action.NEXT:
                         return self._next()
                     case Action.PREVIOUS:

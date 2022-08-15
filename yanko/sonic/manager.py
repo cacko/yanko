@@ -310,9 +310,9 @@ class Manager(object, metaclass=ManagerMeta):
     async def __next(self):
         self.api.playqueue.skip_to = None
         if self.api.isPlaying:
-            await self.api.playback_queue.put(Action.NEXT)
+            self.api.playback_queue.put_nowait(Action.NEXT)
         else:
-            await self.api.command_queue.put((Command.PLAYLIST, None))
+            self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
     async def __previous(self):
         if self.api.isPlaying:

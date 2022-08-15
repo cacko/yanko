@@ -36,7 +36,7 @@ class Command(Enum):
     PLAY = 'play'
     STOP = 'stop'
     NEXT = 'next'
-    PREV = 'previous'
+    PREVIOUS = 'previous'
     RANDOM = 'random'
     LAST_ADDED = 'last_added'
     QUIT = 'quit'
@@ -66,7 +66,7 @@ class Action(Enum):
     EXIT = 'x'
     STOP = 's'
     TOGGLE = 'p'
-    PREV = 'pre'
+    PREVIOUS = 'previous'
 
 
 class Status(Enum):

@@ -175,8 +175,8 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__quit()
                 case Command.NEXT:
                     await self.__next()
-                case Command.PREV:
-                    await self.__prev()
+                case Command.PREVIOUS:
+                    await self.__previous()
                 case Command.RESTART:
                     await self.__restart()
                 case Command.LAST_ADDED:
@@ -322,9 +322,9 @@ class Manager(object, metaclass=ManagerMeta):
         else:
             await self.api.command_queue.put((Command.PLAYLIST, None))
 
-    async def __prev(self):
+    async def __previous(self):
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait(Action.PREV)
+            self.api.playback_queue.put_nowait(Action.PREVIOUS)
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 

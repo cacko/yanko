@@ -55,7 +55,7 @@ class PlayQueue:
             yield song
 
     def previous(self):
-        res = self.__songs[min(0, self.__idx - 1)]
+        res = self.__songs[max(0, self.__idx - 1)]
         self.skip_to = res.get("id")
         return res
 

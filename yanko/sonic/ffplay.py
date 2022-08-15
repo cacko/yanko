@@ -74,8 +74,8 @@ class FFPlay(object):
                     return self.__restart(stream_url, track_data)
                 case Action.NEXT:
                     return self.__next()
-                case Action.PREV:
-                    return self.__prev()
+                case Action.PREVIOUS:
+                    return self.__previous()
                 case Action.STOP:
                     return self.__stop()
                 case Action.EXIT:
@@ -110,6 +110,6 @@ class FFPlay(object):
         self.__terminate()
         return Status.NEXT
 
-    def __prev(self):
+    def __previous(self):
         self.__terminate()
         return Status.PREVIOUS

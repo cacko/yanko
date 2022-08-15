@@ -428,6 +428,12 @@ class Client(object):
 
             self.status = self.ffplay.play(stream_url, track_data)
 
+            match(self.status):
+                case Status.NEXT:
+                    self.playqueue.next()
+                case Status.PREVIOUS:
+                    self.playqueue.previous()
+
             return self.status not in [Status.EXIT, Status.STOPPED]
 
         except OSError as err:

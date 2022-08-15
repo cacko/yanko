@@ -21,7 +21,7 @@ class FFPlay(BasePlayer):
         params = [
             'ffplay',
             '-i',
-            self.__url,
+            stream_url,
             '-t',
             f'{track_data.get("duration")}',
             '-autoexit',

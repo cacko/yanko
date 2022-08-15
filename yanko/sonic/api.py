@@ -428,7 +428,7 @@ class Client(object):
             )
 
             self.status = self.ffplay.play(stream_url, track_data)
-            
+
             match(self.status):
                 case Status.NEXT:
                     self.playqueue.next()

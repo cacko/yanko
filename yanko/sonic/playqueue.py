@@ -60,6 +60,8 @@ class PlayQueue:
         return res
 
     def next(self):
+        if self.skip_to:
+            return next(filter(lambda x: x.get("id") == self.skip_to, self.__songs), None)
         res = self.__songs[min(len(self.__songs), self.__idx + 1)]
         self.skip_to = res.get("id")
         return res

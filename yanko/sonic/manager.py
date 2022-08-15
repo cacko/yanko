@@ -308,6 +308,7 @@ class Manager(object, metaclass=ManagerMeta):
         self.api.playback_queue.put_nowait(Action.STOP)
 
     async def __next(self):
+        self.api.playqueue.skip_to = None
         if self.api.isPlaying:
             await self.api.playback_queue.put(Action.NEXT)
         else:

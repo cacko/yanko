@@ -29,10 +29,14 @@ class Miniplay(BasePlayer):
     __paused = False
     __return = None
     __device = None
+    __running = False
 
     def stream_progress_callback(self, framecount: int) -> None:
         while self.__paused:
             sleep(0.05)
+
+    def stream_stop_callback(self):
+        self.__running = False
 
     def play(self, stream_url, track_data):
         stream_url = self.get_stream_url(stream_url, track_data, format="flac")
@@ -40,12 +44,14 @@ class Miniplay(BasePlayer):
             stream = miniaudio.stream_any(
                 source, source_format=FileFormat.FLAC)
             callbacks_stream = miniaudio.stream_with_callbacks(
-                stream, progress_callback=self.stream_progress_callback, end_callback=None)
+                stream, progress_callback=self.stream_progress_callback, end_callback=self.stream_stop_callback)
             next(callbacks_stream)
+            self.__return = Status.PLAYING
+            self.__running = True
             with miniaudio.PlaybackDevice() as device:
                 self.__device = device
                 device.start(callbacks_stream)
-                while device.running:
+                while self.__running and device.running:
                     if self._queue.empty():
                         sleep(0.05)
                     else:

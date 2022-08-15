@@ -59,7 +59,7 @@ class Server(object, metaclass=ServerMeta):
                 return {"items": res.get("items", [])}
 
     def do_state(self):
-        self.state_callback()
+        return self.state_callback()
             
     def do_command(self, query):
         queue_item = query.split("=", 2)

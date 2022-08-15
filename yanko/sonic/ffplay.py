@@ -29,15 +29,25 @@ class FFPlay(object):
             return True
         return self.__proc.poll() is None
 
+    @property
+    def ffplay_binary(self):
+        ps = Path(__file__).as_posix()
+        if 'lib' in ps:
+            res, sc = ps.split('lib')
+            rp = Path(res) / "ffplay"
+            return rp.as_posix()
+        ffp = Path(__file__).parent.parent.parent / "bin" / "ffplay"
+        return ffp.as_posix()
+
+
     def play(self, stream_url, track_data):
-        logging.warning(Path(__file__))
         song_id = track_data.get("id")
         url = urlparse(stream_url)
         query = parse_qs(url.query)
         query = {"id": song_id, "format": "raw", **query}
         self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
-            '/Applications/Yanko.app/Contents/Resources/ffplay',
+            self.ffplay_binary,
             '-i',
             self.__url,
             '-t',

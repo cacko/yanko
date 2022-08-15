@@ -1,11 +1,10 @@
-import logging
 from subprocess import Popen, run
-from queue import Queue
 from yanko.sonic import Status, Action
-from urllib.parse import urlparse, parse_qs, urlencode
 from os import environ
 from signal import SIGSTOP, SIGCONT
 from yanko.player.base import BasePlayer
+from time import sleep
+
 
 class FFPlay(BasePlayer):
 
@@ -17,8 +16,8 @@ class FFPlay(BasePlayer):
             return True
         return self.__proc.poll() is None
 
-    def _play(self, stream_url, track_data):
-
+    def play(self, stream_url, track_data):
+        stream_url = self.get_stream_url(stream_url, track_data)
         params = [
             'ffplay',
             '-i',
@@ -45,6 +44,27 @@ class FFPlay(BasePlayer):
         self.__proc = Popen(params, env=env)
         self.lock_file.open("w+").close()
         run(['sudo', 'renice', '-5', f"{self.__proc.pid}"])
+
+        while self.hasFinished:
+            if self._queue.empty():
+                sleep(0.1)
+                continue
+
+            command = self._queue.get_nowait()
+            self._queue.task_done()
+            match (command):
+                case Action.RESTART:
+                    return self._restart(stream_url, track_data)
+                case Action.NEXT:
+                    return self._next()
+                case Action.PREVIOUS:
+                    return self._previous()
+                case Action.STOP:
+                    return self._stop()
+                case Action.EXIT:
+                    return self.exit()
+
+        return Status.PLAYING
 
     def __send_signal(self, signal):
         if self.__proc:
@@ -82,4 +102,3 @@ class FFPlay(BasePlayer):
 
     def resume(self):
         return self.__send_signal(SIGCONT)
-

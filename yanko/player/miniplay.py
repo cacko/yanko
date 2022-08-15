@@ -7,7 +7,7 @@ from miniaudio import SeekOrigin, FileFormat
 from time import sleep
 
 
-class FileSource(miniaudio.StreamableSource):
+class SubsonicSource(miniaudio.StreamableSource):
 
     paused = False
 
@@ -36,7 +36,7 @@ class Miniplay(BasePlayer):
 
     def play(self, stream_url, track_data):
         stream_url = self.get_stream_url(stream_url, track_data, format="flac")
-        with FileSource(stream_url) as source:
+        with SubsonicSource(stream_url) as source:
             stream = miniaudio.stream_any(
                 source, source_format=FileFormat.FLAC)
             callbacks_stream = miniaudio.stream_with_callbacks(

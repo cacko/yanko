@@ -30,7 +30,7 @@ class FFPlay(object):
         return self.__proc.poll() is None
 
     def play(self, stream_url, track_data):
-        logging.debug(Path(__file__))
+        logging.warning(Path(__file__))
         song_id = track_data.get("id")
         url = urlparse(stream_url)
         query = parse_qs(url.query)

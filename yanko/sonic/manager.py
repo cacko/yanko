@@ -302,7 +302,9 @@ class Manager(object, metaclass=ManagerMeta):
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
     async def __quit(self):
-        self.api.search_queue.put_nowait((Command.QUIT, None))
+        if self.api.isPlaying:
+            self.api.playback_queue.put_nowait(Action.EXIT)
+        self.player_queue.put_nowait(Playstatus(status=Status.EXIT))
 
     async def __stop(self):
         self.api.playback_queue.put_nowait(Action.STOP)

@@ -489,8 +489,6 @@ class Client(object):
                     self.manager_queue.put_nowait(ArtistAlbums(
                         artistInfo=self.get_artist_info(payload),
                         albums=self.get_artist_albums(payload)))
-                case Command.QUIT:
-                    self.playback_queue.put_nowait(Action.EXIT)
                 case Command.RESCAN:
                     self.startScan()
                 case Command.TOGGLE:

@@ -41,38 +41,42 @@ class Miniplay(BasePlayer):
     def play(self, stream_url, track_data):
         stream_url = self.get_stream_url(stream_url, track_data, format="flac")
         with SubsonicSource(stream_url) as source:
-            stream = miniaudio.stream_any(
-                source, source_format=FileFormat.FLAC)
-            callbacks_stream = miniaudio.stream_with_callbacks(
-                stream, progress_callback=self.stream_progress_callback, end_callback=self.stream_stop_callback)
-            next(callbacks_stream)
-            self.__return = Status.PLAYING
-            self.__running = True
-            with miniaudio.PlaybackDevice() as device:
-                self.__device = device
-                device.start(callbacks_stream)
-                while self.__running and device.running:
-                    if self._queue.empty():
-                        sleep(0.05)
-                    else:
-                        command = self._queue.get_nowait()
-                        self._queue.task_done()
-                        match (command):
-                            case Action.RESTART:
-                                self._restart(
-                                    stream_url, track_data)
-                            case Action.NEXT:
-                                self._next()
-                            case Action.PREVIOUS:
-                                self._previous()
-                            case Action.STOP:
-                                self._stop()
-                            case Action.EXIT:
-                                self.exit()
-                            case Action.PAUSE:
-                                self.__paused = True
-                            case Action.RESUME:
-                                self.__paused = False
+            try:
+                stream = miniaudio.stream_any(
+                    source, source_format=FileFormat.FLAC)
+                callbacks_stream = miniaudio.stream_with_callbacks(
+                    stream, progress_callback=self.stream_progress_callback, end_callback=self.stream_stop_callback)
+                next(callbacks_stream)
+                self.__return = Status.PLAYING
+                self.__running = True
+                with miniaudio.PlaybackDevice() as device:
+                    self.__device = device
+                    device.start(callbacks_stream)
+                    while self.__running and device.running:
+                        if self._queue.empty():
+                            sleep(0.05)
+                        else:
+                            command = self._queue.get_nowait()
+                            self._queue.task_done()
+                            match (command):
+                                case Action.RESTART:
+                                    self._restart(
+                                        stream_url, track_data)
+                                case Action.NEXT:
+                                    self._next()
+                                case Action.PREVIOUS:
+                                    self._previous()
+                                case Action.STOP:
+                                    self._stop()
+                                case Action.EXIT:
+                                    self.exit()
+                                case Action.PAUSE:
+                                    self.__paused = True
+                                case Action.RESUME:
+                                    self.__paused = False
+            except Exception as e:
+                logging.error(e)
+                self.__running = Status.PLAYING
         self.__paused = False
         return self.__return if self.__return else Status.PLAYING
 

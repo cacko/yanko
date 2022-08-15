@@ -105,7 +105,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.LAST_ADDED, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
-    
+
     @property
     def threads(self):
         return self.__threads
@@ -142,6 +142,11 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def wake(self):
         pass
 
+    # @rumps.timer(1)
+    # def updatePlayingTime(self, sender):
+    #     if self.__status == Status.PLAYING:
+    #         self.title = self.__nowplaying.menubar_title
+
     def onManagerResult(self, resp):
         logging.debug(resp)
 
@@ -155,7 +160,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__nowplaying = resp
         LaMetric.nowplaying(
             f"{track.artist} / {track.title}", Path(track.coverArt))
-        self.title = f"{track.artist} / {truncate(track.title)}"
+        self.title = resp.menubar_title
         self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:
             self._menu.pop(itm)

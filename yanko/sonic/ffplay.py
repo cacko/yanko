@@ -5,7 +5,7 @@ from pathlib import Path
 from yanko.core.config import app_config
 from urllib.parse import urlparse, parse_qs, urlencode
 from os import environ
-import time
+from time import sleep
 
 
 class FFPlay(object):
@@ -28,7 +28,6 @@ class FFPlay(object):
             return True
         return self.__proc.poll() is None
 
-
     def play(self, stream_url, track_data):
         song_id = track_data.get("id")
         url = urlparse(stream_url)
@@ -37,7 +36,7 @@ class FFPlay(object):
         self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
             'ffplay',
-            '-i',   
+            '-i',
             self.__url,
             '-t',
             f'{track_data.get("duration")}',
@@ -61,10 +60,9 @@ class FFPlay(object):
         self.__proc = Popen(params, env=env)
         self.lock_file.open("w+").close()
         run(['sudo', 'renice', '-5', f"{self.__proc.pid}"])
-
         while self.hasFinished:
             if self.__queue.empty():
-                time.sleep(0.1)
+                sleep(0.1)
                 continue
 
             command = self.__queue.get_nowait()

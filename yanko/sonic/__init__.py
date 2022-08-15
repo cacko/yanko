@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from dataclasses import dataclass, field
 from marshmallow import fields
@@ -210,6 +210,20 @@ class NowPlaying:
     track: Track
     start: datetime
 
+    @property
+    def total_length(self) -> str:
+        td = timedelta(seconds=int(self.track.duration))
+        return str(td)[2:7]
+
+    @property
+    def current_position(self) -> str:
+        td = datetime.now(tz=timezone.utc) - self.start
+        return str(td)[2:7]
+
+    @property
+    def menubar_title(self) -> str:
+        return f"{self.track.artist} / {truncate(self.track.title)}"
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -246,6 +260,7 @@ class RecentlyPlayed:
 @dataclass
 class MostPlayed:
     albums: list[Album]
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass

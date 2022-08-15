@@ -37,7 +37,7 @@ class FFPlay(object):
         query = {"id": song_id, "format": "raw", **query}
         self.__url = f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
         params = [
-            'ffplay',
+            '/Applications/Yanko.app/Contents/Resources/ffplay',
             '-i',
             self.__url,
             '-t',
@@ -55,11 +55,11 @@ class FFPlay(object):
             '-af',
             'virtualbass',
         ]
-        env = dict(
-            environ,
-            PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
-        )
-        self.__proc = Popen(params, env=env)
+        # env = dict(
+        #     environ,
+        #     PATH=f"{environ.get('HOME')}/.local/bin:/usr/bin:/usr/local/bin:{environ.get('PATH')}",
+        # )
+        self.__proc = Popen(params)
         self.lock_file.open("w+").close()
         run(['sudo', 'renice', '-5', f"{self.__proc.pid}"])
         while self.hasFinished:

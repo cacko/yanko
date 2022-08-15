@@ -26,3 +26,5 @@ db
 build
 dist
 *.flac
+node_modules
+*.dmg

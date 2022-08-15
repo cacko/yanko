@@ -3,7 +3,7 @@
 version: '3'
 
 vars:
-  GREETING: Hello, World!
+  PROJECT: Yanko
 
 tasks:
   default:
@@ -32,13 +32,21 @@ tasks:
 
   install:
     cmds:
-      - killall Yanko || true
-      - rm -rf /Applications/Yanko.app
-      - mv dist/Yanko.app /Applications
+      - killall {{.PROJECT}} || true
+      - rm -rf /Applications/{{.PROJECT}}.app
+      - mv dist/{{.PROJECT}}.app /Applications
+
+  dmg:
+    desc: create dmg file
+    cmds:
+      - echo "create DMS"
+      - rm -f {{.PROJECT}}.dmg
+      - ./node_modules/.bin/appdmg {{.PROJECT}}.json {{.PROJECT}}.dmg
 
   deploy:
     cmds:
       - task: push
       - task: build
+      - task: dmg
       - task: install
 

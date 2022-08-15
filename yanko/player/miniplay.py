@@ -26,12 +26,9 @@ class FileSource(miniaudio.StreamableSource):
 
 class Miniplay(BasePlayer):
 
-    __source: FileSource = None
-    __has_finished = False
     __paused = False
-
-    def stream_end_callback(self) -> None:
-        self.__has_finished = True
+    __return = None
+    __device = None
 
     def stream_progress_callback(self, framecount: int) -> None:
         while self.__paused:
@@ -39,62 +36,62 @@ class Miniplay(BasePlayer):
 
     def play(self, stream_url, track_data):
         stream_url = self.get_stream_url(stream_url, track_data, format="flac")
-        self.__has_finished = False
         with FileSource(stream_url) as source:
-            self.__source = source
             stream = miniaudio.stream_any(
                 source, source_format=FileFormat.FLAC)
             callbacks_stream = miniaudio.stream_with_callbacks(
-                stream, self.stream_progress_callback, self.stream_end_callback)
+                stream, progress_callback=self.stream_progress_callback, end_callback=None)
             next(callbacks_stream)
             with miniaudio.PlaybackDevice() as device:
+                self.__device = device
                 device.start(callbacks_stream)
-                while True:
-                    if self.__has_finished:
-                        break
-                    elif self._queue.empty():
+                while device.running:
+                    if self._queue.empty():
                         sleep(0.05)
                     else:
                         command = self._queue.get_nowait()
                         self._queue.task_done()
                         match (command):
                             case Action.RESTART:
-                                return self._restart(stream_url, track_data)
+                                self._restart(
+                                    stream_url, track_data)
                             case Action.NEXT:
-                                return self._next()
+                                self._next()
                             case Action.PREVIOUS:
-                                return self._previous()
+                                self._previous()
                             case Action.STOP:
-                                return self._stop()
+                                self._stop()
                             case Action.EXIT:
-                                return self.exit()
+                                self.exit()
                             case Action.PAUSE:
                                 self.__paused = True
                             case Action.RESUME:
                                 self.__paused = False
-        return Status.PLAYING
+        self.__paused = False
+        return self.__return if self.__return else Status.PLAYING
 
     def __terminate(self):
-        if self.__source:
-            self.__source.close()
+        if self.__device:
+            self.__device.stop()
         return Status.STOPPED
 
     def exit(self):
+        self.__return = Status.EXIT
         self.__terminate()
-        return Status.EXIT
 
     def _stop(self):
-        return self.__terminate()
+        self.__return = Status.STOPPED
+        self.__terminate()
 
     def _restart(self, stream_url, track_data):
+        self.__return = Status.LOADING
         self.__terminate()
-        self.status = Status.LOADING
         return self.play(stream_url, track_data)
 
     def _next(self):
+        self.__return = Status.NEXT
         self.__terminate()
-        return Status.NEXT
 
     def _previous(self):
+        self.__return = Status.PREVIOUS
         self.__terminate()
-        return Status.PREVIOUS

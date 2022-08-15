@@ -15,6 +15,10 @@ def cli():
     """This script showcases different terminal UI helpers in Click."""
     pass
 
+@cli.command('config', short_help="Config")
+def cli_config():
+    print('this is config')
+    input()
 
 @cli.command('command', short_help="Api command")
 @click.argument('command')

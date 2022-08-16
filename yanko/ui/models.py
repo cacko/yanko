@@ -40,7 +40,7 @@ class Icon(Enum):
     RECENT = 'recents.png'
     PAUSE = 'pause.png'
     RESCAN = 'rescan.png'
-    RANDOM_ALBUM = 'random_album.png'
+    RANDOM_ALBUM = 'random_album.svg'
     MOST_PLAYED = 'most_played.png'
 
     def __new__(cls, *args):

@@ -70,6 +70,8 @@ setup(
         "ffmpeg-python >= 0.2.0",
         "numpy >= 1.23.2",
         "sounddevice >= 0.4.4",
+        "pycparser",
+        "cffi"
     ],
     packages=find_packages(include=['yanko', 'yanko.*', 'sounddevice.*']),
     options={'py2app': OPTIONS},

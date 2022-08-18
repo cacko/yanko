@@ -6,6 +6,7 @@ from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action
 from yanko.player.base import BasePlayer
 from time import sleep
+import logging
 
 
 def int_or_str(text):
@@ -43,13 +44,15 @@ class FFMPeg(BasePlayer):
         stream = streams[0]
 
         if stream.get('codec_type') != 'audio':
-            sys.exit('The stream must be an audio stream')
+            logging.warning('The stream must be an audio stream')
+            return Status.STOPPED
 
+        self.status = Status.PLAYING
         channels = stream['channels']
         samplerate = float(stream['sample_rate'])
 
         try:
-            print('Opening stream ...')
+            logging.debug('Opening stream ...')
             process = ffmpeg.input(
                 url
             ).output(
@@ -65,37 +68,43 @@ class FFMPeg(BasePlayer):
                 device=self.device, channels=channels, dtype='float32',
                 callback=self.callback)
             read_size = self.BLOCKSIZE * channels * stream.samplesize
-            print('Buffering ...')
+            logging.debug('Buffering ...')
             for _ in range(self.BUFFISIZE):
                 self.q.put_nowait(process.stdout.read(read_size))
-            print('Starting Playback ...')
+            logging.debug('Starting Playback ...')
             with stream:
                 timeout = self.BLOCKSIZE * self.BUFFISIZE / samplerate
                 while True:
-                    while self.status == Status.PAUSED:
-                        sleep(0.1)
-                    self.q.put(process.stdout.read(read_size), timeout=timeout)
+                    if self.status == Status.PAUSED:
+                        sleep(0.05)
+                    else:
+                        self.q.put(process.stdout.read(
+                            read_size), timeout=timeout)
                     if queue_action := self.process_queue():
+                        self.status = Status.STOPPED
                         process.terminate()
                         stream.close()
                         return queue_action
         except queue.Full:
             pass
         except Exception as e:
-            print(e)
+            logging.error(e)
         return Status.PLAYING
 
     def callback(self, outdata, frames, time, status):
-
+        while self.status == Status.PAUSED:
+            sleep(0.1)
         assert frames == self.BLOCKSIZE
         if status.output_underflow:
-            print('Output underflow: increase blocksize?', file=sys.stderr)
+            logging.debug(
+                'Output underflow: increase blocksize?', file=sys.stderr)
             raise sounddevice.CallbackAbort
         assert not status
         try:
             data = self.q.get_nowait()
         except queue.Empty as e:
-            print('Buffer is empty: increase buffersize?', file=sys.stderr)
+            logging.debug(
+                'Buffer is empty: increase buffersize?', file=sys.stderr)
             raise sounddevice.CallbackAbort from e
         assert len(data) == len(outdata)
         outdata[:] = data

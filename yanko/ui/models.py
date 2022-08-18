@@ -30,6 +30,7 @@ class Icon(Enum):
     RANDOM = 'random.png'
     ALBUM = 'album.png'
     NEXT = 'next.png'
+    PREVIOUS = 'previous.png'
     RESTART = 'restart.png'
     PLAYING = 'playing.png'
     STOPPED = 'stopped.png'
@@ -40,8 +41,9 @@ class Icon(Enum):
     RECENT = 'recents.png'
     PAUSE = 'pause.png'
     RESCAN = 'rescan.png'
-    RANDOM_ALBUM = 'random_album.svg'
+    RANDOM_ALBUM = 'random_album.png'
     MOST_PLAYED = 'most_played.png'
+    MUTED = 'muted.png'
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"

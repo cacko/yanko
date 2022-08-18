@@ -1,9 +1,10 @@
+from multiprocessing import set_forkserver_preload
 import queue
 import sys
 import ffmpeg
 import sounddevice
 from yanko.player.base import BasePlayer
-from yanko.sonic import Status, Action
+from yanko.sonic import Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
 import logging
 import numpy
@@ -21,12 +22,35 @@ class FFMPeg(BasePlayer):
 
     BUFFISIZE = 20
     BLOCKSIZE = 1024
+    VOLUME_STEP = 0.05
     q: queue.Queue = None
     status: Status = None
     last_frame = 0
     tot_frames = 0
-    volume = 1
-    muted = False
+    __volume = 1
+    __muted = False
+
+    @property
+    def volume(self):
+        return self.__volume
+
+    @volume.setter
+    def volume(self, val):
+        self.__volume = val
+        self._manager_queue.put_nowait(
+            VolumeStatus(volume=self.__volume, muted=self.__muted)
+        )
+
+    @property
+    def muted(self):
+        return self.__muted
+
+    @muted.setter
+    def muted(self, val):
+        self.__muted = val
+        self._manager_queue.put_nowait(
+            VolumeStatus(volume=self.__volume, muted=self.__muted)
+        )
 
     @property
     def device(self):
@@ -144,9 +168,9 @@ class FFMPeg(BasePlayer):
             case Action.RESUME:
                 self.status = Status.RESUMED
             case Action.VOLUME_DOWN:
-                self.volume = max(0, self.volume - 0.1)
+                self.volume = max(0, self.volume - self.VOLUME_STEP)
             case Action.VOLUME_UP:
-                self.volume = min(2, self.volume + 0.1)
+                self.volume = min(2, self.volume + self.VOLUME_STEP)
             case Action.MUTE:
                 self.muted = not self.muted
         return None

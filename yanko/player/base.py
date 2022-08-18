@@ -8,13 +8,22 @@ from urllib.parse import urlparse, parse_qs, urlencode
 class BasePlayer(object):
 
     _queue: Queue = None
+    _manager_queue: Queue = None
     _url = None
     _data = None
     _format = "raw"
 
-    def __init__(self, queue, stream_url, track_data, format="raw"):
+    def __init__(
+            self,
+            queue,
+            manager_queue,
+            stream_url,
+            track_data,
+            format="raw"
+    ):
         self.lock_file.unlink(missing_ok=True)
         self._queue = queue
+        self._manager_queue = manager_queue
         self._url = stream_url
         self._data = track_data
         self._format = format

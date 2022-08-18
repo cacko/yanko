@@ -13,7 +13,8 @@ from yanko.sonic import (
     Search,
     Status,
     Playstatus,
-    ScanStatus
+    ScanStatus,
+    VolumeStatus
 )
 from yanko.ui.models import (
     ActionItem,
@@ -57,6 +58,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     __threads = []
     __status: Status = None
     __nowplaying: NowPlaying = None
+    __volume: float = None
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -142,10 +144,14 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def wake(self):
         pass
 
-    # @rumps.timer(1)
-    # def updatePlayingTime(self, sender):
-    #     if self.__status == Status.PLAYING:
-    #         self.title = self.__nowplaying.menubar_title
+    @rumps.timer(5)
+    def updatePlayingTime(self, sender):
+        if self.__volume:
+            self.__volume = None
+            if self.__status == Status.PLAYING:
+                self.title = self.__nowplaying.menubar_title
+            else:
+                self.title = ''
 
     def onManagerResult(self, resp):
         logging.debug(resp)
@@ -232,6 +238,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             ActionItem.restart.hide()
         elif resp.status == Status.EXIT:
             rumps.quit_application()
+
+    def _onVolumeStatus(self, resp: VolumeStatus):
+        self.__volume = resp.volume
+        if self.__status == Status.PLAYING:
+            self.title = f"{self.__nowplaying.menubar_title} V:{self.__volume:.02f}"
+        else:
+            self.title = 'V:{self.__volume}'
 
     def _onLastAdded(self, resp: LastAdded):
         albums = resp.albums

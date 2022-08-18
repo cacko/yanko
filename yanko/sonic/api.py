@@ -129,10 +129,6 @@ class Client(object):
     def status(self) -> Status:
         return self.__status
 
-    @property
-    def isPlaying(self) -> bool:
-        return self.status not in [Status.STOPPED, Status.EXIT]
-
     @status.setter
     def status(self, val: Status):
         self.__status = val
@@ -141,6 +137,10 @@ class Client(object):
         )
         if val == Status.RESUMED:
             self.status = Status.PLAYING
+
+    @property
+    def isPlaying(self) -> bool:
+        return self.status not in [Status.STOPPED, Status.EXIT]
 
     def test_config(self):
         return self.make_request(url=self.create_url(Subsonic.PING)) is not None
@@ -421,7 +421,12 @@ class Client(object):
                     start=datetime.now(tz=timezone.utc),
                     track=Track(**{**track_data, "coverArt": coverArtUrl}))
             )
-            self.player = FFMPeg(queue=self.playback_queue, stream_url=stream_url, track_data=track_data)
+            self.player = FFMPeg(
+                queue=self.playback_queue, 
+                manager_queue=self.manager_queue,
+                stream_url=stream_url, 
+                track_data=track_data
+            )
 
             self.status = self.player.play()
 

@@ -254,6 +254,13 @@ class Playstatus:
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
+class VolumeStatus:
+    volume: float
+    muted: bool
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
 class LastAdded:
     albums: list[Album]
 

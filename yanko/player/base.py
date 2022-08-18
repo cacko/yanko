@@ -1,8 +1,8 @@
 from queue import Queue
-from yanko.sonic import Status
-from pathlib import Path
+from yanko.sonic import Status, StreamFormat
 from yanko.core.config import app_config
 from urllib.parse import urlparse, parse_qs, urlencode
+from pathlib import Path
 
 
 class BasePlayer(object):
@@ -19,14 +19,14 @@ class BasePlayer(object):
             manager_queue,
             stream_url,
             track_data,
-            format="raw"
+            format: StreamFormat = None
     ):
         self.lock_file.unlink(missing_ok=True)
         self._queue = queue
         self._manager_queue = manager_queue
         self._url = stream_url
         self._data = track_data
-        self._format = format
+        self._format = format.value if format else StreamFormat.RAW.value
 
     @property
     def lock_file(self) -> Path:

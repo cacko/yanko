@@ -33,6 +33,16 @@ RESULT_KEYS = [
 ]
 
 
+class StreamFormat(Enum):
+    RAW = 'raw'
+    AAC = 'aac'
+    FLAC = 'flac'
+
+    @classmethod
+    def _missing_(cls, value):
+        return cls.RAW
+
+
 class Command(Enum):
     TOGGLE = 'toggle'
     PLAY = 'play'

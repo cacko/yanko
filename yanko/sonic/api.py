@@ -425,7 +425,7 @@ class Client(object):
                 queue=self.playback_queue, 
                 manager_queue=self.manager_queue,
                 stream_url=stream_url, 
-                track_data=track_data
+                track_data=track_data,
             )
 
             self.status = self.player.play()

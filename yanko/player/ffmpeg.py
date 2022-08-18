@@ -1,7 +1,7 @@
 import queue
 import sys
 import ffmpeg
-import sounddevice as sd
+import sounddevice
 from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action
 from yanko.player.base import BasePlayer
@@ -25,7 +25,7 @@ class FFMPeg(BasePlayer):
 
     @property
     def device(self):
-        _, device = sd.default.device
+        _, device = sounddevice.default.device
         return device
 
     def play(self, stream_url, track_data):
@@ -60,7 +60,7 @@ class FFMPeg(BasePlayer):
                 ar=samplerate,
                 loglevel='quiet',
             ).run_async(pipe_stdout=True)
-            stream = sd.RawOutputStream(
+            stream = sounddevice.RawOutputStream(
                 samplerate=samplerate, blocksize=self.BLOCKSIZE,
                 device=self.device, channels=channels, dtype='float32',
                 callback=self.callback)
@@ -86,17 +86,17 @@ class FFMPeg(BasePlayer):
         return Status.PLAYING
 
     def callback(self, outdata, frames, time, status):
-        
+
         assert frames == self.BLOCKSIZE
         if status.output_underflow:
             print('Output underflow: increase blocksize?', file=sys.stderr)
-            raise sd.CallbackAbort
+            raise sounddevice.CallbackAbort
         assert not status
         try:
             data = self.q.get_nowait()
         except queue.Empty as e:
             print('Buffer is empty: increase buffersize?', file=sys.stderr)
-            raise sd.CallbackAbort from e
+            raise sounddevice.CallbackAbort from e
         assert len(data) == len(outdata)
         outdata[:] = data
 

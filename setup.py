@@ -24,7 +24,10 @@ OPTIONS = {
         'cv2',
         'numpy',
         'bs4',
-        'miniaudio'
+        'miniaudio',
+        'ffmpeg-python',
+        'numpy',
+        'sounddevice'
     ],
 }
 setup(

@@ -27,7 +27,9 @@ OPTIONS = {
         'miniaudio',
         'ffmpeg',
         'numpy',
-        'sounddevice'
+        'sounddevice',
+        'cffy',
+        'pycparser'
     ],
 }
 setup(

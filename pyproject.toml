@@ -31,8 +31,8 @@ pixelme = "^0.4.7"
 bs4 = "^0.0.1"
 miniaudio = "^1.52"
 ffmpeg-python = "^0.2.0"
-sounddevice = "^0.4.4"
 numpy = "^1.23.2"
+sounddevice = "^0.4.4"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

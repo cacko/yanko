@@ -28,7 +28,7 @@ OPTIONS = {
         'ffmpeg',
         'numpy',
         'sounddevice',
-        'cffy',
+        'cffi',
         'pycparser'
     ],
 }

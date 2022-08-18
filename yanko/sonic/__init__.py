@@ -37,6 +37,9 @@ class Command(Enum):
     STOP = 'stop'
     NEXT = 'next'
     PREVIOUS = 'previous'
+    VOLUME_UP = 'volume_up'
+    VOLUME_DOWN = 'volume_down'
+    MUTE = 'mute'
     RANDOM = 'random'
     LAST_ADDED = 'last_added'
     QUIT = 'quit'
@@ -61,14 +64,17 @@ class Command(Enum):
 
 
 class Action(Enum):
-    NEXT = 'n'
-    RESTART = 'b'
-    EXIT = 'x'
-    STOP = 's'
-    TOGGLE = 'p'
+    NEXT = 'next'
+    RESTART = 'restart'
+    EXIT = 'exit'
+    STOP = 'stop'
+    TOGGLE = 'toggle'
     PREVIOUS = 'previous'
     PAUSE = 'pause'
     RESUME = 'resumt'
+    VOLUME_UP = 'vol_up'
+    VOLUME_DOWN = 'vol_down'
+    MUTE = 'mute'
 
 
 class Status(Enum):

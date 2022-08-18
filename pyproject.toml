@@ -32,7 +32,6 @@ bs4 = "^0.0.1"
 ffmpeg-python = "^0.2.0"
 sounddevice = "^0.4.4"
 numpy = "^1.23.2"
-pydub = "^0.25.1"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"

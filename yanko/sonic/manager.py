@@ -168,6 +168,12 @@ class Manager(object, metaclass=ManagerMeta):
                     await self.__next()
                 case Command.PREVIOUS:
                     await self.__previous()
+                case Command.VOLUME_UP:
+                    await self.__volume_up()
+                case Command.VOLUME_DOWN:
+                    await self.__volume_down()
+                case Command.MUTE:
+                    await self.__mute()
                 case Command.RESTART:
                     await self.__restart()
                 case Command.LAST_ADDED:
@@ -308,6 +314,18 @@ class Manager(object, metaclass=ManagerMeta):
 
     async def __stop(self):
         self.api.playback_queue.put_nowait(Action.STOP)
+
+    async def __volume_up(self):
+        if self.api.isPlaying:
+            self.api.playback_queue.put_nowait(Action.VOLUME_UP)
+
+    async def __volume_down(self):
+        if self.api.isPlaying:
+            self.api.playback_queue.put_nowait(Action.VOLUME_DOWN)
+
+    async def __mute(self):
+        if self.api.isPlaying:
+            self.api.playback_queue.put_nowait(Action.MUTE)
 
     async def __next(self):
         self.api.playqueue.skip_to = None

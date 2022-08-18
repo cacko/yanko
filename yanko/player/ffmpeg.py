@@ -6,6 +6,7 @@ from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action
 from yanko.player.base import BasePlayer
 import logging
+import numpy
 
 
 def int_or_str(text):
@@ -22,6 +23,10 @@ class FFMPeg(BasePlayer):
     BLOCKSIZE = 1024
     q: queue.Queue = None
     status: Status = None
+    last_frame = 0
+    tot_frames = 0
+    volume = 1
+    muted = False
 
     @property
     def device(self):
@@ -57,6 +62,7 @@ class FFMPeg(BasePlayer):
 
         try:
             logging.debug('Opening stream ...')
+            self.last_frame = 0
             process = ffmpeg.input(self.stream_url).filter(
                 'loudnorm', I=-16, LRA=11, tp=-1.5
             ).filter(
@@ -109,12 +115,13 @@ class FFMPeg(BasePlayer):
         assert not status
         try:
             data = self.q.get_nowait()
+            data_array = numpy.frombuffer(data, dtype='float32')
+            volume_norm = data_array * (0 if self.muted else self.volume)
+            outdata[:] = volume_norm.tobytes()
         except queue.Empty as e:
             logging.debug(
                 'Buffer is empty: increase buffersize?', file=sys.stderr)
             raise sounddevice.CallbackAbort from e
-        assert len(data) == len(outdata)
-        outdata[:] = data
 
     def process_queue(self):
         if self._queue.empty():
@@ -136,6 +143,12 @@ class FFMPeg(BasePlayer):
                 self.status = Status.PAUSED
             case Action.RESUME:
                 self.status = Status.RESUMED
+            case Action.VOLUME_DOWN:
+                self.volume = max(0, self.volume - 0.1)
+            case Action.VOLUME_UP:
+                self.volume = min(2, self.volume + 0.1)
+            case Action.MUTE:
+                self.muted = not self.muted
         return None
 
     def _stop(self):

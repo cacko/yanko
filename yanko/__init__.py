@@ -5,7 +5,6 @@ from yanko.ui.app import YankoApp
 from yanko.core.config import app_config
 
 logging.basicConfig(
-    filename="/tmp/yanko.log",
     level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
     format="%(filename)s %(message)s",
     datefmt="YANKO %H:%M:%S",

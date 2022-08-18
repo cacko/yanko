@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from dataclasses import dataclass, field
+from math import floor
 from marshmallow import fields
 from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional
 from yanko.core.string import truncate
 from yanko.core.date import isodate_decoder, isodate_encoder
+import time
 
 RESULT_KEYS = [
     'searchResult3',
@@ -257,6 +259,11 @@ class Playstatus:
 class VolumeStatus:
     volume: float
     muted: bool
+    timestamp: float
+
+    @property
+    def hasExpired(self):
+        return floor(time.time() - self.timestamp) > 3
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

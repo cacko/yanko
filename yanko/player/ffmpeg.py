@@ -1,13 +1,13 @@
-from multiprocessing import set_forkserver_preload
 import queue
 import sys
 import ffmpeg
 import sounddevice
+import logging
+import numpy
+import time
 from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
-import logging
-import numpy
 
 
 def int_or_str(text):
@@ -38,7 +38,8 @@ class FFMPeg(BasePlayer):
     def volume(self, val):
         self.__volume = val
         self._manager_queue.put_nowait(
-            VolumeStatus(volume=self.__volume, muted=self.__muted)
+            VolumeStatus(volume=self.__volume, muted=self.__muted,
+                         timestamp=time.time())
         )
 
     @property
@@ -49,7 +50,8 @@ class FFMPeg(BasePlayer):
     def muted(self, val):
         self.__muted = val
         self._manager_queue.put_nowait(
-            VolumeStatus(volume=self.__volume, muted=self.__muted)
+            VolumeStatus(volume=self.__volume, muted=self.__muted,
+                         timestamp=time.time())
         )
 
     @property

@@ -27,10 +27,10 @@ from yanko.ui.items.playlist import Playlist
 from yanko.ui.items.albumlist import Albumlist, ArtistAlbumsList
 from yanko.ui.items.nowplaying import NowPlayingItem
 import logging
-from yanko.core.string import truncate
 from yanko.api.server import Server
 from yanko.lametric import LaMetric
 from pathlib import Path
+import time
 
 
 class YankoAppMeta(type):
@@ -58,7 +58,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     __threads = []
     __status: Status = None
     __nowplaying: NowPlaying = None
-    __volume: float = None
+    __volume: VolumeStatus = None
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -144,9 +144,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def wake(self):
         pass
 
-    @rumps.timer(5)
+    @rumps.timer(1)
     def updatePlayingTime(self, sender):
-        if self.__volume:
+        if self.__volume and self.__volume.hasExpired:
             self.__volume = None
             if self.__status == Status.PLAYING:
                 self.title = self.__nowplaying.menubar_title
@@ -240,9 +240,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             rumps.quit_application()
 
     def _onVolumeStatus(self, resp: VolumeStatus):
-        self.__volume = resp.volume
+        self.__volume = resp
         if self.__status == Status.PLAYING:
-            self.title = f"{self.__nowplaying.menubar_title} V:{self.__volume:.02f}"
+            self.title = f"{self.__nowplaying.menubar_title} [VOLUME {self.__volume.volume:.02f}]"
         else:
             self.title = 'V:{self.__volume}'
 

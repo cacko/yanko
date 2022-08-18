@@ -25,7 +25,7 @@ OPTIONS = {
         'numpy',
         'bs4',
         'miniaudio',
-        'ffmpeg-python',
+        'ffmpeg',
         'numpy',
         'sounddevice'
     ],

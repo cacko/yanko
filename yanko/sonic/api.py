@@ -1,18 +1,21 @@
 from dataclasses import dataclass
 import hashlib
 import logging
-from nntplib import ArticleInfo
 import string
 import sys
 import time
+import urllib3
+import requests
+from queue import Queue
+from datetime import datetime, timezone
 from random import SystemRandom, choice
-from subprocess import CalledProcessError
+from urllib.parse import urlencode
 from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
-from ..player.miniplay import Miniplay
-from ..player.ffmpeg import FFMPeg
-from ..player.base import BasePlayer
+from yanko.core.config import app_config
+from yanko.core.string import string_hash
+from yanko.player.ffmpeg import FFMPeg
 from yanko.sonic import (
     Action,
     AlbumSearchItem,
@@ -39,15 +42,7 @@ from yanko.sonic import (
     TrackSearchItem,
     ScanStatusResponse
 )
-import requests
-from queue import Queue
-from datetime import datetime, timezone
-from yanko.core.config import app_config
-import urllib3
-from urllib.parse import urlencode
-from yanko.core.string import string_hash
 
-from yanko.player.ffplay import FFPlay
 from yanko.sonic.playqueue import PlayQueue
 urllib3.disable_warnings()
 
@@ -59,7 +54,7 @@ class ApiArguments:
     t: str
     s: str
     v: str
-    c: str = "yAnKo"
+    c: str = "Yanko"
     f: str = "json"
 
 
@@ -84,7 +79,7 @@ class Client(object):
     __status: Status = Status.STOPPED
     playqueue: PlayQueue = None
     playidx = 0
-    ffplay: BasePlayer = None
+    player: FFMPeg = None
     scanning = False
     __threads = []
 
@@ -117,7 +112,7 @@ class Client(object):
         self.__threads.append(search_thread)
 
         self.playback_queue = Queue()
-        self.ffplay = FFMPeg(self.playback_queue)
+        self.player = FFMPeg(self.playback_queue)
         self.manager_queue = manager_queue
         self.playqueue = PlayQueue(manager_queue)
 
@@ -294,7 +289,7 @@ class Client(object):
             return
         return Artist.from_dict(artist_info)
 
-    def get_artist_info(self, artist_id) -> ArticleInfo:
+    def get_artist_info(self, artist_id) -> ArtistInfo:
         artist_info = self.make_request(
             self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
         if artist_info:
@@ -428,7 +423,7 @@ class Client(object):
                     track=Track(**{**track_data, "coverArt": coverArtUrl}))
             )
 
-            self.status = self.ffplay.play(stream_url, track_data)
+            self.status = self.player.play(stream_url, track_data)
 
             match(self.status):
                 case Status.NEXT:
@@ -440,12 +435,12 @@ class Client(object):
 
         except OSError as err:
             logging.error(
-                f'Could not run ffplay. Please make sure it is installed, {str(err)}'
+                f'Could not run ffmpeg. Please make sure it is installed, {str(err)}'
             )
             return False
-        except CalledProcessError as e:
+        except Exception as e:
             logging.error(
-                'ffplay existed unexpectedly with the following error: {}'.format(e))
+                'ffmpeg existed unexpectedly with the following error: {}'.format(e))
             return False
 
     def add_input(self):
@@ -506,7 +501,7 @@ class Client(object):
             self.search_queue.task_done()
 
     def exit(self):
-        self.ffplay.exit()
+        self.player.exit()
         for th in self.__threads:
             try:
                 th.stop()

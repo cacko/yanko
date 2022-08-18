@@ -16,6 +16,11 @@ def int_or_str(text):
     except ValueError:
         return text
 
+        # '-af',
+        # 'loudnorm=I=-16:LRA=11:TP=-1.5',
+        # '-af',
+        # 'virtualbass',
+
 
 class FFMPeg(BasePlayer):
 
@@ -53,8 +58,6 @@ class FFMPeg(BasePlayer):
 
         try:
             logging.debug('Opening stream ...')
-            # input.audio.filter("loudnorm", "I=-16:LRA=11:TP=-1.5")
-            # input.audio.filter("virtualbass")
             process = ffmpeg.input(url).output(
                 'pipe:',
                 format='f32le',
@@ -131,14 +134,10 @@ class FFMPeg(BasePlayer):
                 self.status = Status.RESUMED
         return None
 
-    @property
-    def hasFinished(self):
-        raise NotImplementedError
-
     def _stop(self):
         return Status.STOPPED
 
-    def _restart(self, stream_url, track_data):
+    def _restart(self):
         return Status.PLAYING
 
     def _next(self):

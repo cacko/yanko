@@ -5,7 +5,6 @@ import sounddevice
 from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action
 from yanko.player.base import BasePlayer
-from time import sleep
 import logging
 
 
@@ -30,28 +29,26 @@ class FFMPeg(BasePlayer):
         return device
 
     def probe(self):
-        pass
+        try:
+            info = ffmpeg.probe(self.stream_url)
+        except ffmpeg.Error as e:
+            sys.stderr.buffer.write(e.stderr)
+
+        streams = info.get('streams', [])
+
+        stream = streams[0]
+
+        if stream.get('codec_type') != 'audio':
+            logging.warning('The stream must be an audio stream')
+            return Status.STOPPED
+
+        return stream
 
     def play(self):
 
         self.q = queue.Queue(maxsize=self.BUFFISIZE)
 
-        # try:
-        #     info = ffmpeg.probe(url)
-        # except ffmpeg.Error as e:
-        #     sys.stderr.buffer.write(e.stderr)
-
-        # streams = info.get('streams', [])
-
-        # stream = streams[0]
-
-        # if stream.get('codec_type') != 'audio':
-        #     logging.warning('The stream must be an audio stream')
-        #     return Status.STOPPED
-
         self.status = Status.PLAYING
-        # channels = stream['channels']
-        # samplerate = float(stream['sample_rate'])
         device = self.device
         device_spec = sounddevice.query_devices(device, 'output')
         channels = device_spec.get("max_output_channels")
@@ -85,7 +82,7 @@ class FFMPeg(BasePlayer):
                 timeout = self.BLOCKSIZE * self.BUFFISIZE / samplerate
                 while True:
                     if self.status == Status.PAUSED:
-                        sleep(0.05)
+                        sounddevice.sleep(50)
                     else:
                         self.q.put(process.stdout.read(
                             read_size), timeout=timeout)
@@ -103,7 +100,7 @@ class FFMPeg(BasePlayer):
 
     def callback(self, outdata, frames, time, status):
         while self.status == Status.PAUSED:
-            sleep(0.1)
+            sounddevice.sleep(50)
         assert frames == self.BLOCKSIZE
         if status.output_underflow:
             logging.debug(

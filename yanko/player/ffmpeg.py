@@ -39,18 +39,18 @@ class FFMPeg(BasePlayer):
 
         self.q = queue.Queue(maxsize=self.BUFFISIZE)
 
-        try:
-            info = ffmpeg.probe(url)
-        except ffmpeg.Error as e:
-            sys.stderr.buffer.write(e.stderr)
+        # try:
+        #     info = ffmpeg.probe(url)
+        # except ffmpeg.Error as e:
+        #     sys.stderr.buffer.write(e.stderr)
 
-        streams = info.get('streams', [])
+        # streams = info.get('streams', [])
 
-        stream = streams[0]
+        # stream = streams[0]
 
-        if stream.get('codec_type') != 'audio':
-            logging.warning('The stream must be an audio stream')
-            return Status.STOPPED
+        # if stream.get('codec_type') != 'audio':
+        #     logging.warning('The stream must be an audio stream')
+        #     return Status.STOPPED
 
         self.status = Status.PLAYING
         # channels = stream['channels']
@@ -60,7 +60,6 @@ class FFMPeg(BasePlayer):
         channels = device_spec.get("max_output_channels")
         samplerate = float(device_spec.get("default_samplerate"))
         logging.debug(device_spec)
-        logging.debug(stream)
 
         try:
             logging.debug('Opening stream ...')

@@ -37,7 +37,6 @@ setup(
         'pixelme>= 0.4.7',
         'opencv-python >= 4.6.0.66',
         'bs4 >= 0.0.1',
-        'miniaudio',
         'ffmpeg-python>=0.2.0',
         'numpy>=1.23.2',
         'sounddevice>=0.4.4',

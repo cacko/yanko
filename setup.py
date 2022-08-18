@@ -13,6 +13,7 @@ OPTIONS = {
     },
     'packages': [
         '_sounddevice_data',
+        'PIL'
     ],
 }
 setup(

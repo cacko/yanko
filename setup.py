@@ -14,6 +14,8 @@ OPTIONS = {
     'packages': [
         '_sounddevice_data',
         'PIL'
+        'cv2',
+        'numpy'
     ],
 }
 setup(

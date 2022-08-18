@@ -95,6 +95,7 @@ class FFMPeg(BasePlayer):
                         process.terminate()
                         stream.close()
                         return queue_action
+            process.wait()
         except queue.Full:
             pass
         except Exception as e:

@@ -9,35 +9,39 @@ class BasePlayer(object):
 
     _queue: Queue = None
     _url = None
+    _data = None
+    _format = "raw"
 
-    def __init__(self, queue):
+    def __init__(self, queue, stream_url, track_data, format="raw"):
         self.lock_file.unlink(missing_ok=True)
         self._queue = queue
+        self._url = stream_url
+        self._data = track_data
+        self._format = format
 
     @property
     def lock_file(self) -> Path:
         return app_config.app_dir / "play.lock"
 
-
-
-    def get_stream_url(self, stream_url, track_data, format="raw"):
-        song_id = track_data.get("id")
-        url = urlparse(stream_url)
+    @property
+    def stream_url(self):
+        song_id = self._data.get("id")
+        url = urlparse(self._url)
         query = parse_qs(url.query)
-        query = {"id": song_id, "format": format, **query}
+        query = {"id": song_id, "format": self._format, **query}
         return f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
 
     @property
     def hasFinished(self):
         raise NotImplementedError
 
-    def play(self, stream_url, track_data):
+    def play(self):
         raise NotImplementedError
 
     def _stop(self):
         raise NotImplementedError
 
-    def _restart(self, stream_url, track_data):
+    def _restart(self):
         raise NotImplementedError
 
     def _next(self):

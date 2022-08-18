@@ -112,7 +112,6 @@ class Client(object):
         self.__threads.append(search_thread)
 
         self.playback_queue = Queue()
-        self.player = FFMPeg(self.playback_queue)
         self.manager_queue = manager_queue
         self.playqueue = PlayQueue(manager_queue)
 
@@ -422,8 +421,9 @@ class Client(object):
                     start=datetime.now(tz=timezone.utc),
                     track=Track(**{**track_data, "coverArt": coverArtUrl}))
             )
+            self.player = FFMPeg(queue=self.playback_queue, stream_url=stream_url, track_data=track_data)
 
-            self.status = self.player.play(stream_url, track_data)
+            self.status = self.player.play()
 
             match(self.status):
                 case Status.NEXT:

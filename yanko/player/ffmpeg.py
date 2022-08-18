@@ -34,8 +34,10 @@ class FFMPeg(BasePlayer):
         _, device = sounddevice.default.device
         return device
 
-    def play(self, stream_url, track_data):
-        url = self.get_stream_url(stream_url=stream_url, track_data=track_data)
+    def probe(self):
+        pass
+
+    def play(self):
 
         self.q = queue.Queue(maxsize=self.BUFFISIZE)
 
@@ -63,7 +65,7 @@ class FFMPeg(BasePlayer):
 
         try:
             logging.debug('Opening stream ...')
-            process = ffmpeg.input(url).output(
+            process = ffmpeg.input(self.stream_url).output(
                 'pipe:',
                 format='f32le',
                 acodec='pcm_f32le',

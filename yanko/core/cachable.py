@@ -9,6 +9,7 @@ from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
 from dataclasses_json import dataclass_json, Undefined
+from yanko.core.string import file_hash
 
 
 class Method(Enum):
@@ -181,6 +182,7 @@ class CachableFile(Cachable):
     SIZE = (250, 250)
     _path: Path = None
     __contentType: str = None
+    __filehash: str = None
 
     def tocache(self, res: BinaryStruct):
         im = Image.open(io.BytesIO(res.binary))
@@ -202,6 +204,12 @@ class CachableFile(Cachable):
     def path(self):
         self._init()
         return self.storage_path
+
+    @property
+    def filehash(self):
+        if not self.__filehash:
+            self.__filehash = file_hash(self.storage_path)
+        return self.__filehash
 
     @property
     def contentType(self) -> str:

@@ -53,9 +53,9 @@ class FFMPeg(BasePlayer):
 
         try:
             logging.debug('Opening stream ...')
-            process = ffmpeg.input(
-                url
-            ).output(
+            # input.audio.filter("loudnorm", "I=-16:LRA=11:TP=-1.5")
+            # input.audio.filter("virtualbass")
+            process = ffmpeg.input(url).output(
                 'pipe:',
                 format='f32le',
                 acodec='pcm_f32le',

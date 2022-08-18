@@ -18,9 +18,7 @@ class BasePlayer(object):
     def lock_file(self) -> Path:
         return app_config.app_dir / "play.lock"
 
-    @property
-    def hasFinished(self):
-        raise NotImplementedError
+
 
     def get_stream_url(self, stream_url, track_data, format="raw"):
         song_id = track_data.get("id")
@@ -28,6 +26,10 @@ class BasePlayer(object):
         query = parse_qs(url.query)
         query = {"id": song_id, "format": format, **query}
         return f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
+
+    @property
+    def hasFinished(self):
+        raise NotImplementedError
 
     def play(self, stream_url, track_data):
         raise NotImplementedError

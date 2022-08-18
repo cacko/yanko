@@ -38,10 +38,9 @@ class FFPlay(BasePlayer):
     __track = NoSectionError
 
     @property
-    def process_has_finished(self):
-        if not self.__proc:
-            return True
-        return self.__proc.poll() is None
+    def process_is_running(self):
+        print(self.__proc.poll())
+        return self.__proc and self.__proc.poll() is not None
 
     def play(self, stream_url, track_data):
         self.__track = track_data
@@ -70,12 +69,11 @@ class FFPlay(BasePlayer):
         self.__proc = Popen(params, stdin=PIPE, env=env)
         self.lock_file.open("w+").close()
         run(['sudo', 'renice', '-5', f"{self.__proc.pid}"])
-
         with FFStream(self.__url, self.__proc.stdin) as stream:
             for _ in stream.fragments():
                 if queue_action := self.process_queue():
                     return queue_action
-        while not self.process_has_finished:
+        while self.process_is_running:
             if queue_action := self.process_queue():
                 return queue_action
             sleep(0.05)
@@ -101,6 +99,7 @@ class FFPlay(BasePlayer):
                 self.__paused = True
             case Action.RESUME:
                 self.__paused = False
+        return None
 
     def __terminate(self):
         self.lock_file.unlink(missing_ok=True)

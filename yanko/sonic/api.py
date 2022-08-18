@@ -11,6 +11,7 @@ from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from ..player.miniplay import Miniplay
+from ..player.ffmpeg import FFMPeg
 from ..player.base import BasePlayer
 from yanko.sonic import (
     Action,
@@ -116,7 +117,7 @@ class Client(object):
         self.__threads.append(search_thread)
 
         self.playback_queue = Queue()
-        self.ffplay = FFPlay(self.playback_queue)
+        self.ffplay = FFMPeg(self.playback_queue)
         self.manager_queue = manager_queue
         self.playqueue = PlayQueue(manager_queue)
 

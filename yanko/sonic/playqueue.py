@@ -1,8 +1,8 @@
 from queue import Queue
-import queue
 from yanko.core.config import app_config
 from pathlib import Path
 import json
+import pickle
 from yanko.sonic import Playlist, Track
 from datetime import datetime, timezone
 
@@ -12,6 +12,7 @@ class PlayQueue:
     __queue: Queue = None
     __songs: list = []
     __idx: int = 0
+    __last_id: str = None
     skip_to = None
 
     def __init__(self, manager_queue: Queue) -> None:
@@ -21,6 +22,25 @@ class PlayQueue:
     @property
     def playlist_file(self) -> Path:
         return app_config.app_dir / "playlist.dat"
+
+    @property
+    def last_id_file(self) -> Path:
+        return app_config.app_dir / "last_id.dat"
+
+    @property
+    def last_id(self):
+        if not self.__last_id:
+            data = self.last_id_file.read_bytes()
+            if not data:
+                return None
+            last_id = pickle.loads(data)
+            self.__last_id = last_id
+        return self.__last_id
+
+    @last_id.setter
+    def last_id(self, val):
+        self.__last_id = val
+        self.last_id_file.write_bytes(pickle.dumps(val))
 
     def __load(self):
         if not self.playlist_file.exists():
@@ -52,6 +72,7 @@ class PlayQueue:
                     self.skip_to = None
                 else:
                     continue
+            self.last_id = song.get("id")
             yield song
 
     def previous(self):

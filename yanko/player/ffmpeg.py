@@ -53,8 +53,14 @@ class FFMPeg(BasePlayer):
             return Status.STOPPED
 
         self.status = Status.PLAYING
-        channels = stream['channels']
-        samplerate = float(stream['sample_rate'])
+        # channels = stream['channels']
+        # samplerate = float(stream['sample_rate'])
+        device = self.device
+        device_spec = sounddevice.query_devices(device, 'output')
+        channels = device_spec.get("max_output_channels")
+        samplerate = float(device_spec.get("default_samplerate"))
+        logging.debug(device_spec)
+        logging.debug(stream)
 
         try:
             logging.debug('Opening stream ...')
@@ -68,7 +74,7 @@ class FFMPeg(BasePlayer):
             ).run_async(pipe_stdout=True)
             stream = sounddevice.RawOutputStream(
                 samplerate=samplerate, blocksize=self.BLOCKSIZE,
-                device=self.device, channels=channels, dtype='float32',
+                device=device, channels=channels, dtype='float32',
                 callback=self.callback)
             read_size = self.BLOCKSIZE * channels * stream.samplesize
             logging.debug('Buffering ...')

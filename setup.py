@@ -13,7 +13,7 @@ OPTIONS = {
     },
     'packages': [
         '_sounddevice_data',
-        'PIL'
+        'PIL',
         'cv2',
         'numpy'
     ],

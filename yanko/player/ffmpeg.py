@@ -25,8 +25,6 @@ class FFMPeg(BasePlayer):
     VOLUME_STEP = 0.05
     q: queue.Queue = None
     status: Status = None
-    last_frame = 0
-    tot_frames = 0
     __volume = 1
     __muted = False
 
@@ -64,11 +62,8 @@ class FFMPeg(BasePlayer):
             info = ffmpeg.probe(self.stream_url)
         except ffmpeg.Error as e:
             sys.stderr.buffer.write(e.stderr)
-
         streams = info.get('streams', [])
-
         stream = streams[0]
-
         if stream.get('codec_type') != 'audio':
             logging.warning('The stream must be an audio stream')
             return Status.STOPPED
@@ -181,7 +176,7 @@ class FFMPeg(BasePlayer):
         return Status.STOPPED
 
     def _restart(self):
-        return Status.PLAYING
+        return self.play()
 
     def _next(self):
         return Status.NEXT

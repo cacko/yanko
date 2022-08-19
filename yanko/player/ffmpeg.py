@@ -161,8 +161,6 @@ class FFMPeg(BasePlayer):
             self.last_frame = 0
             process = ffmpeg.input(self.stream_url).filter(
                 'loudnorm', I=-16, LRA=11, tp=-1.5
-            ).filter(
-                'virtualbass'
             ).output(
                 'pipe:',
                 format='f32le',

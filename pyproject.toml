@@ -10,7 +10,7 @@ secondary = true
 url = "https://pypi.cacko.net/simple/"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.8,<=3.10"
 pyfiglet = "^0.8.post1"
 PyGObject = "^3.42.1"
 requests = "^2.28.1"

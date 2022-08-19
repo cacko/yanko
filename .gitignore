@@ -28,3 +28,4 @@ dist
 *.flac
 node_modules
 *.dmg
+*.wav

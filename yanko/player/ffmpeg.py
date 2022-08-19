@@ -5,9 +5,46 @@ import sounddevice
 import logging
 import numpy
 import time
+# from yanko.core.thread import StoppableThread
 from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
+# from subprocess import Popen, PIPE
+
+
+# import asyncio
+
+# from contextlib import contextmanager
+# import time
+# import logging
+
+
+# @contextmanager
+# def run_bpm():
+#     proc = Popen(["bpm"], stdin=PIPE, stdout=PIPE)
+#     try:
+#         yield proc.stdin, proc.stdout
+#         res, _ = proc.communicate()
+#         print(res)
+#         yield res
+#     finally:
+#         pass
+
+
+# async def run(cmd: str):
+#     proc = await asyncio.create_subprocess_shell(
+#         cmd,
+#         stdin=asyncio.subprocess.PIPE,
+#         stdout=asyncio.subprocess.PIPE
+#     )
+
+#     stdout, stderr = await proc.communicate()
+
+#     print(f'[{cmd!r} exited with {proc.returncode}]')
+#     if stdout:
+#         print(f'[stdout]\n{stdout.decode()}')
+#     if stderr:
+#         print(f'[stderr]\n{stderr.decode()}')
 
 
 def int_or_str(text):
@@ -16,6 +53,44 @@ def int_or_str(text):
         return int(text)
     except ValueError:
         return text
+
+
+# class BPM:
+
+#     __process: Popen = None
+#     __queue: queue.Queue = None
+
+#     def __init__(self):
+#         self.__queue = queue.Queue()
+
+#     @property
+#     def queue(self):
+#         return self.__queue
+
+#     def start(self):
+#         with run_bpm() as runner:
+#             inp, out = runner
+#             for data in self.queue_gen():
+#                 if data:
+#                     inp.write(data)
+
+
+#     def queue_gen(self):
+#         while True:
+#             if self.__queue.empty():
+#                 time.sleep(0.05)
+#                 print('yield none')
+#                 yield None
+#             else:
+#                 data = self.__queue.get_nowait()
+#                 self.__queue.task_done()
+#                 yield data
+
+#     def __del__(self):
+#         try:
+#             self.__process.terminate()
+#         except Exception as e:
+#             print(e)
 
 
 class FFMPeg(BasePlayer):
@@ -27,6 +102,7 @@ class FFMPeg(BasePlayer):
     status: Status = None
     __volume = 1
     __muted = False
+    # __bpm: BPM = None
 
     @property
     def volume(self):
@@ -80,7 +156,6 @@ class FFMPeg(BasePlayer):
         channels = device_spec.get("max_output_channels")
         samplerate = float(device_spec.get("default_samplerate"))
         logging.debug(device_spec)
-
         try:
             logging.debug('Opening stream ...')
             self.last_frame = 0
@@ -105,6 +180,9 @@ class FFMPeg(BasePlayer):
             for _ in range(self.BUFFISIZE):
                 self.q.put_nowait(process.stdout.read(read_size))
             logging.debug('Starting Playback ...')
+            # self.__bpm = BPM()
+            # t = StoppableThread(target=self.__bpm.start)
+            # t.start()
             with stream:
                 timeout = self.BLOCKSIZE * self.BUFFISIZE / samplerate
                 while True:
@@ -136,6 +214,7 @@ class FFMPeg(BasePlayer):
         assert not status
         try:
             data = self.q.get_nowait()
+            # self.__bpm.queue.put_nowait(data)
             data_array = numpy.frombuffer(data, dtype='float32')
             volume_norm = data_array * (0 if self.muted else self.volume)
             outdata[:] = volume_norm.tobytes()

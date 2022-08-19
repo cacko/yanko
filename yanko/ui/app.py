@@ -21,7 +21,7 @@ from yanko.ui.models import (
     Symbol,
     Label,
     MusicItem,
-    AnimatedPlay
+    ProgressIcon
 )
 from yanko.sonic.manager import Manager
 from yanko.ui.items.playlist import Playlist
@@ -31,7 +31,13 @@ import logging
 from yanko.api.server import Server
 from yanko.lametric import LaMetric
 from pathlib import Path
-import time
+
+
+
+ProgressPlay = ProgressIcon(icons=[
+    Symbol.GRID1, Symbol.GRID2, Symbol.GRID3, Symbol.GRID4
+])
+
 
 
 class YankoAppMeta(type):
@@ -148,7 +154,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     @rumps.timer(0.2)
     def updatePlayingTime(self, sender):
         if self.__status == Status.PLAYING:
-            self.icon = next(AnimatedPlay).value
+            self.icon = next(ProgressPlay).value
         if self.__volume and self.__volume.hasExpired:
             self.__volume = None
             if self.__status == Status.PLAYING:

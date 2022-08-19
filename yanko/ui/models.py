@@ -46,6 +46,12 @@ class Symbol(Enum):
     WAVE1 = 'speaker.wave.1'
     WAVE2 = 'speaker.wave.2'
     WAVE3 = 'speaker.wave.3'
+    WAVEFORM = "waveform"
+    WAVEFORM_PATH = "waveform.path"
+    GRID1 = "circle.grid.cross.left.filled"
+    GRID2 = "circle.grid.cross.up.filled"
+    GRID3 = "circle.grid.cross.right.filled"
+    GRID4 = "circle.grid.cross.down.filled"
 
 
 class Icon(Enum):
@@ -83,10 +89,24 @@ class AnimatedIcon:
         return res
 
 
-AnimatedPlay = AnimatedIcon(icons=[
-    Symbol.WAVE1, Symbol.WAVE2, Symbol.WAVE3
-])
+class ProgressIcon:
 
+    __items: list[Symbol] = []
+    __idx = 0
+
+    def __init__(self, icons: list[Symbol]) -> None:
+        self.__items = icons
+
+    def __iter__(self):
+        self.__idx = 0
+        return self
+
+    def __next__(self):
+        res = self.__items[self.__idx]
+        self.__idx += 1
+        if self.__idx == len(self.__items):
+            self.__idx = 0
+        return res
 
 class ActionItemMeta(type):
 

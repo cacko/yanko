@@ -22,7 +22,6 @@ from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
 import asyncio
 from multiprocessing.pool import ThreadPool
-from itertools import repeat
 
 
 def resolveCoverArt(obj):

@@ -74,7 +74,6 @@ class PlayQueue:
                     self.skip_to = None
                 else:
                     continue
-            self.last_id = song.get("id")
             yield song
 
     def previous(self):

@@ -422,11 +422,13 @@ class Client(object):
                     track=Track(**{**track_data, "coverArt": coverArtUrl}))
             )
             self.player = FFMPeg(
-                queue=self.playback_queue, 
+                queue=self.playback_queue,
                 manager_queue=self.manager_queue,
-                stream_url=stream_url, 
+                stream_url=stream_url,
                 track_data=track_data,
             )
+
+            self.playqueue.last_id = song_id
 
             self.status = self.player.play()
 

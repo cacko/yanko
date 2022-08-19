@@ -22,28 +22,30 @@ class Label(Enum):
     MOST_PLAYED = 'Most played'
 
 
-class Icon(Enum):
-    PLAY = 'play.png'
-    STOP = 'stop.png'
+class Symbol(Enum):
+    STOPPED = "figure.dress.line.vertical.figure"
+    PLAY = 'play'
+    STOP = 'stop'
     FIND = 'find.png'
-    QUIT = 'quit.png'
-    RANDOM = 'random.png'
-    ALBUM = 'album.png'
-    NEXT = 'next.png'
-    PREVIOUS = 'previous.png'
-    RESTART = 'restart.png'
-    PLAYING = 'playing.png'
-    STOPPED = 'stopped.png'
-    LAST_ADDED = 'newest.png'
-    ARTIST = 'artist.png'
-    NOWPLAYING = 'nowplaying.png'
-    DEFAULT_ART = 'default_art.png'
-    RECENT = 'recents.png'
-    PAUSE = 'pause.png'
-    RESCAN = 'rescan.png'
-    RANDOM_ALBUM = 'random_album.png'
-    MOST_PLAYED = 'most_played.png'
+    QUIT = 'power'
+    RANDOM = 'dice'
+    ALBUM = 'opticaldisc'
+    NEXT = 'forward'
+    PREVIOUS = 'backward'
+    RESTART = 'gobackward'
+    PLAYING = 'speaker.wave.3'
+    LAST_ADDED = 'wand.and.stars'
+    ARTIST = 'guitars'
+    NOWPLAYING = 'speaker.wave.3'
+    RECENT = 'clock.arrow.circlepath'
+    PAUSE = 'pause'
+    RESCAN = 'lifepreserver'
+    RANDOM_ALBUM = 'die.face.5'
+    MOST_PLAYED = 'arrow.clockwise.heart'
     MUTED = 'muted.png'
+
+
+class Icon(Enum):
 
     def __new__(cls, *args):
         icons_path: Path = Path(__file__).parent / "icons"
@@ -64,43 +66,43 @@ class ActionItemMeta(type):
 
     @property
     def next(cls) -> 'ActionItem':
-        return cls("next", Label.NEXT.value, icon=Icon.NEXT.value)
+        return cls("next", Label.NEXT.value, icon=Symbol.NEXT.value)
 
     @property
     def restart(cls) -> 'ActionItem':
-        return cls("restart", Label.RESTART.value, icon=Icon.RESTART.value)
+        return cls("restart", Label.RESTART.value, icon=Symbol.RESTART.value)
 
     @property
     def quit(cls) -> 'ActionItem':
-        return cls("quit", Label.QUIT.value, icon=Icon.QUIT.value)
+        return cls("quit", Label.QUIT.value, icon=Symbol.QUIT.value)
 
     @property
     def random(cls) -> 'ActionItem':
-        return cls("random", Label.RANDOM.value, icon=Icon.RANDOM.value)
+        return cls("random", Label.RANDOM.value, icon=Symbol.RANDOM.value)
 
     @property
     def random_album(cls) -> 'ActionItem':
-        return cls("random_album", Label.RANDOM_ALBUM.value, icon=Icon.RANDOM_ALBUM.value)
+        return cls("random_album", Label.RANDOM_ALBUM.value, icon=Symbol.RANDOM_ALBUM.value)
 
     @property
     def last_added(cls) -> 'ActionItem':
-        return cls("newest", Label.LAST_ADDED.value, icon=Icon.LAST_ADDED.value)
+        return cls("newest", Label.LAST_ADDED.value, icon=Symbol.LAST_ADDED.value)
 
     @property
     def artist(cls) -> 'ActionItem':
-        return cls("artist", Label.ARTIST.value, icon=Icon.ARTIST.value)
+        return cls("artist", Label.ARTIST.value, icon=Symbol.ARTIST.value)
 
     @property
     def recent(cls) -> 'ActionItem':
-        return cls("recent", Label.RECENT.value, icon=Icon.RECENT.value)
+        return cls("recent", Label.RECENT.value, icon=Symbol.RECENT.value)
 
     @property
     def most_played(cls) -> 'ActionItem':
-        return cls("most_played", Label.MOST_PLAYED.value, icon=Icon.MOST_PLAYED.value)
+        return cls("most_played", Label.MOST_PLAYED.value, icon=Symbol.MOST_PLAYED.value)
 
     @property
     def rescan(cls) -> 'ActionItem':
-        return cls("rescan", Label.RESCAN.value, icon=Icon.RESCAN.value)
+        return cls("rescan", Label.RESCAN.value, icon=Symbol.RESCAN.value)
 
 
 class ActionItem(MenuItem, metaclass=ActionItemMeta):

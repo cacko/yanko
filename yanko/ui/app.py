@@ -18,7 +18,7 @@ from yanko.sonic import (
 )
 from yanko.ui.models import (
     ActionItem,
-    Icon,
+    Symbol,
     Label,
     MusicItem
 )
@@ -78,7 +78,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.rescan,
                 ActionItem.quit
             ],
-            icon=Icon.STOPPED.value,
+            icon=Symbol.STOPPED.value,
             quit_button=None,
             template=False
         )
@@ -225,11 +225,11 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.next.show()
             ActionItem.restart.show()
         elif resp.status == Status.PAUSED:
-            self.icon = Icon.PAUSE.value
+            self.icon = Symbol.PAUSE.value
         elif resp.status == Status.RESUMED:
             self.icon = self.__nowplaying.track.coverArtIcon
         elif resp.status == Status.STOPPED:
-            self.icon = Icon.STOPPED.value
+            self.icon = Symbol.STOPPED.value
             self.title = ''
             if len(self.__playlist):
                 ActionItem.next.show()

@@ -43,6 +43,9 @@ class Symbol(Enum):
     RANDOM_ALBUM = 'die.face.5'
     MOST_PLAYED = 'arrow.clockwise.heart'
     MUTED = 'muted.png'
+    WAVE1 = 'speaker.wave.1'
+    WAVE2 = 'speaker.wave.2'
+    WAVE3 = 'speaker.wave.3'
 
 
 class Icon(Enum):
@@ -53,6 +56,36 @@ class Icon(Enum):
         obj = object.__new__(cls)
         obj._value_ = value.as_posix()
         return obj
+
+
+class AnimatedIcon:
+
+    __items: list[Symbol] = []
+    __idx = 0
+    __offset = 1
+
+    def __init__(self, icons: list[Symbol]) -> None:
+        self.__items = icons
+
+    def __iter__(self):
+        self.__idx = 0
+        return self
+
+    def __next__(self):
+        res = self.__items[self.__idx]
+        if self.__offset > 0 and self.__idx + self.__offset == len(self.__items):
+            self.__offset = -1
+        elif self.__idx == 0:
+            self.__offset = 1
+
+        self.__idx += self.__offset
+
+        return res
+
+
+AnimatedPlay = AnimatedIcon(icons=[
+    Symbol.WAVE1, Symbol.WAVE2, Symbol.WAVE3
+])
 
 
 class ActionItemMeta(type):

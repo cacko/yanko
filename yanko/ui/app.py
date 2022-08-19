@@ -20,7 +20,8 @@ from yanko.ui.models import (
     ActionItem,
     Symbol,
     Label,
-    MusicItem
+    MusicItem,
+    AnimatedPlay
 )
 from yanko.sonic.manager import Manager
 from yanko.ui.items.playlist import Playlist
@@ -80,7 +81,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             ],
             icon=Symbol.STOPPED.value,
             quit_button=None,
-            template=False
+            template=True
         )
         self.menu.setAutoenablesItems = False
         self.__status = Status.STOPPED
@@ -144,8 +145,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def wake(self):
         pass
 
-    @rumps.timer(1)
+    @rumps.timer(0.2)
     def updatePlayingTime(self, sender):
+        if self.__status == Status.PLAYING:
+            self.icon = next(AnimatedPlay).value
         if self.__volume and self.__volume.hasExpired:
             self.__volume = None
             if self.__status == Status.PLAYING:
@@ -176,7 +179,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 track, callback=self._onNowPlayClick)),
             self.menu.insert_before(top, None)
         ]
-        self.icon = resp.track.coverArtIcon
+        self.icon = Symbol.PLAYING.value
         self.manager.commander.put_nowait(
             (Command.ARTIST_ALBUMS, resp.track.artistId))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
@@ -227,7 +230,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         elif resp.status == Status.PAUSED:
             self.icon = Symbol.PAUSE.value
         elif resp.status == Status.RESUMED:
-            self.icon = self.__nowplaying.track.coverArtIcon
+            self.icon = Symbol.PLAYING.value
         elif resp.status == Status.STOPPED:
             self.icon = Symbol.STOPPED.value
             self.title = ''

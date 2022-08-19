@@ -12,6 +12,7 @@ class Label(Enum):
     RANDOM = 'Random Songs'
     ALBUM = 'Album'
     NEXT = 'Next Song'
+    PREVIOUS = 'Previous Song'
     RESTART = 'Replay'
     QUIT = 'Quit'
     LAST_ADDED = 'Last addded'
@@ -23,7 +24,7 @@ class Label(Enum):
 
 
 class Symbol(Enum):
-    STOPPED = "figure.dress.line.vertical.figure"
+    STOPPED = "speaker.zzz.fill"
     PLAY = 'play'
     STOP = 'stop'
     FIND = 'find.png'
@@ -32,7 +33,7 @@ class Symbol(Enum):
     ALBUM = 'opticaldisc'
     NEXT = 'forward'
     PREVIOUS = 'backward'
-    RESTART = 'gobackward'
+    RESTART = 'restart'
     PLAYING = 'speaker.wave.3'
     LAST_ADDED = 'wand.and.stars'
     ARTIST = 'guitars'
@@ -43,15 +44,13 @@ class Symbol(Enum):
     RANDOM_ALBUM = 'die.face.5'
     MOST_PLAYED = 'arrow.clockwise.heart'
     MUTED = 'muted.png'
-    WAVE1 = 'speaker.wave.1'
-    WAVE2 = 'speaker.wave.2'
-    WAVE3 = 'speaker.wave.3'
-    WAVEFORM = "waveform"
-    WAVEFORM_PATH = "waveform.path"
-    GRID1 = "circle.grid.cross.left.filled"
-    GRID2 = "circle.grid.cross.up.filled"
-    GRID3 = "circle.grid.cross.right.filled"
-    GRID4 = "circle.grid.cross.down.filled"
+    WAVE1 = 'wave.1.forward'
+    WAVE2 = 'wave.2.forward'
+    WAVE3 = 'wave.3.forward'
+    GRID1 = "circle.grid.2x1"
+    GRID2 = "circle.grid.2x1.left.filled"
+    GRID3 = "circle.grid.2x1.right.filled"
+    GRID4 = "circle.grid.2x1.fill"
 
 
 class Icon(Enum):
@@ -108,6 +107,7 @@ class ProgressIcon:
             self.__idx = 0
         return res
 
+
 class ActionItemMeta(type):
 
     _instances = {}
@@ -124,6 +124,10 @@ class ActionItemMeta(type):
     @property
     def restart(cls) -> 'ActionItem':
         return cls("restart", Label.RESTART.value, icon=Symbol.RESTART.value)
+
+    @property
+    def previous(cls) -> 'ActionItem':
+        return cls("previous", Label.PREVIOUS.value, icon=Symbol.PREVIOUS.value)
 
     @property
     def quit(cls) -> 'ActionItem':

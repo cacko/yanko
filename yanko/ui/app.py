@@ -21,7 +21,8 @@ from yanko.ui.models import (
     Symbol,
     Label,
     MusicItem,
-    ProgressIcon
+    ProgressIcon,
+    AnimatedIcon
 )
 from yanko.sonic.manager import Manager
 from yanko.ui.items.playlist import Playlist
@@ -33,11 +34,13 @@ from yanko.lametric import LaMetric
 from pathlib import Path
 
 
-
-ProgressPlay = ProgressIcon(icons=[
-    Symbol.GRID1, Symbol.GRID2, Symbol.GRID3, Symbol.GRID4
+PausingIcon = AnimatedIcon(icons=[
+    Symbol.GRID1, Symbol.GRID4
 ])
 
+PlayingIcon = AnimatedIcon(icons=[
+    Symbol.GRID1, Symbol.GRID2, Symbol.GRID3, Symbol.GRID4
+])
 
 
 class YankoAppMeta(type):
@@ -79,8 +82,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.last_added,
                 ActionItem.most_played,
                 None,
-                ActionItem.next,
+                ActionItem.previous,
                 ActionItem.restart,
+                ActionItem.next,
                 None,
                 ActionItem.rescan,
                 ActionItem.quit
@@ -98,6 +102,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__recent = Albumlist(self, Label.RECENT.value)
         ActionItem.next.hide()
         ActionItem.restart.hide()
+        ActionItem.previous.hide()
         self.manager = Manager()
         t = StoppableThread(target=self.manager.start, args=[
             self.onManagerResult,
@@ -135,6 +140,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def onNext(self, sender):
         self.manager.commander.put_nowait((Command.NEXT, None))
 
+    @rumps.clicked(Label.PREVIOUS.value)
+    def onPrevious(self, sender):
+        self.manager.commander.put_nowait((Command.PREVIOUS, None))
+
     @rumps.clicked(Label.RESTART.value)
     def onRestart(self, sender):
         self.manager.commander.put_nowait((Command.RESTART, None))
@@ -153,14 +162,17 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     @rumps.timer(0.2)
     def updatePlayingTime(self, sender):
-        if self.__status == Status.PLAYING:
-            self.icon = next(ProgressPlay).value
-        if self.__volume and self.__volume.hasExpired:
-            self.__volume = None
-            if self.__status == Status.PLAYING:
-                self.title = self.__nowplaying.menubar_title
-            else:
-                self.title = ''
+        match(self.__status):
+            case Status.PLAYING:
+                self.icon = next(PlayingIcon).value
+            case Status.PAUSED:
+                self.icon = next(PausingIcon).value
+        # if self.__volume and self.__volume.hasExpired:
+        #     self.__volume = None
+        #     if self.__status == Status.PLAYING:
+        #         self.title = self.__nowplaying.menubar_title
+        #     else:
+        #         self.title = ''
 
     def onManagerResult(self, resp):
         logging.debug(resp)
@@ -185,10 +197,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 track, callback=self._onNowPlayClick)),
             self.menu.insert_before(top, None)
         ]
-        self.icon = Symbol.PLAYING.value
         self.manager.commander.put_nowait(
             (Command.ARTIST_ALBUMS, resp.track.artistId))
-        self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
+        self.manager.commander.put_nowait(
+            (Command.RECENTLY_PLAYED, None))
 
     def _onLaMetricInit(self):
         if self.__status in [Status.PLAYING] and self.__nowplaying:
@@ -232,18 +244,17 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         if resp.status == Status.PLAYING:
             if len(self.__playlist):
                 ActionItem.next.show()
+                ActionItem.previous.show()
             ActionItem.restart.show()
-        elif resp.status == Status.PAUSED:
-            self.icon = Symbol.PAUSE.value
-        elif resp.status == Status.RESUMED:
-            self.icon = Symbol.PLAYING.value
         elif resp.status == Status.STOPPED:
             self.icon = Symbol.STOPPED.value
             self.title = ''
             if len(self.__playlist):
                 ActionItem.next.show()
+                ActionItem.previous.show()
             else:
                 ActionItem.next.hide()
+                ActionItem.previous.hide()
             ActionItem.restart.hide()
         elif resp.status == Status.EXIT:
             rumps.quit_application()

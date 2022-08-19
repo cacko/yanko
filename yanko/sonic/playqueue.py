@@ -47,10 +47,12 @@ class PlayQueue:
             return
         with self.playlist_file.open("r") as fp:
             try:
-                if last_id := self.last_id:
-                    self.skip_to = last_id
                 last_playlist = json.load(fp)
                 self.load(last_playlist)
+                if last_id := self.last_id:
+                    ids = [s.get("id") for s in self.__songs]
+                    if last_id in ids:
+                        self.skip_to = last_id
             except json.decoder.JSONDecodeError:
                 pass
 

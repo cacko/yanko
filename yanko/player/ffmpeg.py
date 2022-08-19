@@ -159,9 +159,7 @@ class FFMPeg(BasePlayer):
         try:
             logging.debug('Opening stream ...')
             self.last_frame = 0
-            process = ffmpeg.input(self.stream_url).filter(
-                'loudnorm', I=-16, LRA=11, tp=-1.5
-            ).output(
+            process = ffmpeg.input(self.stream_url).output(
                 'pipe:',
                 format='f32le',
                 acodec='pcm_f32le',

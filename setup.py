@@ -20,7 +20,9 @@ OPTIONS = {
         'PIL',
         'cv2',
         'numpy',
-        'sounddevice'
+        'sounddevice',
+        'sd',
+        'np'
     ],
 }
 setup(

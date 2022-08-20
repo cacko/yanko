@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import hashlib
 import logging
+from pprint import pprint
 import string
 import sys
 import time
@@ -31,6 +32,7 @@ from yanko.sonic import (
     Search,
     Search3Response,
     SearchItemIcon,
+    Song,
     Track,
     Status,
     LastAdded,
@@ -279,6 +281,11 @@ class Client(object):
         songs = album_info.get('song', [])
         return songs
 
+    def get_song_data(self, song_id) -> Song:
+        song_data = self.make_request(
+            self.create_url(Subsonic.SONG, id=song_id))
+        return Song.from_dict(song_data)
+
     def get_artist(self, artist_id) -> Artist:
         if not artist_id:
             return
@@ -403,7 +410,6 @@ class Client(object):
         song_id = track_data.get('id')
         if not song_id:
             return False
-
         self.scrobble(song_id)
 
         try:
@@ -419,13 +425,15 @@ class Client(object):
             self.manager_queue.put_nowait(
                 NowPlaying(
                     start=datetime.now(tz=timezone.utc),
-                    track=Track(**{**track_data, "coverArt": coverArtUrl}))
+                    track=Track(**{**track_data, "coverArt": coverArtUrl}),
+                    song=Song.from_dict(self.get_song_data(song_id))
+                )
             )
             self.player = FFMPeg(
                 queue=self.playback_queue,
                 manager_queue=self.manager_queue,
                 stream_url=stream_url,
-                track_data=track_data,
+                track_data=track_data
             )
 
             self.playqueue.last_id = song_id

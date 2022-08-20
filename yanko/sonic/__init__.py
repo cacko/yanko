@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from dataclasses import dataclass, field
 from math import floor
+from optparse import Option
 from marshmallow import fields
 from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional
@@ -120,6 +121,7 @@ class Subsonic(Enum):
     TOP_SONGS = 'getTopSongs'
     START_SCAN = 'startScan'
     GET_SCAN_STATUS = 'getScanStatus'
+    SONG = 'getSong'
 
 
 class AlbumType(Enum):
@@ -127,6 +129,33 @@ class AlbumType(Enum):
     RECENT = 'recent'
     RANDOM = 'random'
     FREQUENT = 'frequent'
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Song:
+    album: Optional[str] = None
+    albumId: Optional[str] = None
+    artist: Optional[str] = None
+    artistId: Optional[str] = None
+    bitRate: Optional[int] = None
+    contentType: Optional[str] = None
+    coverArt: Optional[str] = None
+    created: Optional[str] = None
+    discNumber: Optional[int] = None
+    duration: Optional[int] = None
+    id: Optional[str] = None
+    isDir: Optional[bool] = None
+    isVideo: Optional[bool] = None
+    parent: Optional[str] = None
+    path: Optional[str] = None
+    size: Optional[int] = None
+    suffix: Optional[str] = None
+    title: Optional[str] = None
+    track: Optional[int] = None
+    type: Optional[str] = None
+    year: Optional[int] = None
+    Bpm: Optional[int] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -228,7 +257,14 @@ class ArtistInfo:
 @dataclass
 class NowPlaying:
     track: Track
+    song: Song
     start: datetime
+
+    @property
+    def bpm(self) -> int:
+        if bpm := self.song.Bpm:
+            return int(bpm)
+        return None
 
     @property
     def total_length(self) -> str:

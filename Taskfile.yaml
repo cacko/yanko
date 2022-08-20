@@ -45,6 +45,7 @@ tasks:
 
   deploy:
     cmds:
+      - poetry run python app.py increment_version
       - task: push
       - task: build
       - task: dmg

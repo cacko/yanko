@@ -1,4 +1,5 @@
 from setuptools import setup
+from yanko.version import __version__
 
 
 APP = ['app.py']
@@ -9,7 +10,7 @@ OPTIONS = {
     'plist': {
         'LSUIElement': True,
         'CFBundleIdentifier': 'net.cacko.yanko',
-        'CFBundleVersion': '0.2.1',
+        'CFBundleVersion': f"{__version__}",
         'LSEnvironment': dict(
             PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin',
             YANKO_LOG_LEVEL="FATAL"

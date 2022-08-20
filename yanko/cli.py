@@ -1,8 +1,11 @@
+from ast import arguments
 import click
 from yanko.core.config import app_config
 from yanko.sonic import Command
 from requests import get
 from requests.exceptions import ConnectionError
+import semver
+from pathlib import Path
 
 class YankoCommand(click.Group):
 
@@ -14,6 +17,13 @@ class YankoCommand(click.Group):
 def cli():
     """This script showcases different terminal UI helpers in Click."""
     pass
+
+@cli.command('increment_version', short_help="Increment version")
+def cli_inc_version():
+    init = Path(__file__).parent / "version.py"
+    _, v = init.read_text().split(' = ')
+    cv = semver.VersionInfo.parse(v.strip('"'))
+    init.write_text(f'__version__ = "{cv.bump_patch()}"')
 
 @cli.command('config', short_help="Config")
 def cli_config():

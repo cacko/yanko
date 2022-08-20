@@ -20,6 +20,7 @@ OPTIONS = {
         'PIL',
         'cv2',
         'numpy'
+        'sounddevice'
     ],
 }
 setup(

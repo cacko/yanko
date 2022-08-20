@@ -9,7 +9,7 @@ OPTIONS = {
     'plist': {
         'LSUIElement': True,
         'CFBundleIdentifier': 'net.cacko.yanko',
-        'CFBundleVersion': '0.2.0',
+        'CFBundleVersion': '0.2.1',
         'LSEnvironment': dict(
             PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin',
             YANKO_LOG_LEVEL="FATAL"
@@ -21,8 +21,6 @@ OPTIONS = {
         'cv2',
         'numpy',
         'sounddevice',
-        'sd',
-        'np'
     ],
 }
 setup(
@@ -44,7 +42,8 @@ setup(
         'numpy>=1.23.2',
         'sounddevice>=0.4.4',
         'cffi >= 1.15.1',
-        'pycparser >= 2.21'
+        'pycparser >= 2.21',
+        'olefile >= ^0.46'
     ],
     data_files=DATA_FILES,
     options={'py2app': OPTIONS},

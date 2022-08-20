@@ -67,5 +67,4 @@ class BasePlayer(object):
         raise NotImplementedError
 
     def exit(self):
-        self._terminate()
         return Status.EXIT

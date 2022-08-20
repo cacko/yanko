@@ -9,6 +9,7 @@ from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
 
+
 def int_or_str(text):
     """Helper function for argument parsing."""
     try:
@@ -78,6 +79,7 @@ class FFMPeg(BasePlayer):
         channels = device_spec.get("max_output_channels")
         samplerate = float(
             device_spec.get("default_samplerate"))
+        self.BLOCKSIZE = int(samplerate / 64)
         logging.debug(device_spec)
         try:
             logging.debug('Opening stream ...')

@@ -1,13 +1,17 @@
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json, Undefined
 import queue
 import sys
 import ffmpeg
-import sounddevice
+import sounddevice as sd
 import logging
 import numpy as np
 import time
 from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
+from typing import Optional
+from yanko.core.bytes import nearest_bytes
 
 
 def int_or_str(text):
@@ -18,10 +22,51 @@ def int_or_str(text):
         return text
 
 
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class OutputDevice:
+    name: Optional[str] = None
+    index: Optional[int] = None
+    hostapi: Optional[int] = None
+    max_input_channels: Optional[int] = None
+    max_output_channels: Optional[int] = None
+    default_low_input_latency: Optional[float] = None
+    default_low_output_latency: Optional[float] = None
+    default_high_input_latency: Optional[float] = None
+    default_high_output_latency: Optional[float] = None
+    default_samplerate: Optional[float] = None
+
+    def __post_init__(self):
+        if not self.default_samplerate:
+            self.default_samplerate = 44100.0
+
+    @property
+    def blocksize(self) -> int:
+        latency = max(filter(lambda x: x, [
+            self.default_high_output_latency,
+            self.default_low_output_latency
+        ]))
+        return nearest_bytes(int(self.default_samplerate * latency))
+
+    @property
+    def output_channels(self) -> int:
+        return int(self.max_output_channels)
+
+    @property
+    def input_channels(self) -> int:
+        return int(self.max_input_channels)
+
+    @property
+    def samplerate(self) -> float:
+        return float(self.default_samplerate)
+
+    @property
+    def buffsize(self) -> int:
+        return 20
+
+
 class FFMPeg(BasePlayer):
 
-    BUFFISIZE = 20
-    BLOCKSIZE = 1024
     VOLUME_STEP = 0.05
     q: queue.Queue = None
     status: Status = None
@@ -36,8 +81,11 @@ class FFMPeg(BasePlayer):
     def volume(self, val):
         self.__volume = val
         self._manager_queue.put_nowait(
-            VolumeStatus(volume=self.__volume, muted=self.__muted,
-                         timestamp=time.time())
+            VolumeStatus(
+                volume=self.__volume,
+                muted=self.__muted,
+                timestamp=time.time()
+            )
         )
 
     @property
@@ -48,14 +96,18 @@ class FFMPeg(BasePlayer):
     def muted(self, val):
         self.__muted = val
         self._manager_queue.put_nowait(
-            VolumeStatus(volume=self.__volume, muted=self.__muted,
-                         timestamp=time.time())
+            VolumeStatus(
+                volume=self.__volume,
+                muted=self.__muted,
+                timestamp=time.time()
+            )
         )
 
     @property
-    def device(self):
-        _, device = sounddevice.default.device
-        return device
+    def device(self) -> OutputDevice:
+        _, device = sd.default.device
+        device_spec = sd.query_devices(device, 'output')
+        return OutputDevice(**device_spec)
 
     def probe(self):
         try:
@@ -67,45 +119,41 @@ class FFMPeg(BasePlayer):
         if stream.get('codec_type') != 'audio':
             logging.warning('The stream must be an audio stream')
             return Status.STOPPED
-
         return stream
 
     def play(self):
-
-        self.q = queue.Queue(maxsize=self.BUFFISIZE)
-        self.status = Status.PLAYING
         device = self.device
-        device_spec = sounddevice.query_devices(device, 'output')
-        channels = device_spec.get("max_output_channels")
-        samplerate = float(
-            device_spec.get("default_samplerate"))
-        self.BLOCKSIZE = int(samplerate / 64)
-        logging.debug(device_spec)
+        logging.debug(device)
+        self.q = queue.Queue(maxsize=device.buffsize)
+        self.status = Status.PLAYING
         try:
             logging.debug('Opening stream ...')
-            self.last_frame = 0
             process = ffmpeg.input(self.stream_url).output(
                 'pipe:',
                 format='f32le',
                 acodec='pcm_f32le',
-                ac=channels,
-                ar=samplerate,
+                ac=device.output_channels,
+                ar=device.samplerate,
                 loglevel='quiet',
             ).run_async(pipe_stdout=True)
-            stream = sounddevice.RawOutputStream(
-                samplerate=samplerate, blocksize=self.BLOCKSIZE,
-                device=device, channels=channels, dtype='float32',
-                callback=self.callback)
-            read_size = self.BLOCKSIZE * channels * stream.samplesize
+            stream = sd.RawOutputStream(
+                samplerate=device.samplerate,
+                blocksize=device.blocksize,
+                device=device.index,
+                channels=device.output_channels,
+                dtype='float32',
+                callback=self.callback
+            )
+            read_size = device.blocksize * device.output_channels * stream.samplesize
             logging.debug('Buffering ...')
-            for _ in range(self.BUFFISIZE):
+            for _ in range(device.buffsize):
                 self.q.put_nowait(process.stdout.read(read_size))
             logging.debug('Starting Playback ...')
             with stream:
-                timeout = self.BLOCKSIZE * self.BUFFISIZE / samplerate
+                timeout = device.blocksize * device.buffsize / device.samplerate
                 while True:
                     if self.status == Status.PAUSED:
-                        sounddevice.sleep(50)
+                        sd.sleep(50)
                     else:
                         self.q.put(process.stdout.read(
                             read_size), timeout=timeout)
@@ -123,12 +171,12 @@ class FFMPeg(BasePlayer):
 
     def callback(self, outdata, frames, time, status):
         while self.status == Status.PAUSED:
-            sounddevice.sleep(50)
-        assert frames == self.BLOCKSIZE
+            sd.sleep(50)
+        assert frames == self.device.blocksize
         if status.output_underflow:
             logging.debug(
                 'Output underflow: increase blocksize?', file=sys.stderr)
-            raise sounddevice.CallbackAbort
+            raise sd.CallbackAbort
         assert not status
         try:
             data = self.q.get_nowait()
@@ -138,7 +186,7 @@ class FFMPeg(BasePlayer):
         except queue.Empty as e:
             logging.debug(
                 'Buffer is empty: increase buffersize?', file=sys.stderr)
-            raise sounddevice.CallbackAbort from e
+            raise sd.CallbackAbort from e
 
     def process_queue(self):
         if self._queue.empty():

@@ -1,6 +1,5 @@
-from pprint import pprint
 from queue import Queue
-from yanko.sonic import Song, Status, StreamFormat
+from yanko.sonic import Status, StreamFormat
 from yanko.core.config import app_config
 from urllib.parse import urlparse, parse_qs, urlencode
 from pathlib import Path

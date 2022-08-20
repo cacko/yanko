@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from dataclasses import dataclass, field
 from math import floor
-from optparse import Option
 from marshmallow import fields
 from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional

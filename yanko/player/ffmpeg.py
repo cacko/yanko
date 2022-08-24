@@ -162,11 +162,10 @@ class FFMPeg(BasePlayer):
                         self.q.put(process.stdout.read(
                             read_size), timeout=timeout)
                     if queue_action := self.process_queue():
-                        self.status = Status.STOPPED
                         process.terminate()
                         stream.close()
+                        self.status = Status.STOPPED
                         return queue_action
-            process.wait()
         except queue.Full:
             pass
         except Exception as e:

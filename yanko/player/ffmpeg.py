@@ -128,11 +128,7 @@ class FFMPeg(BasePlayer):
         self.status = Status.PLAYING
         try:
             logging.debug('Opening stream ...')
-            process = ffmpeg.input(self.stream_url).filter(
-                'loudnorm', I=-16, LRA=11, tp=-1.5
-            ).filter(
-                'virtualbass'
-            ).output(
+            process = ffmpeg.input(self.stream_url).output(
                 'pipe:',
                 format='f32le',
                 acodec='pcm_f32le',

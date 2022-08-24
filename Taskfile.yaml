@@ -25,9 +25,9 @@ tasks:
 
   build:
     cmds:
-      - rm -rf build 
-      - rm -rf dist
-      - rm -rf .eggs
+      - rm -rf build || true
+      - rm -rf dist || true
+      - rm -rf .eggs || true
       - conda run --live-stream -n {{.PROJECT}} python setup.py py2app
 
   install:

@@ -1,5 +1,12 @@
 from setuptools import setup
+from pathlib import Path
 from yanko.version import __version__
+import sys
+
+def resolve_libs(libs):
+    env = Path(sys.executable)
+    root = env.parent.parent / "lib"
+    return [(root / f).as_posix() for f in libs]
 
 
 APP = ['app.py']
@@ -22,7 +29,15 @@ OPTIONS = {
         'cv2',
         'numpy',
         'sounddevice',
+        'pycparser'
     ],
+    'frameworks': resolve_libs([
+        'libffi.8.dylib',
+        'libtcl8.6.dylib',
+        'libtk8.6.dylib',
+        'libssl.3.dylib',
+        'libcrypto.3.dylib'
+    ]),
 }
 setup(
     app=APP,
@@ -32,7 +47,7 @@ setup(
         'dataclasses_json >= 0.5.7',
         'requests >= 2.28.1',
         'tld >= 0.12.6',
-        'pillow >= 9.2.0',
+        'Pillow >= 9.2.0',
         'appdir >= 0.2',
         'pyotp >= 2.6.0',
         'click >= 8.1.3',
@@ -46,7 +61,8 @@ setup(
         'pycparser >= 2.21',
         'olefile >= ^0.46'
     ],
+    python_requires=">=3.10",
     data_files=DATA_FILES,
     options={'py2app': OPTIONS},
-    setup_requires=['py2app'],
+    setup_requires=['py2app', 'Pillow', 'cffi', 'pycparser'],
 )

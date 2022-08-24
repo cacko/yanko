@@ -44,6 +44,7 @@ dependencies:
     - numpy==1.23.2
     - olefile==0.46
     - opencv-python==4.6.0.66
+    - oxidized-importer==0.8.0.dev0
     - packaging==21.3
     - pillow==9.2.0
     - pixelme==0.4.7

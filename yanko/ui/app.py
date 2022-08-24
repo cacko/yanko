@@ -187,12 +187,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             getattr(self, method)(resp)
 
     def _onNowPlaying(self, resp: NowPlaying):
-        BPM.stop()
         track = resp.track
         self.__nowplaying = resp
         LaMetric.nowplaying(
             f"{track.artist} / {track.title}", Path(track.coverArt))
         self.title = resp.menubar_title
+        if bpm := resp.bpm:
+            BPM.start(bpm)
         self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:
             self._menu.pop(itm)
@@ -206,8 +207,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             (Command.ARTIST_ALBUMS, resp.track.artistId))
         self.manager.commander.put_nowait(
             (Command.RECENTLY_PLAYED, None))
-        if bpm := resp.bpm:
-            BPM.start(bpm)
 
     def bpm_callback(self):
         match(self.__status):
@@ -261,6 +260,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.previous.show()
             ActionItem.restart.show()
         elif resp.status == Status.STOPPED:
+            BPM.stop()
             self.icon = Symbol.STOPPED.value
             self.title = ''
             if len(self.__playlist):

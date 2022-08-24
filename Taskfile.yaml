@@ -8,7 +8,7 @@ vars:
 tasks:
   default:
     cmds:
-      - poetry run python app.py
+      - conda run --live-stream -n {{.PROJECT}}  python app.py
     silent: true
 
   notunes:
@@ -28,7 +28,7 @@ tasks:
       - rm -rf build 
       - rm -rf dist
       - rm -rf .eggs
-      - poetry run python setup.py py2app
+      - conda run --live-stream -n {{.PROJECT}} python setup.py py2app
 
   install:
     cmds:
@@ -45,7 +45,7 @@ tasks:
 
   deploy:
     cmds:
-      - poetry run python app.py increment_version
+      - conda run --live-stream -n {{.PROJECT}} python app.py increment_version
       - task: push
       - task: build
       - task: dmg

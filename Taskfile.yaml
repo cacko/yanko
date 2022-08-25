@@ -22,6 +22,21 @@ tasks:
       - git add .  || true
       - git commit -am "$(curl -s https://commit.cacko.net/index.txt)" || true
       - git push || true
+      
+  on:
+    desc: activate env
+    cmds:
+      - conda activate {{.PROJECT}}
+
+  off:
+    desc: deactive env
+    cmds:
+      - conda deactivate
+
+  export:
+    desc: export env
+    cmds:
+      - conda env export --no-builds  -n {{.PROJECT}} > environment.yml
 
   build:
     cmds:

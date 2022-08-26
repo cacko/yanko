@@ -1,43 +1,47 @@
 from asyncio.log import logger
 from time import sleep
-from tkinter.messagebox import NO
+from threading import Event
+
+from yanko.core.thread import StoppableThread
 
 
 class BPMMeta(type):
 
     __instance: 'BPM' = None
+    __ui_event: Event = None
 
     def __call__(cls, *args, **kwds):
-        if not cls.__instance:
-            cls.__instance = type.__call__(cls, *args, **kwds)
+        if not cls.__instance or cls.__instance.stopped():
+            cls.__instance = type.__call__(cls, cls.__ui_event, *args, **kwds)
         return cls.__instance
 
-    def register(cls, app_callback):
-        cls(app_callback).wait()
+    def register(cls, ui_event: Event):
+        cls.__ui_event = ui_event
 
-    def start(cls, bpm: int):
+    def on(cls, bpm: int):
         logger.debug(f"START BPM {bpm}")
-        cls.__instance.bpm = bpm
+        if not cls().stopped():
+            cls().stop()
+        cls().start(bpm)
 
-    def stop(cls):
-        cls.__instance.bpm = None
+    def off(cls):
+        cls().stop()
 
+class BPM(StoppableThread, metaclass=BPMMeta):
 
-class BPM(object, metaclass=BPMMeta):
-
-    __callback = None
+    __ui_event: Event = None
     running = False
     bpm = None
 
-    def __init__(self, app_callback):
-        self.__callback = app_callback
+    def __init__(self, ui_event):
+        self.__ui_event = ui_event
+        super().__init__()
 
-    def wait(self):
-        sl = 0.05
-        while True:
-            if self.bpm is not None:
-                self.__callback()
-                sl = 60 / self.bpm
-            else:
-                sl = 0.05
-            sleep(sl)
+    def start(self, bpm) -> None:
+        self.bpm = bpm
+        return super().start()
+
+    def run(self):
+        while not self.stopped():
+            self.__ui_event.set()
+            sleep(60 / self.bpm)

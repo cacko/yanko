@@ -104,13 +104,12 @@ class Manager(object, metaclass=ManagerMeta):
     commander: Queue = None
     alfred: Queue = None
     eventLoop: asyncio.AbstractEventLoop = None
-    manager_callback = None
-    player_callback = None
     api = None
     __running = False
     player_queue: Queue = None
     announce_queue: Queue = None
     playing_now: NowPlaying = None
+    __ui_queue: Queue = None
 
     def __init__(self) -> None:
         self.eventLoop = asyncio.new_event_loop()
@@ -119,9 +118,8 @@ class Manager(object, metaclass=ManagerMeta):
         self.api = Client(self.player_queue)
         self.announce_queue = Queue()
 
-    def start(self, manager_callback, player_callback):
-        self.manager_callback = manager_callback
-        self.player_callback = player_callback
+    def start(self, ui_queue: Queue):
+        self.__ui_queue = ui_queue
         self.__running = True
         tasks = asyncio.wait(
             [self.command_processor(), self.player_processor(), self.announce_processor()])
@@ -227,7 +225,7 @@ class Manager(object, metaclass=ManagerMeta):
             elif isinstance(cmd, ArtistAlbums):
                 cmd.artistInfo = resolveArtistImage(cmd.artistInfo)
                 cmd.albums = resolveAlbums(cmd.albums)
-            self.player_callback(cmd)
+            self.__ui_queue.put_nowait(cmd)
             self.player_queue.task_done()
         except Exception as e:
             logging.exception(e)

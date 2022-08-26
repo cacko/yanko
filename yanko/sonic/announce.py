@@ -31,10 +31,12 @@ class Announce(object, metaclass=AnnounceMeta):
     def post(self, track: Track):
         if not len(self.__to):
             return
-        track.coverArt = b64encode(Path(track.coverArt).read_bytes()).decode()
+        payload = track.to_dict()
+        payload["coverArt"] = b64encode(
+            Path(payload["coverArt"]).read_bytes()).decode()
         for url in self.__to:
             try:
-                resp = requests.post(url, json=track.to_dict())
+                resp = requests.post(url, json=payload)
                 logging.debug(resp.status_code)
             except ConnectionError as e:
                 print_exc(e)

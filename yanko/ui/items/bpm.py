@@ -1,6 +1,6 @@
-from asyncio.log import logger
 from time import sleep
 from threading import Event
+import logging
 
 from yanko.core.thread import StoppableThread
 
@@ -19,7 +19,7 @@ class BPMMeta(type):
         cls.__ui_event = ui_event
 
     def on(cls, bpm: int):
-        logger.debug(f"START BPM {bpm}")
+        logging.debug(f"START BPM {bpm}")
         if not cls().stopped():
             cls().stop()
         cls().start(bpm)

@@ -2,6 +2,7 @@ from yanko.core.config import app_config
 from queue import Queue
 from bottle import Bottle, run
 import time
+from yanko.core.thread import StoppableThread
 from yanko.sonic import Command
 from yanko.api.auth import auth_required
 from yanko.core.string import string_hash
@@ -19,8 +20,9 @@ class ServerMeta(type):
             self._instance = super().__call__(*args, **kwds)
         return self._instance
 
-    def start(cls, queue: Queue, state_callback):
-        cls().start_server(queue, state_callback)
+    def listen(cls, queue: Queue, state_callback):
+        cls().start(queue, state_callback)
+        return cls()
 
     def search(cls, query):
         return  cls().do_search(query)
@@ -36,14 +38,17 @@ class ServerMeta(type):
             cls._queue[queue_id] = Queue()
         return cls._queue[queue_id]
 
-class Server(object, metaclass=ServerMeta):
+class Server(StoppableThread, metaclass=ServerMeta):
 
     api: Queue = None
     state_callback = None
-    
-    def start_server(self, queue, state_callback):
+
+    def start(self, queue, state_callback):
         self.api = queue
         self.state_callback = state_callback
+        return super().start()
+    
+    def run(self):
         conf = app_config.get("api")
         run(app, **conf)
 

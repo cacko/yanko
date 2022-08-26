@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from queue import Queue
 from yanko.core import perftime
+from yanko.core.thread import StoppableThread
 from yanko.sonic import (
     Action,
     ArtistAlbums,
@@ -99,48 +100,47 @@ class ManagerMeta(type):
         return self._instance
 
 
-class Manager(object, metaclass=ManagerMeta):
+class Manager(StoppableThread, metaclass=ManagerMeta):
 
     commander: Queue = None
     alfred: Queue = None
     eventLoop: asyncio.AbstractEventLoop = None
     api = None
-    __running = False
     player_queue: Queue = None
     announce_queue: Queue = None
     playing_now: NowPlaying = None
     __ui_queue: Queue = None
 
-    def __init__(self) -> None:
+    def __init__(self, ui_queue) -> None:
+        self.__ui_queue = ui_queue
         self.eventLoop = asyncio.new_event_loop()
         self.commander = Queue()
         self.player_queue = Queue()
         self.api = Client(self.player_queue)
         self.announce_queue = Queue()
+        super().__init__()
 
-    def start(self, ui_queue: Queue):
-        self.__ui_queue = ui_queue
-        self.__running = True
+    def run(self):
         tasks = asyncio.wait(
             [self.command_processor(), self.player_processor(), self.announce_processor()])
         self.eventLoop.run_until_complete(tasks)
 
     async def command_processor(self):
-        while self.__running:
+        while not self.stopped():
             if self.commander.empty():
                 await asyncio.sleep(0.1)
                 continue
             await self.commander_runner()
 
     async def announce_processor(self):
-        while self.__running:
+        while not self.stopped():
             if self.announce_queue.empty():
                 await asyncio.sleep(0.1)
                 continue
             await self.announce_runner()
 
     async def player_processor(self):
-        while self.__running:
+        while not self.stopped():
             if self.player_queue.empty():
                 await asyncio.sleep(0.1)
                 continue
@@ -209,7 +209,7 @@ class Manager(object, metaclass=ManagerMeta):
             cmd = self.player_queue.get_nowait()
             if isinstance(cmd, Playstatus):
                 if cmd == Status.EXIT:
-                    self.__running = False
+                    self.stop()
             elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
                 cmd.track = resolveCoverArt(cmd.track)
                 self.announce_queue.put_nowait(cmd.track)

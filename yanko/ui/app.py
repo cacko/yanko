@@ -1,7 +1,6 @@
 from queue import Queue, Empty
 from traceback import print_exc
 import rumps
-from yanko.core.thread import StoppableThread
 from yanko.sonic import (
     ArtistAlbums,
     Command,
@@ -108,18 +107,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         ActionItem.next.hide()
         ActionItem.restart.hide()
         ActionItem.previous.hide()
-        self.manager = Manager()
-        t = StoppableThread(target=self.manager.start, args=[
-            self.__ui_queue
-        ])
-        t.start()
-        self.__threads.append(t)
-        ts = StoppableThread(target=Server.start, args=[
+        self.manager = Manager(self.__ui_queue)
+        self.manager.start()
+        self.__threads.append(self.manager)
+        self.__threads.append(Server.listen(
             self.manager.commander,
             self._onLaMetricInit
-        ])
-        ts.start()
-        self.__threads.append(ts)
+        ))
 
         self.manager.commander.put_nowait((Command.LAST_ADDED, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))

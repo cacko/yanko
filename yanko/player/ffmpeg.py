@@ -12,6 +12,9 @@ from yanko.sonic import Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
 from typing import Optional
 from yanko.core.bytes import nearest_bytes
+from yanko.core.thread import StoppableThread, process
+from pathlib import Path
+from yanko.core.config import app_config
 
 
 def int_or_str(text):
@@ -20,6 +23,39 @@ def int_or_str(text):
         return int(text)
     except ValueError:
         return text
+
+
+class BpmExeNotFound(Exception):
+    pass
+
+
+class Buffer(queue.Queue):
+    pass
+
+class RealTimeBpm(StoppableThread):
+
+    __input: Buffer = None
+
+    def __init__(self, *args, **kwargs):
+        self.__input = Buffer()
+        super().__init__(*args, **kwargs)
+
+    @property
+    def buffer(self) -> Buffer:
+        return self.__input
+
+    @property
+    def bpm_exe(self) -> Path:
+        path = app_config.get("tools", {}).get("bpm_exe")
+        if not path:
+            raise BpmExeNotFound
+
+    def run(self):
+        while not self.stopped():
+            try:
+                data = self.__input.get()
+            except queue.Empty:
+                pass
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

@@ -410,9 +410,7 @@ class Client(object):
 
     
     def load_beats(self):
-        f = Path(__file__).parent.parent.parent / "bc.json"
-        data = json.loads(f.read_bytes())
-        return data
+        return []
 
     def play_stream(self, track_data):
         stream_url = self.create_url(Subsonic.STREAM)

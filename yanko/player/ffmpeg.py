@@ -6,16 +6,12 @@ import ffmpeg
 import sounddevice as sd
 import logging
 import numpy as np
-import time
+import time as _time
 from yanko.player.base import BasePlayer
 from yanko.sonic import Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
 from typing import Optional
 from yanko.core.bytes import nearest_bytes
-from yanko.core.thread import StoppableThread, process
-from pathlib import Path
-from yanko.core.config import app_config
-
 
 def int_or_str(text):
     """Helper function for argument parsing."""
@@ -27,36 +23,6 @@ def int_or_str(text):
 
 class BpmExeNotFound(Exception):
     pass
-
-
-class Buffer(queue.Queue):
-    pass
-
-class RealTimeBpm(StoppableThread):
-
-    __input: Buffer = None
-
-    def __init__(self, *args, **kwargs):
-        self.__input = Buffer()
-        super().__init__(*args, **kwargs)
-
-    @property
-    def buffer(self) -> Buffer:
-        return self.__input
-
-    @property
-    def bpm_exe(self) -> Path:
-        path = app_config.get("tools", {}).get("bpm_exe")
-        if not path:
-            raise BpmExeNotFound
-
-    def run(self):
-        while not self.stopped():
-            try:
-                data = self.__input.get()
-            except queue.Empty:
-                pass
-
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -98,8 +64,7 @@ class OutputDevice:
 
     @property
     def buffsize(self) -> int:
-        return 20
-
+        return 5
 
 class FFMPeg(BasePlayer):
 
@@ -108,6 +73,7 @@ class FFMPeg(BasePlayer):
     status: Status = None
     __volume = 1
     __muted = False
+    _start = 0
 
     @property
     def volume(self):
@@ -120,7 +86,7 @@ class FFMPeg(BasePlayer):
             VolumeStatus(
                 volume=self.__volume,
                 muted=self.__muted,
-                timestamp=time.time()
+                timestamp=_time.time()
             )
         )
 
@@ -135,7 +101,7 @@ class FFMPeg(BasePlayer):
             VolumeStatus(
                 volume=self.__volume,
                 muted=self.__muted,
-                timestamp=time.time()
+                timestamp=_time.time()
             )
         )
 
@@ -186,14 +152,17 @@ class FFMPeg(BasePlayer):
                 self.q.put_nowait(process.stdout.read(read_size))
             logging.debug('Starting Playback ...')
             with stream:
+                self._time_event.set()
                 timeout = device.blocksize * device.buffsize / device.samplerate
                 while True:
                     if self.status == Status.PAUSED:
+                        self._time_event.clear()
                         sd.sleep(50)
                     else:
                         self.q.put(process.stdout.read(
                             read_size), timeout=timeout)
                     if queue_action := self.process_queue():
+                        self._time_event.clear()
                         process.terminate()
                         stream.close()
                         self.status = Status.STOPPED
@@ -206,11 +175,12 @@ class FFMPeg(BasePlayer):
 
     def callback(self, outdata, frames, time, status):
         while self.status == Status.PAUSED:
+            self._time_event.clear()
             sd.sleep(50)
         assert frames == self.device.blocksize
         if status.output_underflow:
             logging.debug(
-                'Output underflow: increase blocksize?', file=sys.stderr)
+                'Output underflow: increase blocksize?')
             raise sd.CallbackAbort
         assert not status
         try:
@@ -220,7 +190,7 @@ class FFMPeg(BasePlayer):
             outdata[:] = volume_norm.tobytes()
         except queue.Empty as e:
             logging.debug(
-                'Buffer is empty: increase buffersize?', file=sys.stderr)
+                'Buffer is empty: increase buffersize?')
             raise sd.CallbackAbort from e
 
     def process_queue(self):

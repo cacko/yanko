@@ -16,9 +16,9 @@ from yanko.sonic import (
     ScanStatus,
     VolumeStatus
 )
-from yanko.ui.items.bpm import BPM
 from yanko.ui.models import (
     ActionItem,
+    ProgressIcon,
     Symbol,
     Label,
     MusicItem,
@@ -32,6 +32,7 @@ from yanko.api.server import Server
 from yanko.lametric import LaMetric
 from pathlib import Path
 from threading import Event
+import time
 
 
 PausingIcon = AnimatedIcon(icons=[
@@ -39,7 +40,7 @@ PausingIcon = AnimatedIcon(icons=[
 ])
 
 PlayingIcon = AnimatedIcon(icons=[
-    Symbol.GRID1, Symbol.GRID2, Symbol.GRID3, Symbol.GRID4
+    Symbol.GRID2, Symbol.GRID3
 ])
 
 
@@ -69,7 +70,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     __nowplaying: NowPlaying = None
     __volume: VolumeStatus = None
     __ui_queue: Queue = None
-    __bpm_queue: Queue = None
+    __time_event: Event = None
+    __time_start = 0
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -95,8 +97,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             template=True
         )
         self.__ui_queue = Queue()
-        self.__bmp_event = Event()
-        BPM.register(self.__bmp_event)
+        self.__time_event = Event()
         self.menu.setAutoenablesItems = False
         self.__status = Status.STOPPED
         self.__playlist = Playlist(self, Label.RANDOM.value)
@@ -107,14 +108,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         ActionItem.next.hide()
         ActionItem.restart.hide()
         ActionItem.previous.hide()
-        self.manager = Manager(self.__ui_queue)
+        self.manager = Manager(self.__ui_queue, self.__time_event)
         self.manager.start()
         self.__threads.append(self.manager)
         self.__threads.append(Server.listen(
             self.manager.commander,
             self._onLaMetricInit
         ))
-
         self.manager.commander.put_nowait((Command.LAST_ADDED, None))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
@@ -170,14 +170,23 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     @rumps.timer(0.05)
     def on_bpm_event(self, sender):
-        if not self.__bmp_event.is_set():
-            return
-        self.__bmp_event.clear()
-        match(self.__status):
-            case Status.PLAYING:
-                self.icon = next(PlayingIcon).value
-            case Status.PAUSED:
-                self.icon = next(PausingIcon).value
+        try:
+            if not self.__time_event.is_set():
+                return
+            if self.__time_start == 0:
+                self.__time_start = time.time()
+            delta = abs(time.time() - self.__time_start - self.__nowplaying.beats[0])
+            if  delta < 0.05:
+                match(self.__status):
+                    case Status.PLAYING:
+                        self.icon = next(PlayingIcon).value
+                    case Status.PAUSED:
+                        self.icon = next(PausingIcon).value
+                self.__nowplaying.beats.pop(0)
+
+        except Empty:
+            pass
+
 
     @rumps.timer(0.1)
     def process_ui_queue(self, sender):
@@ -191,13 +200,12 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             pass
 
     def _onNowPlaying(self, resp: NowPlaying):
+        self.__time_start = 0
         track = resp.track
         self.__nowplaying = resp
         LaMetric.nowplaying(
             f"{track.artist} / {track.title}", Path(track.coverArt))
         self.title = resp.menubar_title
-        if bpm := resp.bpm:
-            BPM.on(bpm)
         self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:
             self._menu.pop(itm)
@@ -258,7 +266,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.previous.show()
             ActionItem.restart.show()
         elif resp.status == Status.STOPPED:
-            BPM.off()
             self.icon = Symbol.STOPPED.value
             self.title = ''
             if len(self.__playlist):

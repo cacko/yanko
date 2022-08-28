@@ -1,4 +1,5 @@
 from queue import Queue
+from threading import Event
 from yanko.sonic import Status, StreamFormat
 from yanko.core.config import app_config
 from urllib.parse import urlparse, parse_qs, urlencode
@@ -9,6 +10,7 @@ class BasePlayer(object):
 
     _queue: Queue = None
     _manager_queue: Queue = None
+    _time_event: Event = None
     _url = None
     _data = None
     _format = "raw"
@@ -19,11 +21,13 @@ class BasePlayer(object):
             manager_queue,
             stream_url,
             track_data,
+            time_event,
             format: StreamFormat = None
     ):
         self.lock_file.unlink(missing_ok=True)
         self._queue = queue
         self._manager_queue = manager_queue
+        self._time_event = time_event
         self._url = stream_url
         self._data = track_data
         self._format = format.value if format else StreamFormat.RAW.value

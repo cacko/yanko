@@ -258,6 +258,7 @@ class NowPlaying:
     track: Track
     song: Song
     start: datetime
+    beats: Optional[list[float]] = None
 
     @property
     def bpm(self) -> int:

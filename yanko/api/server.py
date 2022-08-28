@@ -42,6 +42,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
 
     api: Queue = None
     state_callback = None
+    config_vars = ["host", "port"]
 
     def start(self, queue, state_callback):
         self.api = queue
@@ -50,7 +51,8 @@ class Server(StoppableThread, metaclass=ServerMeta):
     
     def run(self):
         conf = app_config.get("api")
-        run(app, **conf)
+        app_config = {k:v for k,v in conf if k in self.config_vars}
+        run(app, **app_config)
 
     def do_search(self, query):
         queue_id = string_hash(query)

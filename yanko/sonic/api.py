@@ -44,7 +44,8 @@ from yanko.sonic import (
     TrackSearchItem,
     ScanStatusResponse
 )
-
+from pathlib import Path
+import json
 from yanko.sonic.playqueue import PlayQueue
 urllib3.disable_warnings()
 
@@ -78,6 +79,7 @@ class Client(object):
     search_queue: Queue = None
     playback_queue: Queue = None
     manager_queue: Queue = None
+    time_event: Queue = None
     __status: Status = Status.STOPPED
     playqueue: PlayQueue = None
     playidx = 0
@@ -87,7 +89,7 @@ class Client(object):
 
     BATCH_SIZE = 20
 
-    def __init__(self, manager_queue):
+    def __init__(self, manager_queue, time_event):
         server_config = app_config.get('server', {})
         self.host = server_config.get('host')
         self.username = server_config.get('username', '')
@@ -115,6 +117,7 @@ class Client(object):
 
         self.playback_queue = Queue()
         self.manager_queue = manager_queue
+        self.time_event = time_event
         self.playqueue = PlayQueue(manager_queue)
 
     @property
@@ -405,6 +408,12 @@ class Client(object):
                     return
                 playing = self.play_stream(dict(song))
 
+    
+    def load_beats(self):
+        f = Path(__file__).parent.parent.parent / "bc.json"
+        data = json.loads(f.read_bytes())
+        return data
+
     def play_stream(self, track_data):
         stream_url = self.create_url(Subsonic.STREAM)
         song_id = track_data.get('id')
@@ -426,13 +435,15 @@ class Client(object):
                 NowPlaying(
                     start=datetime.now(tz=timezone.utc),
                     track=Track(**{**track_data, "coverArt": coverArtUrl}),
-                    song=Song.from_dict(self.get_song_data(song_id))
+                    song=Song.from_dict(self.get_song_data(song_id)),
+                    beats=self.load_beats()
                 )
             )
             self.player = FFMPeg(
                 queue=self.playback_queue,
                 manager_queue=self.manager_queue,
                 stream_url=stream_url,
+                time_event=self.time_event,
                 track_data=track_data
             )
 

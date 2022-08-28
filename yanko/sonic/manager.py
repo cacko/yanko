@@ -111,12 +111,12 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     playing_now: NowPlaying = None
     __ui_queue: Queue = None
 
-    def __init__(self, ui_queue) -> None:
+    def __init__(self, ui_queue, time_event) -> None:
         self.__ui_queue = ui_queue
         self.eventLoop = asyncio.new_event_loop()
         self.commander = Queue()
         self.player_queue = Queue()
-        self.api = Client(self.player_queue)
+        self.api = Client(self.player_queue, time_event)
         self.announce_queue = Queue()
         super().__init__()
 

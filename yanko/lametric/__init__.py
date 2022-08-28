@@ -41,7 +41,7 @@ class LaMetricMeta(type):
     def nowplaying(cls, text, icon: Path):
         cls().send_nowplaying(text, icon)
 
-    def status(cls, status: Status):
+    def status(cls, status: Status=Status.STOPPED):
         cls().send_status(status)
 
 
@@ -77,7 +77,7 @@ class LaMetric(object, metaclass=LaMetricMeta):
             "api/nowplaying",
             json=model.to_dict()
         )
-    def send_status(self, status: Status):
+    def send_status(self, status: Status=Status.STOPPED):
         return self.__make_request(
             Method.POST,
             "api/status",

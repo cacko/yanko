@@ -29,7 +29,7 @@ from yanko.ui.items.playlist import Playlist
 from yanko.ui.items.albumlist import Albumlist, ArtistAlbumsList
 from yanko.ui.items.nowplaying import NowPlayingItem
 from yanko.api.server import Server
-from yanko.lametric import LaMetric
+from yanko.lametric import LaMetric, StatusFrame
 from pathlib import Path
 from threading import Event
 import time
@@ -222,11 +222,12 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
 
     def _onLaMetricInit(self):
+        LaMetric.status(status=self.__status)     
         if self.__status in [Status.PLAYING] and self.__nowplaying:
             track = self.__nowplaying.track
             LaMetric.nowplaying(
                 f"{track.artist} / {track.title}", Path(track.coverArt))
-        return LaMetric.send_status(self.__status)
+        return StatusFrame(status=self.__status.value).to_dict()
 
     def _onSearch(self, resp: Search):
         Server.queue(resp.queue_id).put_nowait(resp.to_dict())

@@ -51,8 +51,8 @@ class Server(StoppableThread, metaclass=ServerMeta):
     
     def run(self):
         conf = app_config.get("api")
-        app_config = {k:v for k,v in conf if k in self.config_vars}
-        run(app, **app_config)
+        bottle_config = {k:v for k,v in conf.items() if k in self.config_vars}
+        run(app, **bottle_config)
 
     def do_search(self, query):
         queue_id = string_hash(query)

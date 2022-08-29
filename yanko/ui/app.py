@@ -2,7 +2,7 @@ from queue import Queue, Empty
 from traceback import print_exc
 import rumps
 from yanko.sonic import (ArtistAlbums, Command, MostPlayed, Playlist,
-                         AlbumPlaylist, NowPlaying, LastAdded, QueueCommand, RecentlyPlayed,
+                         AlbumPlaylist, NowPlaying, LastAdded, RecentlyPlayed,
                          Search, Status, Playstatus, ScanStatus, VolumeStatus)
 from yanko.ui.items.bpm import BPM, BPMEvent
 from yanko.ui.models import (ActionItem, Symbol, Label,

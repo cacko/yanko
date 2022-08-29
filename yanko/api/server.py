@@ -72,8 +72,6 @@ class Server(StoppableThread, metaclass=ServerMeta):
             cmd = Command(queue_item.pop(0))
             if len(queue_item) > 0:
                 payload = queue_item.pop(0)
-            print("SERVER DO COMMAND", cmd, payload)
-            print(self.api)
             self.api.put_nowait((cmd, payload))
         except ValueError as e:
             print(e)

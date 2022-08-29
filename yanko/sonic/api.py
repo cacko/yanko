@@ -69,7 +69,7 @@ def get_scan_status(url, manager_queue: Queue):
         response: ScanStatusResponse = ScanStatusResponse.from_dict(
             data.get("subsonic-response"))
         status: ScanStatus = response.scanStatus
-        manager_queue.put_nowait(status)
+        manager_queue.put_nowait((Command.PLAYER_RESPONSE, status))
         if not status.scanning:
             break
 
@@ -138,7 +138,8 @@ class Client(object):
     def status(self, val: Status):
         self.__status = val
         self.manager_queue.put_nowait(
-            Playstatus(status=val)
+            ( Command.PLAYER_RESPONSE,
+            Playstatus(status=val))
         )
         if val == Status.RESUMED:
             self.status = Status.PLAYING
@@ -359,7 +360,7 @@ class Client(object):
 
     def play_last_added(self):
         last_added = self.get_last_added()
-        self.manager_queue.put_nowait(LastAdded(albums=last_added))
+        self.manager_queue.put_nowait((Command.PLAYER_RESPONSE,LastAdded(albums=last_added)))
         albums = list(reversed(last_added))
         while album := albums.pop():
             play_next = self.play_album(album.id, endless=len(albums) == 0)
@@ -368,7 +369,7 @@ class Client(object):
 
     def play_most_played(self):
         most_player = self.get_most_played()
-        self.manager_queue.put_nowait(MostPlayed(albums=most_player))
+        self.manager_queue.put_nowait(( Command.PLAYER_RESPONSE,MostPlayed(albums=most_player)))
         albums = list(reversed(most_player))
         while album := albums.pop():
             play_next = self.play_album(album.id, endless=len(albums) == 0)
@@ -434,13 +435,16 @@ class Client(object):
                     id=coverArt,
                     size=200
                 )
-            self.manager_queue.put_nowait(
+
+            print("s>>>>>>>>>>>>>>>>>>>>ending now play")
+            self.manager_queue.put_nowait(( 
+                Command.PLAYER_RESPONSE,
                 NowPlaying(
                     start=datetime.now(tz=timezone.utc),
                     track=Track(**{**track_data, "coverArt": coverArtUrl}),
                     song=Song.from_dict(self.get_song_data(song_id)),
                     beats=self.load_beats(track_data.get("path"))
-                )
+                ))
             )
             self.player = FFMPeg(
                 queue=self.playback_queue,
@@ -497,8 +501,9 @@ class Client(object):
                 case Command.SONG:
                     self.playqueue.skip_to = payload
                 case Command.SEARCH:
-                    self.manager_queue.put_nowait(
-                        Search(queue_id=string_hash(payload), items=self.search(payload)))
+                    self.manager_queue.put_nowait((
+                         Command.PLAYER_RESPONSE,
+                        Search(queue_id=string_hash(payload), items=self.search(payload))))
 
     def add_search(self):
         while True:
@@ -509,24 +514,26 @@ class Client(object):
             match(cmd):
                 case Command.SEARCH:
                     self.manager_queue.put_nowait(
-                        Search(queue_id=string_hash(payload), items=self.search(payload)))
+                    ( Command.PLAYER_RESPONSE,
+                        Search(queue_id=string_hash(payload), items=self.search(payload))))
                 case Command.ARTIST_ALBUMS:
-                    self.manager_queue.put_nowait(ArtistAlbums(
+                    self.manager_queue.put_nowait(
+                        ( Command.PLAYER_RESPONSE,ArtistAlbums(
                         artistInfo=self.get_artist_info(payload),
-                        albums=self.get_artist_albums(payload)))
+                        albums=self.get_artist_albums(payload))))
                 case Command.RESCAN:
                     self.startScan()
                 case Command.TOGGLE:
                     self.togglePlay()
                 case Command.RECENTLY_PLAYED:
-                    self.manager_queue.put_nowait(RecentlyPlayed(
-                        albums=self.get_recently_played()))
+                    self.manager_queue.put_nowait(( Command.PLAYER_RESPONSE,RecentlyPlayed(
+                        albums=self.get_recently_played())))
                 case Command.MOST_PLAYED:
-                    self.manager_queue.put_nowait(MostPlayed(
-                        albums=self.get_most_played()))
+                    self.manager_queue.put_nowait(( Command.PLAYER_RESPONSE,MostPlayed(
+                        albums=self.get_most_played())))
                 case Command.LAST_ADDED:
-                    self.manager_queue.put_nowait(
-                        LastAdded(albums=self.get_last_added()))
+                    self.manager_queue.put_nowait(( Command.PLAYER_RESPONSE,
+                        LastAdded(albums=self.get_last_added())))
             self.search_queue.task_done()
 
     def exit(self):

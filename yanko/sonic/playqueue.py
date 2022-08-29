@@ -4,9 +4,10 @@ from yanko.core.config import app_config
 from pathlib import Path
 import json
 import pickle
-from yanko.sonic import Playlist, Track
+from yanko.sonic import Command, Playlist, Track
 from datetime import datetime, timezone
 from yanko.sonic.beats import Fetcher
+
 
 class PlayQueue:
 
@@ -65,11 +66,9 @@ class PlayQueue:
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
         self.__queue.put_nowait(
-            Playlist(
-                start=datetime.now(tz=timezone.utc),
-                tracks=[Track(**data) for data in self.__songs]
-            )
-        )
+            (Command.PLAYER_RESPONSE,
+             Playlist(start=datetime.now(tz=timezone.utc),
+                      tracks=[Track(**data) for data in self.__songs])))
 
     def __iter__(self):
         for idx, song in enumerate(self.__songs):
@@ -88,7 +87,9 @@ class PlayQueue:
 
     def next(self):
         if self.skip_to:
-            return next(filter(lambda x: x.get("id") == self.skip_to, self.__songs), None)
+            return next(
+                filter(lambda x: x.get("id") == self.skip_to, self.__songs),
+                None)
         res = self.__songs[min(len(self.__songs) - 1, self.__idx + 1)]
         self.skip_to = res.get("id")
         return res

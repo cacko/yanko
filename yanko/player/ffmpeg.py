@@ -8,7 +8,7 @@ import logging
 import numpy as np
 import time as _time
 from yanko.player.base import BasePlayer
-from yanko.sonic import Status, Action, VolumeStatus
+from yanko.sonic import Command, Status, Action, VolumeStatus
 from yanko.player.base import BasePlayer
 from typing import Optional
 from yanko.core.bytes import nearest_bytes
@@ -82,12 +82,13 @@ class FFMPeg(BasePlayer):
     @volume.setter
     def volume(self, val):
         self.__volume = val
-        self._manager_queue.put_nowait(
+        self._manager_queue.put_nowait((
+            Command.PLAYER_RESPONSE,
             VolumeStatus(
                 volume=self.__volume,
                 muted=self.__muted,
                 timestamp=_time.time()
-            )
+            ))
         )
 
     @property
@@ -97,12 +98,13 @@ class FFMPeg(BasePlayer):
     @muted.setter
     def muted(self, val):
         self.__muted = val
-        self._manager_queue.put_nowait(
+        self._manager_queue.put_nowait((            
+            Command.PLAYER_RESPONSE,
             VolumeStatus(
                 volume=self.__volume,
                 muted=self.__muted,
                 timestamp=_time.time()
-            )
+            ))
         )
 
     @property

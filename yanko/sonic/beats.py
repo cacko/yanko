@@ -56,7 +56,9 @@ class Fetcher(StoppableThread):
         super().__init__(*args, **kwargs)
 
     def run(self):
+        print("fetcher start")
         for path in self.__paths:
             beats = Beats(path=path)
             if not beats.isCached:
                 beats.content
+        print("fetcher end")

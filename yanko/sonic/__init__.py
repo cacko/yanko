@@ -74,15 +74,8 @@ class Command(Enum):
     CURRENT_ALBUM = 'current_album'
     PLAY_LAST_ADDED = 'play_last_added'
     PLAY_MOST_PLAYED = 'play_most_played'
-
-
-
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class QueueCommand:
-    command: Command
-    payload: Optional[any] = None
-
+    ANNOUNCE = 'announce'
+    PLAYER_RESPONSE = "player_response"
 
 class Action(Enum):
     NEXT = 'next'

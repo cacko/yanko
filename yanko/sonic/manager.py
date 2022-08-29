@@ -21,7 +21,6 @@ from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
-import asyncio
 from multiprocessing.pool import ThreadPool
 
 
@@ -104,84 +103,77 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
 
     commander: Queue = None
     alfred: Queue = None
-    eventLoop: asyncio.AbstractEventLoop = None
     api = None
     playing_now: NowPlaying = None
     __ui_queue: Queue = None
 
     def __init__(self, ui_queue, time_event) -> None:
         self.__ui_queue = ui_queue
-        self.eventLoop = asyncio.new_event_loop()
         self.commander = Queue()
         self.api = Client(self.commander, time_event)
         super().__init__()
 
     def run(self):
-        task = self.eventLoop.create_task(
-           self.command_processor())
-        self.eventLoop.run_until_complete(task)
-
-    async def command_processor(self):
         while not self.stopped():
             cmd, payload = self.commander.get()
             match(cmd):
                 case Command.TOGGLE:
-                    await self.__toggle()
+                    self.__toggle()
                 case Command.STOP:
-                    await self.__stop()
+                     self.__stop()
                 case Command.RANDOM:
-                    await self.__random()
+                     self.__random()
                 case Command.RANDOM_ALBUM:
-                    await self.__random_album()
+                     self.__random_album()
                 case Command.QUIT:
-                    await self.__quit()
+                     self.__quit()
                 case Command.NEXT:
-                    await self.__next()
+                     self.__next()
                 case Command.PREVIOUS:
-                    await self.__previous()
+                     self.__previous()
                 case Command.VOLUME_UP:
-                    await self.__volume_up()
+                     self.__volume_up()
                 case Command.VOLUME_DOWN:
-                    await self.__volume_down()
+                     self.__volume_down()
                 case Command.MUTE:
-                    await self.__mute()
+                     self.__mute()
                 case Command.RESTART:
-                    await self.__restart()
+                     self.__restart()
                 case Command.LAST_ADDED:
-                    await self.__newest()
+                     self.__newest()
                 case Command.RECENTLY_PLAYED:
-                    await self.__recently_played()
+                     self.__recently_played()
                 case Command.MOST_PLAYED:
-                    await self.__most_played()
+                     self.__most_played()
                 case Command.ALBUM:
-                    await self.__album(payload)
+                     self.__album(payload)
                 case Command.ARTIST:
-                    await self.__artist(payload)
+                     self.__artist(payload)
                 case Command.SONG:
-                    await self.__song(payload)
+                     self.__song(payload)
                 case Command.SEARCH:
-                    await self.__search(payload)
+                     self.__search(payload)
                 case Command.ALBUMSONG:
-                    await self.__albumsong(*payload.split('/'))
+                     self.__albumsong(*payload.split('/'))
                 case Command.ARTIST_ALBUMS:
-                    await self.__artist_albums(payload)
+                     self.__artist_albums(payload)
                 case Command.RESCAN:
-                    await self.__rescan()
+                     self.__rescan()
                 case Command.CURRENT_ALBUM:
-                    await self.__current_album()
+                     self.__current_album()
                 case Command.CURRENT_ARTIST:
-                    await self.__current_artist()
+                     self.__current_artist()
                 case Command.PLAY_LAST_ADDED:
-                    await self.__play_last_added()
+                     self.__play_last_added()
                 case Command.PLAY_MOST_PLAYED:
-                    await self.__play_most_played()
+                     self.__play_most_played()
                 case Command.ANNOUNCE:
                     Announce.announce(payload)
                 case Command.PLAYER_RESPONSE:
-                    await self.player_processor(payload)
+                     self.player_processor(payload)
             self.commander.task_done()
 
-    async def player_processor(self, cmd):
+    def player_processor(self, cmd):
             if isinstance(cmd, Playstatus):
                 if cmd == Status.EXIT:
                     self.stop()
@@ -202,114 +194,114 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                 cmd.albums = resolveAlbums(cmd.albums)
             self.__ui_queue.put_nowait(cmd)
 
-    async def __random(self):
+    def __random(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
-    async def __random_album(self):
+    def __random_album(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
 
-    async def __toggle(self):
+    def __toggle(self):
         if self.api.isPlaying:
             self.api.search_queue.put_nowait((Command.TOGGLE, None))
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
-    async def __rescan(self):
+    def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
 
-    async def __newest(self):
+    def __newest(self):
         self.api.search_queue.put_nowait((Command.LAST_ADDED, None))
 
-    async def __recently_played(self):
+    def __recently_played(self):
         self.api.search_queue.put_nowait((Command.RECENTLY_PLAYED, None))
 
-    async def __most_played(self):
+    def __most_played(self):
         self.api.search_queue.put_nowait((Command.MOST_PLAYED, None))
 
-    async def __search(self, query):
+    def __search(self, query):
         self.api.search_queue.put_nowait((Command.SEARCH, query))
 
-    async def __artist_albums(self, query):
+    def __artist_albums(self, query):
         if query:
             self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
 
-    async def __album(self, albumId):
+    def __album(self, albumId):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
-    async def __current_album(self):
+    def __current_album(self):
         if self.playing_now:
-            return await self.__album(self.playing_now.track.albumId)
+            return  self.__album(self.playing_now.track.albumId)
 
-    async def __play_last_added(self):
+    def __play_last_added(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.PLAY_LAST_ADDED, None))
 
-    async def __play_most_played(self):
+    def __play_most_played(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.PLAY_MOST_PLAYED, None))
 
-    async def __artist(self, artistId):
+    def __artist(self, artistId):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ARTIST, artistId))
 
-    async def __current_artist(self):
+    def __current_artist(self):
         if self.playing_now:
-            return await self.__artist(self.playing_now.track.artistId)
+            return  self.__artist(self.playing_now.track.artistId)
 
-    async def __albumsong(self, albumId, songId):
+    def __albumsong(self, albumId, songId):
         self.api.playqueue.skip_to = songId
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
-    async def __song(self, songId):
+    def __song(self, songId):
         self.api.playqueue.skip_to = songId
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.NEXT)
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
-    async def __quit(self):
+    def __quit(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.EXIT)
         self.commander.put_nowait((Command.PLAYER_RESPONSE, Playstatus(status=Status.EXIT)))
 
-    async def __stop(self):
+    def __stop(self):
         self.api.playback_queue.put_nowait(Action.STOP)
 
-    async def __volume_up(self):
+    def __volume_up(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.VOLUME_UP)
 
-    async def __volume_down(self):
+    def __volume_down(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.VOLUME_DOWN)
 
-    async def __mute(self):
+    def __mute(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.MUTE)
 
-    async def __next(self):
+    def __next(self):
         self.api.playqueue.skip_to = None
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.NEXT)
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
-    async def __previous(self):
+    def __previous(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.PREVIOUS)
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
-    async def __restart(self):
+    def __restart(self):
         self.api.playback_queue.put_nowait(Action.RESTART)

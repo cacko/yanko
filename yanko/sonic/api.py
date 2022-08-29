@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import hashlib
 import logging
-from pprint import pprint
 import string
 import sys
 import time
@@ -316,6 +315,7 @@ class Client(object):
 
     def play_random_songs(self, fetch=True):
         if fetch:
+            self.playqueue.skip_to = None
             random_songs = self.make_request(
                 self.create_url(
                     Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE

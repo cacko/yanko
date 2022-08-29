@@ -17,21 +17,18 @@ class ServerMeta(type):
 
     def __call__(self, *args, **kwds):
         if not self._instance:
-            self._instance = super().__call__(*args, **kwds)
+            self._instance = type.__call__(self, *args, **kwds)
         return self._instance
 
-    def listen(cls, queue: Queue, state_callback):
-        cls().start(queue, state_callback)
-        return cls()
 
     def search(cls, query):
-        return  cls().do_search(query)
+        return  cls._instance.do_search(query)
 
     def state(cls):
-        return  cls().do_state()
+        return  cls._instance.do_state()
 
     def command(cls, query):
-        return cls().do_command(query)
+        return cls._instance.do_command(query)
 
     def queue(cls, queue_id):
         if queue_id not in cls._queue:
@@ -44,11 +41,11 @@ class Server(StoppableThread, metaclass=ServerMeta):
     state_callback = None
     config_vars = ["host", "port"]
 
-    def start(self, queue, state_callback):
-        self.api = queue
+    def __init__(self, api: Queue, state_callback, *args, **kwargs):
+        self.api = api
         self.state_callback = state_callback
-        return super().start()
-    
+        super().__init__(*args, **kwargs)
+
     def run(self):
         conf = app_config.get("api")
         bottle_config = {k:v for k,v in conf.items() if k in self.config_vars}
@@ -75,6 +72,8 @@ class Server(StoppableThread, metaclass=ServerMeta):
             cmd = Command(queue_item.pop(0))
             if len(queue_item) > 0:
                 payload = queue_item.pop(0)
+            print("SERVER DO COMMAND", cmd, payload)
+            print(self.api)
             self.api.put_nowait((cmd, payload))
         except ValueError as e:
             print(e)

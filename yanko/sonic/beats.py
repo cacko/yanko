@@ -42,8 +42,9 @@ class Beats(CachableFile):
             self._struct = self.fromcache()
             return 
         resp = self.fetch()
-        self._struct = resp
-        self.tocache(self._struct)
+        if resp:
+            self._struct = resp
+            self.tocache(self._struct)
 
 
 class Fetcher(StoppableThread):

@@ -436,7 +436,6 @@ class Client(object):
                     size=200
                 )
 
-            print("s>>>>>>>>>>>>>>>>>>>>ending now play")
             self.manager_queue.put_nowait(( 
                 Command.PLAYER_RESPONSE,
                 NowPlaying(

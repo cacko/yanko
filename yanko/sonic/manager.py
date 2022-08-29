@@ -12,6 +12,7 @@ from yanko.sonic import (
     NowPlaying,
     Playstatus,
     LastAdded,
+    QueueCommand,
     Search,
     Status,
     RecentlyPlayed,
@@ -121,34 +122,24 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         super().__init__()
 
     def run(self):
-        tasks = asyncio.wait(
-            [self.command_processor(), self.player_processor(), self.announce_processor()])
-        self.eventLoop.run_until_complete(tasks)
+
+        task = self.eventLoop.create_task(
+            self.start_processing())
+
+        self.eventLoop.run_until_complete(task)
+
+    async def start_processing(self):
+        processors = [
+            asyncio.create_task(self.command_processor()), 
+            asyncio.create_task(self.player_processor()),
+            asyncio.create_task(self.announce_processor())
+        ]
+    
+        await asyncio.gather(*processors)
 
     async def command_processor(self):
         while not self.stopped():
-            if self.commander.empty():
-                await asyncio.sleep(0.1)
-                continue
-            await self.commander_runner()
-
-    async def announce_processor(self):
-        while not self.stopped():
-            if self.announce_queue.empty():
-                await asyncio.sleep(0.1)
-                continue
-            await self.announce_runner()
-
-    async def player_processor(self):
-        while not self.stopped():
-            if self.player_queue.empty():
-                await asyncio.sleep(0.1)
-                continue
-            await self.player_runner()
-
-    async def commander_runner(self):
-        try:
-            cmd, payload = self.commander.get_nowait()
+            cmd, payload = self.commander.get()
             self.commander.task_done()
             match(cmd):
                 case Command.TOGGLE:
@@ -201,12 +192,16 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                     await self.__play_last_added()
                 case Command.PLAY_MOST_PLAYED:
                     await self.__play_most_played()
-        except Exception as e:
-            logging.exception(e)
 
-    async def player_runner(self):
-        try:
-            cmd = self.player_queue.get_nowait()
+    async def announce_processor(self):
+        while not self.stopped():
+            payload = await self.announce_queue.get()
+            Announce.announce(payload)
+            self.announce_queue.task_done()
+
+    async def player_processor(self):
+        while not self.stopped():
+            cmd = await  self.player_queue.get()
             if isinstance(cmd, Playstatus):
                 if cmd == Status.EXIT:
                     self.stop()
@@ -227,13 +222,6 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                 cmd.albums = resolveAlbums(cmd.albums)
             self.__ui_queue.put_nowait(cmd)
             self.player_queue.task_done()
-        except Exception as e:
-            logging.exception(e)
-
-    async def announce_runner(self):
-        payload = self.announce_queue.get_nowait()
-        Announce.announce(payload)
-        self.announce_queue.task_done()
 
     async def __random(self):
         if self.api.isPlaying:

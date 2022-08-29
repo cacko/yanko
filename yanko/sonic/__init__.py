@@ -76,6 +76,14 @@ class Command(Enum):
     PLAY_MOST_PLAYED = 'play_most_played'
 
 
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class QueueCommand:
+    command: Command
+    payload: Optional[any] = None
+
+
 class Action(Enum):
     NEXT = 'next'
     RESTART = 'restart'

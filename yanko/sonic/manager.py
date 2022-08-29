@@ -194,9 +194,9 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                 case Command.RESCAN:
                     await self.__rescan()
                 case Command.CURRENT_ALBUM:
-                    await self.__album(self.playing_now.track.albumId)
+                    await self.__current_album()
                 case Command.CURRENT_ARTIST:
-                    await self.__artist(self.playing_now.track.artistId)
+                    await self.__current_artist()
                 case Command.PLAY_LAST_ADDED:
                     await self.__play_last_added()
                 case Command.PLAY_MOST_PLAYED:
@@ -251,7 +251,6 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
-
     async def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
 
@@ -276,6 +275,10 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
+    async def __current_album(self):
+        if self.playing_now:
+            return await self.__album(self.playing_now.track.albumId)
+
     async def __play_last_added(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
@@ -290,6 +293,10 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ARTIST, artistId))
+
+    async def __current_artist(self):
+        if self.playing_now:
+            return await self.__artist(self.playing_now.track.artistId)
 
     async def __albumsong(self, albumId, songId):
         self.api.playqueue.skip_to = songId

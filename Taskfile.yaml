@@ -60,7 +60,6 @@ tasks:
 
   deploy:
     cmds:
-      - conda run --live-stream -n {{.PROJECT}} python app.py increment_version
       - task: push
       - task: build
       - task: dmg

@@ -6,8 +6,9 @@ from marshmallow import fields
 from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional
 from yanko.core.string import truncate
-from yanko.core.date import isodate_decoder, isodate_encoder
+from yanko.core.date import isodate_decoder, isodate_encoder, seconds_to_duration
 import time
+import pantomime
 
 RESULT_KEYS = [
     'searchResult3',
@@ -198,6 +199,15 @@ class Track:
         nm = idx + 1
         return f"{nm:02d}. {' / '.join(parts)}"
 
+    @property
+    def audioType(self) -> str:
+        info = pantomime.parse_mimetype(self.contentType)
+        return info.label
+
+    @property
+    def total_time(self) -> str:
+        return seconds_to_duration(self.duration)
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -264,7 +274,7 @@ class NowPlaying:
     def bpm(self) -> int:
         if bpm := self.song.Bpm:
             return int(bpm)
-        return None
+        return 120
 
     @property
     def total_length(self) -> str:

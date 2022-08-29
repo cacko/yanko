@@ -1,7 +1,10 @@
 from setuptools import setup
 from pathlib import Path
+from yanko import __name__
 from yanko.version import __version__
 import sys
+import semver
+
 
 def resolve_libs(libs):
     env = Path(sys.executable)
@@ -9,57 +12,56 @@ def resolve_libs(libs):
     return [(root / f).as_posix() for f in libs]
 
 
+def version():
+    if len(sys.argv) > 1 and sys.argv[1] == "bdist_wheel":
+        init = Path(__file__).parent / __name__.lower() / "version.py"
+        _, v = init.read_text().split(' = ')
+        cv = semver.VersionInfo.parse(v.strip('"'))
+        nv = f"{cv.bump_patch()}"
+        init.write_text(f'__version__ = "{nv}"')
+        return nv
+    from yanko.version import __version__
+    return __version__
+
+
 APP = ['app.py']
 DATA_FILES = []
 OPTIONS = {
-    'iconfile': 'icon.icns',
-    'argv_emulation': True,
+    'iconfile':
+    'icon.icns',
+    'argv_emulation':
+    True,
     'plist': {
-        'LSUIElement': True,
-        'CFBundleIdentifier': 'net.cacko.yanko',
-        'CFBundleVersion': f"{__version__}",
-        'LSEnvironment': dict(
-            PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin',
-            YANKO_LOG_LEVEL="FATAL"
-        )
+        'LSUIElement':
+        True,
+        'CFBundleIdentifier':
+        'net.cacko.yanko',
+        'CFBundleVersion':
+        f"{version()}",
+        'LSEnvironment':
+        dict(
+            PATH=
+            '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin',
+            YANKO_LOG_LEVEL="FATAL")
     },
-    'packages': [
-        '_sounddevice_data',
-        'PIL',
-        'cv2',
-        'numpy',
-        'sounddevice',
-        'pycparser'
-    ],
-    'frameworks': resolve_libs([
-        'libffi.8.dylib',
-        'libtcl8.6.dylib',
-        'libtk8.6.dylib',
-        'libssl.3.dylib',
-        'libcrypto.3.dylib'
+    'packages':
+    ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser'],
+    'frameworks':
+    resolve_libs([
+        'libffi.8.dylib', 'libtcl8.6.dylib', 'libtk8.6.dylib',
+        'libssl.3.dylib', 'libcrypto.3.dylib'
     ]),
 }
 setup(
     app=APP,
-    name="Yanko",
+    name=__name__,
     install_requires=[
-        'rumps >= 0.5.9',
-        'dataclasses_json >= 0.5.7',
-        'requests >= 2.28.1',
-        'tld >= 0.12.6',
-        'Pillow >= 9.2.0',
-        'appdir >= 0.2',
-        'pyotp >= 2.6.0',
-        'click >= 8.1.3',
-        'pixelme>= 0.4.7',
-        'opencv-python >= 4.6.0.66',
-        'bs4 >= 0.0.1',
-        'ffmpeg-python>=0.2.0',
-        'numpy>=1.23.2',
-        'sounddevice>=0.4.4',
-        'cffi >= 1.15.1',
-        'pycparser >= 2.21',
-        'olefile >= ^0.46'
+        'rumps >= 0.5.9', 'dataclasses_json >= 0.5.7', 'cachable >= 0.3.11',
+        'tld >= 0.12.6', 'Pillow >= 9.2.0', 'appdir >= 0.2', 'pyotp >= 2.6.0',
+        'click >= 8.1.3', 'pixelme>= 0.4.7', 'opencv-python >= 4.6.0.66',
+        'bs4 >= 0.0.1', 'ffmpeg-python>=0.2.0', 'numpy>=1.23.2',
+        'sounddevice>=0.4.4', 'cffi >= 1.15.1', 'pycparser >= 2.21',
+        'olefile >= ^0.46', 'pantomime >= 0.5.1'
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

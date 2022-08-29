@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import logging
 import mimetypes
 from pathlib import Path
 import pickle
@@ -112,6 +113,8 @@ class Cachable(object, metaclass=CacheableMeta):
         return None
 
     def tocache(self, res):
+        logging.debug(self.store_key)
+
         Storage.set(self.store_key, pickle.dumps(res))
         Storage.persist(self.store_key)
         return res

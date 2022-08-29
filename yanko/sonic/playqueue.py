@@ -1,3 +1,4 @@
+from pprint import pprint
 from queue import Queue
 from yanko.core.config import app_config
 from pathlib import Path
@@ -5,7 +6,7 @@ import json
 import pickle
 from yanko.sonic import Playlist, Track
 from datetime import datetime, timezone
-
+from yanko.sonic.beats import Fetcher
 
 class PlayQueue:
 
@@ -59,6 +60,8 @@ class PlayQueue:
     def load(self, songs):
         self.__idx = 0
         self.__songs = songs[:]
+        fetcher = Fetcher(paths=[x.get("path") for x in songs])
+        fetcher.start()
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
         self.__queue.put_nowait(

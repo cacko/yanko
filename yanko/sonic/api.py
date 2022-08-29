@@ -46,6 +46,7 @@ from yanko.sonic import (
 )
 from pathlib import Path
 import json
+from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
 urllib3.disable_warnings()
 
@@ -409,8 +410,12 @@ class Client(object):
                 playing = self.play_stream(dict(song))
 
     
-    def load_beats(self):
-        return []
+    def load_beats(self, path:str):
+        beats = Beats(path)
+        if beats.isCached:
+            return beats.content
+        return None
+        
 
     def play_stream(self, track_data):
         stream_url = self.create_url(Subsonic.STREAM)
@@ -434,7 +439,7 @@ class Client(object):
                     start=datetime.now(tz=timezone.utc),
                     track=Track(**{**track_data, "coverArt": coverArtUrl}),
                     song=Song.from_dict(self.get_song_data(song_id)),
-                    beats=self.load_beats()
+                    beats=self.load_beats(track_data.get("path"))
                 )
             )
             self.player = FFMPeg(

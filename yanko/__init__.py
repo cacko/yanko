@@ -1,4 +1,6 @@
+__name__ = "Yanko"
 import logging
+import coloredlogs
 from os import environ
 from yanko.core.cachable import Cachable
 from yanko.ui.app import YankoApp
@@ -6,12 +8,11 @@ from yanko.core.config import app_config
 import sys
 import signal
 
-logging.basicConfig(
+coloredlogs.install(
     level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "INFO")),
-    format="%(filename)s %(message)s",
+    fmt="%(filename)s:%(lineno)d %(message)s",
     datefmt="YANKO %H:%M:%S",
 )
-
 
 def start():
     cache_dir = app_config.app_dir / "cache"
@@ -22,7 +23,6 @@ def start():
         app = YankoApp()
 
         def handler_stop_signals(signum, frame):
-            print("Siugterm")
             app.terminate()
             sys.exit(0)
 

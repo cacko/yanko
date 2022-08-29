@@ -152,7 +152,6 @@ class FFMPeg(BasePlayer):
                 self.q.put_nowait(process.stdout.read(read_size))
             logging.debug('Starting Playback ...')
             with stream:
-                self._time_event.set()
                 timeout = device.blocksize * device.buffsize / device.samplerate
                 while True:
                     if self.status == Status.PAUSED:
@@ -187,6 +186,7 @@ class FFMPeg(BasePlayer):
             data = self.q.get_nowait()
             data_array = np.frombuffer(data, dtype='float32')
             volume_norm = data_array * (0 if self.muted else self.volume)
+            self._time_event.set()
             outdata[:] = volume_norm.tobytes()
         except queue.Empty as e:
             logging.debug(

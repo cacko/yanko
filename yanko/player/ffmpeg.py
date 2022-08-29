@@ -170,6 +170,7 @@ class FFMPeg(BasePlayer):
             pass
         except Exception as e:
             logging.error(e)
+        self._time_event.clear()
         return Status.PLAYING
 
     def callback(self, outdata, frames, time, status):

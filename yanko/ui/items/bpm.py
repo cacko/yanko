@@ -8,7 +8,6 @@ from time import time, sleep
 from yanko.sonic import NowPlaying
 from yanko.ui.models import AnimatedIcon, Symbol
 
-
 PausingIcon = AnimatedIcon(icons=[Symbol.GRID1, Symbol.GRID4])
 
 PlayingIcon = AnimatedIcon(icons=[Symbol.GRID2, Symbol.GRID3])
@@ -73,28 +72,35 @@ class BPM(StoppableThread):
 
     def run(self):
         while not self.stopped():
-            if not self.time_event.is_set():
-                if self.__time_start is not None:
-                    if self.__last_measure:
-                        self.__time_paused += time() - self.__last_measure
-                    if round(self.__time_paused) in self.__beats:
-                        self.__addToQueue(icon=next(PausingIcon).value)
-                    self.__last_measure = time()
-            else:
-                if not self.__time_start:
-                    self.__time_start = time()
-                self.__time_current = time() - self.__time_start - self.__time_paused
-                self.__last_measure = None
-                if self.__time_total < self.__time_current:
-                    logging.warning(
-                        f"current time {self.__time_current:.2f} outside durection {self.__time_total} "
-                    )
-                delta = abs(self.__time_current - self.__beats[0])
-                if round(delta) < 0.05:
-                    self.__addToQueue(next(PlayingIcon).value)
-                    self.__beats.pop(0)
-                    self.__beat_count += 1
-            sleep(0.05)
+            try:
+                if not self.__beats:
+                    sleep(0.5)
+                elif not self.time_event.is_set():
+                    if self.__time_start is not None:
+                        if self.__last_measure:
+                            self.__time_paused += time() - self.__last_measure
+                        if round(self.__time_paused) in self.__beats:
+                            self.__addToQueue(icon=next(PausingIcon).value)
+                        self.__last_measure = time()
+                else:
+                    if not self.__time_start:
+                        self.__time_start = time()
+                    self.__time_current = time(
+                    ) - self.__time_start - self.__time_paused
+                    self.__last_measure = None
+                    if self.__time_total < self.__time_current:
+                        logging.warning(
+                            f"current time {self.__time_current:.2f} outside durection {self.__time_total} "
+                        )
+                    delta = abs(self.__time_current - self.__beats[0])
+                    if round(delta) < 0.05:
+                        self.__addToQueue(next(PlayingIcon).value)
+                        self.__beats.pop(0)
+                        self.__beat_count += 1
+            except Exception as e:
+                logging.error(e)
+            finally:
+                sleep(0.05)
 
     def __addToQueue(self, icon):
         self.__ui_queue.put_nowait(

@@ -100,7 +100,7 @@ class BPM(StoppableThread):
             except Exception as e:
                 logging.error(e)
             finally:
-                sleep(0.07)
+                sleep(0.1)
 
     def __addToQueue(self, icon):
         self.__ui_queue.put_nowait(

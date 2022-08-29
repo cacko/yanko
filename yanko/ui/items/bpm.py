@@ -93,14 +93,14 @@ class BPM(StoppableThread):
                             f"current time {self.__time_current:.2f} outside durection {self.__time_total} "
                         )
                     delta = abs(self.__time_current - self.__beats[0])
-                    if round(delta) < 0.05:
+                    if round(delta) < 0.07:
                         self.__addToQueue(next(PlayingIcon).value)
                         self.__beats.pop(0)
                         self.__beat_count += 1
             except Exception as e:
                 logging.error(e)
             finally:
-                sleep(0.05)
+                sleep(0.07)
 
     def __addToQueue(self, icon):
         self.__ui_queue.put_nowait(

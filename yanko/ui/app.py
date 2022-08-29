@@ -131,7 +131,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             else:
                 self.title = ''
 
-    @rumps.timer(0.05)
+    @rumps.timer(0.07)
     def process_ui_queue(self, sender):
         try:
             while resp := self.__ui_queue.get_nowait():

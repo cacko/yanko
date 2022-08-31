@@ -15,7 +15,7 @@ log_config = {
 }
 
 if __file__.startswith("/Applications/"):
-    log_config['stream'] = open('/tmp/yanko.log', "r+")
+    log_config['stream'] = open('/tmp/yanko.log', "a+")
 
 coloredlogs.install(
     **log_config

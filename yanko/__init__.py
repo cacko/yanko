@@ -9,7 +9,8 @@ import sys
 import signal
 
 coloredlogs.install(
-    level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "INFO")),
+    file="/tmp/yanko",
+    level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
     fmt="%(filename)s:%(lineno)d %(message)s",
     datefmt="YANKO %H:%M:%S",
 )

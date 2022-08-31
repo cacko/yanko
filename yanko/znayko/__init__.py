@@ -40,3 +40,4 @@ class Znayko(object, metaclass=ZnaykoMeta):
             return resp.json()
         except Exception as e:
             logging.debug(e)
+            return None

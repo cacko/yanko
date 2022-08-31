@@ -8,11 +8,17 @@ from yanko.core.config import app_config
 import sys
 import signal
 
+log_config = {
+    "level":getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
+    "fmt":"%(filename)s:%(lineno)d %(message)s",
+    "datefmt":"YANKO %H:%M:%S",
+}
+
+if __file__.startswith("/Applications/"):
+    log_config['stream'] = open('/tmp/yanko.log', "r+")
+
 coloredlogs.install(
-    file="/tmp/yanko",
-    level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
-    fmt="%(filename)s:%(lineno)d %(message)s",
-    datefmt="YANKO %H:%M:%S",
+    **log_config
 )
 
 def start():

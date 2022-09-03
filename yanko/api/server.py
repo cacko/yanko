@@ -96,7 +96,6 @@ app = Server.app
 @app.route('/state')
 @auth_required
 def state():
-
     return Server.state()
 
 

@@ -61,7 +61,7 @@ setup(
         'click >= 8.1.3', 'pixelme>= 0.4.7', 'opencv-python >= 4.6.0.66',
         'bs4 >= 0.0.1', 'ffmpeg-python>=0.2.0', 'numpy>=1.23.2',
         'sounddevice>=0.4.4', 'cffi >= 1.15.1', 'pycparser >= 2.21',
-        'olefile >= ^0.46', 'pantomime >= 0.5.1', 'pyfiglet>=0.7', 'questionary>=1.10.0'
+        'olefile >= ^0.46', 'pantomime >= 0.5.1', 'pyfiglet>=0.7', 'questionary>=1.10.0', 'butilka>=0.1.11'
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

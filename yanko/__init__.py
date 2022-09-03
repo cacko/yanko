@@ -1,6 +1,5 @@
 __name__ = "Yanko"
 import logging
-import coloredlogs
 from os import environ
 from yanko.core.cachable import Cachable
 from yanko.ui.app import YankoApp
@@ -9,17 +8,17 @@ import sys
 import signal
 
 log_config = {
-    "level":getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
-    "fmt":"%(filename)s:%(lineno)d %(message)s",
-    "datefmt":"YANKO %H:%M:%S",
+    "level": getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
+    "format": "%(filename)s:%(lineno)d %(message)s",
+    "datefmt": "YANKO %H:%M:%S",
+    "force": True
 }
 
 if __file__.startswith("/Applications/"):
-    log_config['stream'] = open('/tmp/yanko.log', "a+")
+    log_config['filename'] = '/tmp/yanko.log'
 
-coloredlogs.install(
-    **log_config
-)
+logging.basicConfig(**log_config)
+
 
 def start():
     cache_dir = app_config.app_dir / "cache"

@@ -61,8 +61,7 @@ class PlayQueue:
     def load(self, songs):
         self.__idx = 0
         self.__songs = songs[:]
-        fetcher = Fetcher(paths=[x.get("path") for x in songs])
-        fetcher.start()
+        Fetcher.add(paths=[x.get("path") for x in songs])
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
         self.__queue.put_nowait(

@@ -1,13 +1,12 @@
+import logging
 from yanko.core.config import app_config
 from queue import Queue
-from bottle import Bottle, run
+from butilka.server import Server as ButilkaServer
 import time
-from yanko.core.thread import StoppableThread
 from yanko.sonic import Command
 from yanko.api.auth import auth_required
 from yanko.core.string import string_hash
 
-app = Bottle()
 
 class ServerMeta(type):
 
@@ -20,36 +19,50 @@ class ServerMeta(type):
             self._instance = type.__call__(self, *args, **kwds)
         return self._instance
 
+    @property
+    def app(cls):
+        return cls().app
 
     def search(cls, query):
-        return  cls._instance.do_search(query)
+        return cls().do_search(query)
 
     def state(cls):
-        return  cls._instance.do_state()
+        return cls().do_state()
 
     def command(cls, query):
-        return cls._instance.do_command(query)
+        return cls().do_command(query)
 
     def queue(cls, queue_id):
         if queue_id not in cls._queue:
             cls._queue[queue_id] = Queue()
         return cls._queue[queue_id]
 
-class Server(StoppableThread, metaclass=ServerMeta):
+
+class Server(ButilkaServer, metaclass=ServerMeta):
 
     api: Queue = None
     state_callback = None
     config_vars = ["host", "port"]
 
-    def __init__(self, api: Queue, state_callback, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        conf = app_config.get("api")
+        bottle_config = {
+            k: v
+            for k, v in conf.items() if k in self.config_vars
+        }
+        super().__init__(**bottle_config)
+
+    def start(
+        self,
+        api: Queue,
+        state_callback,
+    ) -> None:
         self.api = api
         self.state_callback = state_callback
-        super().__init__(*args, **kwargs)
+        return super().start()
 
-    def run(self):
-        conf = app_config.get("api")
-        bottle_config = {k:v for k,v in conf.items() if k in self.config_vars}
-        run(app, **bottle_config)
+    def stop(self):
+        return self.terminate()
 
     def do_search(self, query):
         queue_id = string_hash(query)
@@ -64,7 +77,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
 
     def do_state(self):
         return self.state_callback()
-            
+
     def do_command(self, query):
         queue_item = query.split("=", 2)
         payload = None
@@ -76,15 +89,22 @@ class Server(StoppableThread, metaclass=ServerMeta):
         except ValueError as e:
             print(e)
 
+
+app = Server.app
+
+
 @app.route('/state')
 @auth_required
 def state():
+
     return Server.state()
+
 
 @app.route('/search/<query:path>')
 @auth_required
 def search(query):
     return Server.search(query)
+
 
 @app.route('/command/<query:path>')
 @auth_required

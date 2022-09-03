@@ -12,3 +12,7 @@ def perftime(name, silent=False):
         if not silent:
             total = time.perf_counter() - st
             logging.debug(f"{name} -> {total}s")
+
+def chunks(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]

@@ -143,7 +143,7 @@ class Client(object):
 
     @property
     def isPlaying(self) -> bool:
-        return self.player and self.player.status != Status.STOPPED
+        return self.player
 
     def test_config(self):
         return self.make_request(url=self.create_url(Subsonic.PING)) is not None
@@ -466,6 +466,8 @@ class Client(object):
                     self.playqueue.next()
                 case Status.PREVIOUS:
                     self.playqueue.previous()
+
+            self.player = None
 
             return self.status not in [Status.EXIT, Status.STOPPED]
 

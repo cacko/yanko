@@ -51,6 +51,9 @@ class Symbol(Enum):
     GRID2 = "circle.grid.2x1.left.filled"
     GRID3 = "circle.grid.2x1.right.filled"
     GRID4 = "circle.grid.2x1.fill"
+    VOLUME1 = "speaker.wave.1"
+    VOLUME2 = "speaker.wave.2"
+    VOLUME3 = "speaker.wave.3"
 
 
 class Icon(Enum):

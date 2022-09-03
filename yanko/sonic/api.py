@@ -43,13 +43,10 @@ from yanko.sonic import (
     TrackSearchItem,
     ScanStatusResponse
 )
-from pathlib import Path
-import json
+from yanko.sonic.api_cache import ApiCache
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
 urllib3.disable_warnings()
-
-
 @dataclass_json()
 @dataclass()
 class ApiArguments:
@@ -86,7 +83,6 @@ class Client(object):
     player: FFMPeg = None
     scanning = False
     __threads = []
-    internal_cache = {}
 
     BATCH_SIZE = 20
 
@@ -167,9 +163,10 @@ class Client(object):
         return f"https://{self.host}/rest/{endpoint.value}?{qs}"
 
     def make_request(self, url):
+        api_cache = ApiCache(url)
+        if api_cache.isCached:
+            return api_cache.fromcache()
         try:
-            if url in self.internal_cache:
-                return self.internal_cache.get("url")
             r = requests.get(url=url, verify=self.verify_ssl)
         except requests.exceptions.ConnectionError as e:
             logging.exception(e)
@@ -199,16 +196,16 @@ class Client(object):
 
         for k, v in subsonic_response.items():
             if k in RESULT_KEYS:
-                self.internal_cache[url] = v
+                api_cache.tocache(v)
                 return v
-
-        self.internal_cache[url] = response
+        api_cache.tocache(response)
         return response
 
     def scrobble(self, song_id):
         self.make_request(self.create_url(Subsonic.SCROBBLE, id=song_id))
 
     def startScan(self):
+        ApiCache.flush()
         self.make_request(self.create_url(Subsonic.START_SCAN))
         url = self.create_url(Subsonic.GET_SCAN_STATUS)
         get_status = StoppableThread(

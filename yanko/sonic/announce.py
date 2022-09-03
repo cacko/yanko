@@ -31,7 +31,7 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
 
     def __init__(self):
         self.queue = Queue()
-        self.__to = [v for v in app_config.get("announce", {}).values()]
+        self.__to = app_config.get("announce",[])
         super().__init__()
 
     def run(self):

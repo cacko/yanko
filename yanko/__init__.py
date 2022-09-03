@@ -2,6 +2,7 @@ __name__ = "Yanko"
 import logging
 from os import environ
 from yanko.core.cachable import Cachable
+from cachable.cacheable import Cachable as PyCachable
 from yanko.ui.app import YankoApp
 from yanko.core.config import app_config
 import sys
@@ -25,6 +26,8 @@ def start():
     if not cache_dir.parent.exists():
         cache_dir.parent.mkdir(parents=True)
     Cachable.register(cache_dir.as_posix())
+    PyCachable.register(redis_url=app_config.get("redis", {}).get("url"),
+                        storage_dir=cache_dir.as_posix())
     try:
         app = YankoApp()
 

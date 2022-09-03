@@ -29,7 +29,7 @@ dependencies:
     - beautifulsoup4==4.11.1
     - bottle==0.12.23
     - bs4==0.0.1
-    - butilka==0.1.11
+    - butilka==0.1.14
     - cassidy==0.1.4
     - certifi==2022.6.15
     - cffi==1.15.1
@@ -59,7 +59,7 @@ dependencies:
     - oxidized-importer==0.8.0.dev0
     - packaging==21.3
     - pantomime==0.5.1
-    - paste==3.5.2
+    - paste==3.5.2.2
     - pillow==9.2.0
     - pixelme==0.4.7
     - prompt-toolkit==3.0.30

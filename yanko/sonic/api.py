@@ -436,6 +436,7 @@ class Client(object):
                     size=200
                 )
 
+
             self.manager_queue.put_nowait(( 
                 Command.PLAYER_RESPONSE,
                 NowPlaying(
@@ -445,6 +446,7 @@ class Client(object):
                     beats=self.load_beats(track_data.get("path"))
                 ))
             )
+
             self.player = FFMPeg(
                 queue=self.playback_queue,
                 manager_queue=self.manager_queue,

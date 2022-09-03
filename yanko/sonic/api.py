@@ -86,6 +86,7 @@ class Client(object):
     player: FFMPeg = None
     scanning = False
     __threads = []
+    internal_cache = {}
 
     BATCH_SIZE = 20
 
@@ -96,7 +97,7 @@ class Client(object):
         self.password = server_config.get('password', '')
         self.api = server_config.get('api', '1.16.0')
         self.ssl = server_config.get('ssl', False)
-        self.verify_ssl = server_config.get('verify_ssl', True)
+        self.verify_ssl = server_config.get('verify_ssl', False)
 
         self.search_results = []
 
@@ -167,6 +168,8 @@ class Client(object):
 
     def make_request(self, url):
         try:
+            if url in self.internal_cache:
+                return self.internal_cache.get("url")
             r = requests.get(url=url, verify=self.verify_ssl)
         except requests.exceptions.ConnectionError as e:
             logging.exception(e)
@@ -196,8 +199,10 @@ class Client(object):
 
         for k, v in subsonic_response.items():
             if k in RESULT_KEYS:
+                self.internal_cache[url] = v
                 return v
 
+        self.internal_cache[url] = response
         return response
 
     def scrobble(self, song_id):
@@ -389,7 +394,7 @@ class Client(object):
             if not playing:
                 return
         if self.playqueue.skip_to:
-            return self.play_album(album_id, endless=endless, fetch=True)
+            return self.play_album(album_id, endless=endless)
         return self.play_radio(artist_id)
 
     def play_random_album(self):

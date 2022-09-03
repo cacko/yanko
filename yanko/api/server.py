@@ -42,7 +42,7 @@ class Server(ButilkaServer, metaclass=ServerMeta):
 
     api: Queue = None
     state_callback = None
-    config_vars = ["host", "port"]
+    config_vars = ["host", "port", "threadpool_workers"]
 
     def __init__(self, *args, **kwargs):
         conf = app_config.get("api")

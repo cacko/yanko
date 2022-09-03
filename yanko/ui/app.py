@@ -135,7 +135,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     @rumps.timer(0.1)
     def process_ui_queue(self, sender):
         try:
-            while resp := self.__ui_queue.get_nowait():
+            resp = self.__ui_queue.get_nowait()
+            if resp:
                 method = f"_on{resp.__class__.__name__}"
                 if hasattr(self, method):
                     getattr(self, method)(resp)

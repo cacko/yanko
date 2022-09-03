@@ -266,7 +266,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __song(self, songId):
         self.api.playqueue.skip_to = songId
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait(Action.NEXT)
+            self.api.playback_queue.put(Action.NEXT)
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
@@ -304,4 +304,4 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
     def __restart(self):
-        self.api.playback_queue.put_nowait(Action.RESTART)
+        self.api.playback_queue.put(Action.RESTART)

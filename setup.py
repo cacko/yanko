@@ -45,7 +45,7 @@ OPTIONS = {
             YANKO_LOG_LEVEL="FATAL")
     },
     'packages':
-    ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser', 'paste'],
+    ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser'],
     'frameworks':
     resolve_libs([
         'libffi.8.dylib', 'libtcl8.6.dylib', 'libtk8.6.dylib',
@@ -62,7 +62,7 @@ setup(
         'bs4 >= 0.0.1', 'ffmpeg-python>=0.2.0', 'numpy>=1.23.2',
         'sounddevice>=0.4.4', 'cffi >= 1.15.1', 'pycparser >= 2.21',
         'olefile >= ^0.46', 'pantomime >= 0.5.1', 'pyfiglet>=0.7', 
-        'questionary>=1.10.0', 'butilka>=0.1.11', "paste>=3.5.2"
+        'questionary>=1.10.0', 'butilka>=0.1.11'
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

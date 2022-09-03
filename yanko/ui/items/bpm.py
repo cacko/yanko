@@ -65,10 +65,12 @@ class BPM(StoppableThread):
         if self.__beats:
             total_beats = len(self.__beats)
             beats_bmp = total_beats / (self.__time_total / 60)
+            np.bpm = int(beats_bmp)
             logging.debug(f"USING {beats_bmp} BEATS for BPM {self.__bpm}")
         else:
             self.__beats = self.get_static_beats()
             logging.debug(f"USING BPM {self.__bpm}")
+        
 
     def run(self):
         while not self.stopped():

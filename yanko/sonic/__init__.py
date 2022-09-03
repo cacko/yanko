@@ -277,6 +277,10 @@ class NowPlaying:
             return int(bpm)
         return 120
 
+    @bpm.setter
+    def bpm(self, val):
+        self.song.Bpm = val
+
     @property
     def total_length(self) -> str:
         td = timedelta(seconds=int(self.track.duration))

@@ -68,6 +68,7 @@ class FetcherMeta(type):
         for pth in paths:
             cls.queue.put_nowait(pth)
         instance = cls()
+        logging.warning(instance.is_alive())
         if not instance.is_alive():
             instance.start(cls.queue)
         

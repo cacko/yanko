@@ -1,7 +1,6 @@
 __name__ = "Yanko"
 import logging
 from os import environ
-from tkinter import N
 from cachable.cacheable import Cachable
 from yanko.db.base import YankoDb
 from yanko.ui.app import YankoApp
@@ -17,8 +16,6 @@ log_config = {
     "datefmt": "YANKO %H:%M:%S",
     "force": True
 }
-if __file__.startswith("/Applications/"):
-    log_config['filename'] = '/tmp/yanko.log'
 
 logging.basicConfig(**log_config)
 handler = colorlog.StreamHandler()

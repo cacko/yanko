@@ -1,8 +1,8 @@
 __name__ = "Yanko"
 import logging
 from os import environ
-from yanko.core.cachable import Cachable
-from cachable.cacheable import Cachable as PyCachable
+from cachable.cacheable import Cachable
+from yanko.db.base import YankoDb
 from yanko.ui.app import YankoApp
 from yanko.core.config import app_config
 import sys
@@ -22,17 +22,17 @@ logging.basicConfig(**log_config)
 
 
 def start():
-    cache_dir = app_config.app_dir / "cache"
+    cache_dir = app_config.cache_dir
     if not cache_dir.parent.exists():
         cache_dir.parent.mkdir(parents=True)
-    Cachable.register(cache_dir.as_posix())
-    PyCachable.register(redis_url=app_config.get("redis", {}).get("url"),
+    Cachable.register(redis_url=app_config.get("redis", {}).get("url"),
                         storage_dir=cache_dir.as_posix())
     try:
         app = YankoApp()
 
         def handler_stop_signals(signum, frame):
             app.terminate()
+            YankoDb.close()
             sys.exit(0)
 
         signal.signal(signal.SIGINT, handler_stop_signals)

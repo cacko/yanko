@@ -63,7 +63,7 @@ setup(
         'sounddevice>=0.4.4', 'cffi >= 1.15.1', 'pycparser >= 2.21',
         'olefile >= ^0.46', 'pantomime >= 0.5.1', 'pyfiglet>=0.7',
         'questionary>=1.10.0', 'butilka>=0.1.14', 'pyyaml>=6.0',
-        'redis>=4.3.4', 'hiredis>=2.0.0', 'cachable>=0.3.12'
+        'redis>=4.3.4', 'hiredis>=2.0.0', 'cachable>=0.3.12', "peewee>=3.15.2", "prokopiy>=0.1.2"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

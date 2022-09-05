@@ -18,6 +18,10 @@ class app_config_meta(type):
     def app_dir(cls):
         return Path(get_app_dir("Yanko")).expanduser()
 
+    @property
+    def cache_dir(cls):
+        return cls.app_dir / "cache"
+
 
 class app_config(object, metaclass=app_config_meta):
 

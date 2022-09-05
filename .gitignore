@@ -21,7 +21,6 @@ nohup.out
 results.md
 data
 *_results.dat
-db
 .eggs
 build
 dist

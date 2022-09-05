@@ -1,4 +1,4 @@
-from yanko.core.cachable import CachableFile
+from cachable import CachableFile
 from urllib.parse import parse_qs, urlparse
 from hashlib import blake2b
 from PIL import Image
@@ -10,6 +10,7 @@ class CoverArtFile(CachableFile):
 
     _url: str = None
     __filename: str = None
+    __filehash: str = None
     ICON_SIZE = (22, 22)
     NOT_CACHED_HASH = [
         "b9013a23400aeab42ea7dbcd89832ed41a94ab909c1a6d91f866ccd38123515e",
@@ -35,6 +36,12 @@ class CoverArtFile(CachableFile):
     @property
     def isCached(self) -> bool:
         return self.storage_path.exists() and self.filehash not in self.NOT_CACHED_HASH
+
+    @property
+    def filehash(self):
+        if not self.__filehash:
+            self.__filehash = file_hash(self.storage_path)
+        return self.__filehash
 
     @property
     def url(self):

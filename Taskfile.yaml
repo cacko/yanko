@@ -8,7 +8,7 @@ vars:
 tasks:
   default:
     cmds:
-      - conda run --live-stream -n {{.PROJECT}} python app.py | ccze -A
+      - conda run --live-stream -n {{.PROJECT}} python app.py {{.CLI_ARGS}} | ccze -A
     silent: true
 
   notunes:

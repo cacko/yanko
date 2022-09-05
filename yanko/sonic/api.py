@@ -416,7 +416,7 @@ class Client(object):
     def load_beats(self, path:str):
         beats = Beats(path)
         if beats.isCached:
-            return beats.content
+            return beats.beats
         return None
         
 
@@ -435,7 +435,7 @@ class Client(object):
                 coverArtUrl = self.create_url(
                     Subsonic.COVER_ART,
                     id=coverArt,
-                    size=200
+                    size=500
                 )
 
 

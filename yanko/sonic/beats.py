@@ -1,52 +1,42 @@
 import logging
 from queue import Queue, Empty
-from yanko.core.cachable import CachableFile
-from yanko.core.string import string_hash
+from yanko.core.cachable import CachableDb
 from yanko.znayko import Znayko
 from yanko.core.thread import StoppableThread
+from yanko.db.models.beets import Beats as BeatsModel
 from time import sleep
 import json
 
-class Beats(CachableFile):
+class Beats(CachableDb):
 
     __path: str = None
+    _struct: BeatsModel = None
 
     def __init__(self, path) -> None:
         self.__path = path
-        super().__init__()
-
-
-    def tocache(self, res):
-        self.storage_path.write_bytes(json.dumps(res).encode())
-        return res
-
-    def fromcache(self):
-        if self.isCached:
-            return json.loads(self.storage_path.read_bytes())
-        return None
+        super().__init__(model=BeatsModel, id_key="path", id_value=path)
 
     @property
-    def filename(self):
-        return f"{string_hash(self.__path)}.json"
+    def beats(self) -> list[float]:
+        self._init()
+        return self._struct.beats
 
     def fetch(self):
+        resp = self.__fetch()
+        if resp:
+            self._struct = self.tocache(resp)        
+
+    def __fetch(self):
         logging.debug(f"Fetching beats for {self.__path}")
         beats = Znayko.beats(self.__path)
         return beats
 
-    @property
-    def content(self) -> list[float]:
-        self._init()
-        return self._struct
-
     def _init(self):
         if self.isCached:
             self._struct = self.fromcache()
+            logging.debug(f"In DB beats for {self.__path}")
             return 
-        resp = self.fetch()
-        if resp:
-            self._struct = resp
-            self.tocache(self._struct)
+        self.fetch()
 
 class FetcherMeta(type):
 
@@ -90,7 +80,7 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
                 audio_path = self.__queue.get_nowait()
                 beats = Beats(path=audio_path)
                 if not beats.isCached:
-                    beats.content
+                    beats.fetch()
                 self.__queue.task_done()
             except Empty:
                 return

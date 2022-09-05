@@ -42,14 +42,14 @@ OPTIONS = {
         dict(
             PATH=
             '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin',
-            YANKO_LOG_LEVEL="FATAL")
+            YANKO_LOG_LEVEL="DEBUG")
     },
     'packages':
     ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser', 'playhouse'],
     'frameworks':
     resolve_libs([
         'libffi.8.dylib', 'libtcl8.6.dylib', 'libtk8.6.dylib',
-        'libssl.3.dylib', 'libcrypto.3.dylib'
+        'libssl.3.dylib', 'libcrypto.3.dylib', 'libsqlite3.0.dylib'
     ]),
 }
 setup(

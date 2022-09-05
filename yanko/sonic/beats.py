@@ -5,7 +5,6 @@ from yanko.znayko import Znayko
 from yanko.core.thread import StoppableThread
 from yanko.db.models.beets import Beats as BeatsModel
 from time import sleep
-import json
 
 class Beats(CachableDb):
 

@@ -1,7 +1,6 @@
 from enum import Enum
 import logging
 from pathlib import Path
-from typing import Optional
 from cachable import Cachable
 from yanko.db.base import YankoDb
 from yanko.db.models import BaseModel

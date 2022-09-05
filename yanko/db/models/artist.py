@@ -1,7 +1,6 @@
 from re import M
 from peewee import *
 from . import BaseModel
-from playhouse.sqlite_ext import JSONField
 
 
 class Artist(BaseModel):

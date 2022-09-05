@@ -45,7 +45,7 @@ OPTIONS = {
             YANKO_LOG_LEVEL="FATAL")
     },
     'packages':
-    ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser'],
+    ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser', 'playhouse'],
     'frameworks':
     resolve_libs([
         'libffi.8.dylib', 'libtcl8.6.dylib', 'libtk8.6.dylib',

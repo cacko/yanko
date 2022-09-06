@@ -45,12 +45,14 @@ OPTIONS = {
             YANKO_LOG_LEVEL="DEBUG")
     },
     'packages':
-    ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser', 'playhouse'],
-    # 'frameworks':
-    # resolve_libs([
-    #     'libffi.8.dylib', 'libtcl8.6.dylib', 'libtk8.6.dylib',
-    #     'libssl.3.dylib', 'libcrypto.3.dylib'
-    # ]),
+    ['_sounddevice_data', 'PIL', 'cv2', 'numpy', 'sounddevice', 'pycparser'],
+    'frameworks':
+    resolve_libs([
+        'libffi.8.dylib', 'libtcl8.6.dylib', 'libtk8.6.dylib',
+        'libssl.3.dylib', 'libcrypto.3.dylib', 'libcblas.3.dylib',
+        'libgfortran.5.dylib', 'libomp.dylib', 'libquadmath.0.dylib',
+        'libgcc_s.1.1.dylib', 'liblapack.3.dylib', 'libblas.3.dylib'
+    ]),
 }
 setup(
     app=APP,
@@ -65,7 +67,7 @@ setup(
         'questionary>=1.10.0', 'butilka>=0.1.14', 'pyyaml>=6.0',
         'redis>=4.3.4', 'hiredis>=2.0.0', 'cachable>=0.3.12', 
         "arrow==1.2.2",
-        "peewee>=3.15.2", "prokopiy>=0.1.2", "colorlog>=6.7.0", "black>=22.8.0"
+        "peewee>=3.15.2", "colorlog>=6.7.0", "black>=22.8.0"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

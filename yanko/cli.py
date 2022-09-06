@@ -57,14 +57,20 @@ def cli_search(query: str):
 
 
 @cli.command("dbinit", short_help="Init DB")
-def cli_dbinit():
+@click.option("-d", "--drop_table", default=None)
+def cli_dbinit(drop_table:str = None):
     try:
         from yanko.db.models.beets import Beats
         from yanko.db.models.album import Album
         from yanko.db.models.artist import Artist
-
+        from yanko.db.models.artist_info import ArtistInfo
         with YankoDb.db as db:
-            db.create_tables([Beats, Artist, Album])
+            # drop_tables = [ArtistInfo]
+            # # if drop_table:
+            # #     drop_tables.append(drop_table)
+            # if drop_tables:
+            #     db.drop_tables(drop_tables)
+            db.create_tables([Beats, Artist, Album, ArtistInfo])
     except Exception as e:
         print(e)
 

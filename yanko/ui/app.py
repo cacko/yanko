@@ -247,7 +247,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onArtistAlbums(self, resp: ArtistAlbums):
         albums = resp.albums
         artistInfo = resp.artistInfo
-        self.__artist_albums.update(artistInfo, albums, self._onAlbumClick,
+        self.__artist_albums.update(artistInfo, reversed(albums), self._onAlbumClick,
                                     self._onArtistClick)
 
     @rumps.events.before_quit

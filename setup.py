@@ -84,7 +84,7 @@ setup(
         "pantomime >= 0.5.1",
         "pyfiglet>=0.7",
         "questionary>=1.10.0",
-        "butilka>=0.1.14",
+        "butilka==0.1.18",
         "pyyaml>=6.0",
         "redis>=4.3.4",
         "hiredis>=2.0.0",

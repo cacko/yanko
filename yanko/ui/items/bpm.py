@@ -20,6 +20,11 @@ class BPMEvent:
     tempo: str
     beat_no: int
     time_elapsed: int
+    expires: float
+
+    @property
+    def hasExpired(self) -> bool:
+        return time() > self.expires
 
 
 class BPM(StoppableThread):
@@ -47,9 +52,7 @@ class BPM(StoppableThread):
 
     def get_static_beats(self):
         bps = self.__bpm / 60
-        return [
-            round(x / bps, 2) for x in range(0, int(self.__time_total * bps))
-        ]
+        return [round(x / bps, 2) for x in range(0, int(self.__time_total * bps))]
 
     @now_playing.setter
     def now_playing(self, np: NowPlaying):
@@ -70,7 +73,6 @@ class BPM(StoppableThread):
         else:
             self.__beats = self.get_static_beats()
             logger.debug(f"USING BPM {self.__bpm}")
-        
 
     def run(self):
         while not self.stopped():
@@ -87,8 +89,9 @@ class BPM(StoppableThread):
                 else:
                     if not self.__time_start:
                         self.__time_start = time()
-                    self.__time_current = time(
-                    ) - self.__time_start - self.__time_paused
+                    self.__time_current = (
+                        time() - self.__time_start - self.__time_paused
+                    )
                     self.__last_measure = None
                     if self.__time_total < self.__time_current:
                         logger.warning(
@@ -106,7 +109,11 @@ class BPM(StoppableThread):
 
     def __addToQueue(self, icon):
         self.__ui_queue.put_nowait(
-            BPMEvent(icon=icon,
-                     beat_no=self.__beat_count,
-                     tempo=self.__bpm,
-                     time_elapsed=self.__time_current))
+            BPMEvent(
+                icon=icon,
+                beat_no=self.__beat_count,
+                tempo=self.__bpm,
+                time_elapsed=self.__time_current,
+                expires=time() + 0.14,
+            )
+        )

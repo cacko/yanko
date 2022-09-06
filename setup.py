@@ -1,3 +1,4 @@
+import logging
 from setuptools import setup
 from pathlib import Path
 from yanko import __name__
@@ -35,7 +36,7 @@ OPTIONS = {
         "CFBundleIdentifier": "net.cacko.yanko",
         "CFBundleVersion": f"{version()}",
         "LSEnvironment": dict(
-            PATH="/opt/homebrew/bin:/opt/homebrew/sbin", YANKO_LOG_LEVEL="DEBUG"
+            PATH="/opt/homebrew/bin:/opt/homebrew/sbin", YANKO_LOG_LEVEL="FATAL"
         ),
     },
     "packages": [

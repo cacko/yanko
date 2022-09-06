@@ -90,7 +90,7 @@ setup(
         "hiredis>=2.0.0",
         "cachable>=0.3.12",
         "arrow==1.2.2",
-        "colorlog>=6.7.0",
+        "structlog==22.1.0",
         "black==22.8.0",
         "prokopiy==0.1.2",
         "peewee==3.15.2",

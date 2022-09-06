@@ -8,31 +8,35 @@ from yanko.core.config import app_config
 import sys
 import signal
 import logging
-import colorlog
+import structlog
 
-# log_config = {
-#     "level": 
-#     "format": 
-#     "datefmt": "YANKO %H:%M:%S",
-#     "force": True
-# }
-
-handler = colorlog.StreamHandler()
-handler.setFormatter(colorlog.ColoredFormatter(
-	'%(log_color)s%(filename)s:%(lineno)d %(message)s'))
-
+formatter = structlog.stdlib.ProcessorFormatter(
+    processors=[
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M.%S"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.dev.ConsoleRenderer(),
+    ]
+)
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
 
 logging.basicConfig(
-    level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
-    handlers=[handler]
+    level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")), handlers=[handler]
 )
+
 
 def start():
     cache_dir = app_config.cache_dir
     if not cache_dir.parent.exists():
         cache_dir.parent.mkdir(parents=True)
-    Cachable.register(redis_url=app_config.get("redis", {}).get("url"),
-                        storage_dir=cache_dir.as_posix())
+    Cachable.register(
+        redis_url=app_config.get("redis", {}).get("url"),
+        storage_dir=cache_dir.as_posix(),
+    )
     try:
         app = YankoApp()
 

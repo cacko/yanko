@@ -4,7 +4,7 @@ import queue
 import sys
 import ffmpeg
 import sounddevice as sd
-import logging
+from yanko import logger
 import numpy as np
 import time as _time
 from yanko.player.base import BasePlayer
@@ -121,17 +121,17 @@ class FFMPeg(BasePlayer):
         streams = info.get('streams', [])
         stream = streams[0]
         if stream.get('codec_type') != 'audio':
-            logging.warning('The stream must be an audio stream')
+            logger.warning('The stream must be an audio stream')
             return Status.STOPPED
         return stream
 
     def play(self):
         device = self.device
-        logging.debug(device)
+        logger.debug(device)
         self.q = queue.Queue(maxsize=device.buffsize)
         self.status = Status.PLAYING
         try:
-            logging.debug('Opening stream ...')
+            logger.debug('Opening stream ...')
             process = ffmpeg.input(self.stream_url).output(
                 'pipe:',
                 format='f32le',
@@ -149,10 +149,10 @@ class FFMPeg(BasePlayer):
                 callback=self.callback
             )
             read_size = device.blocksize * device.output_channels * stream.samplesize
-            logging.debug('Buffering ...')
+            logger.debug('Buffering ...')
             for _ in range(device.buffsize):
                 self.q.put_nowait(process.stdout.read(read_size))
-            logging.debug('Starting Playback ...')
+            logger.debug('Starting Playback ...')
             with stream:
                 timeout = device.blocksize * device.buffsize / device.samplerate
                 while True:
@@ -171,7 +171,7 @@ class FFMPeg(BasePlayer):
         except queue.Full:
             pass
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
         self._time_event.clear()
         return Status.PLAYING
 
@@ -181,7 +181,7 @@ class FFMPeg(BasePlayer):
             sd.sleep(50)
         assert frames == self.device.blocksize
         if status.output_underflow:
-            logging.debug(
+            logger.debug(
                 'Output underflow: increase blocksize?')
             raise sd.CallbackAbort
         assert not status
@@ -192,7 +192,7 @@ class FFMPeg(BasePlayer):
             self._time_event.set()
             outdata[:] = volume_norm.tobytes()
         except queue.Empty as e:
-            logging.debug(
+            logger.debug(
                 'Buffer is empty: increase buffersize?')
             raise sd.CallbackAbort from e
 

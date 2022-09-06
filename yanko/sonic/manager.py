@@ -1,4 +1,4 @@
-import logging
+from yanko import logger
 from pathlib import Path
 from queue import Queue
 from yanko.core import perftime
@@ -69,7 +69,7 @@ def resolveSearch(items):
             try:
                 items[find_idx_by_id(items, res, 'uid')] = res
             except Exception as e:
-                logging.error(e, exc_info=True)
+                logger.error(e, exc_info=True)
         pool.close()
         pool.join()
     return items
@@ -83,7 +83,7 @@ def resolveAlbums(albums):
                 try:
                     albums[find_idx_by_id(albums, res)] = res
                 except Exception as e:
-                    logging.error(e, exc_info=True)
+                    logger.error(e, exc_info=True)
             pool.close()
             pool.join()
         return albums

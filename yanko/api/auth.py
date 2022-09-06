@@ -1,4 +1,4 @@
-import logging
+from yanko import logger
 from bottle import request, HTTPError
 import pyotp
 from yanko.core.config import app_config

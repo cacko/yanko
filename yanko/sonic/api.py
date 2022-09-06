@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import hashlib
-import logging
+from yanko import logger
 import string
 import sys
 import time
@@ -163,7 +163,7 @@ class Client(object):
         try:
             r = requests.get(url=url, verify=self.verify_ssl)
         except requests.exceptions.ConnectionError as e:
-            logging.exception(e)
+            logger.exception(e)
             sys.exit(1)
 
         try:
@@ -181,7 +181,7 @@ class Client(object):
 
         if status == "failed":
             error = subsonic_response.get("error", {})
-            logging.error(
+            logger.error(
                 f"Command failed - {error.get('code')} {error.get('message')}"
             )
             return None
@@ -465,12 +465,12 @@ class Client(object):
             return self.status not in [Status.EXIT, Status.STOPPED]
 
         except OSError as err:
-            logging.error(
+            logger.error(
                 f"Could not run ffmpeg. Please make sure it is installed, {str(err)}"
             )
             return False
         except Exception as e:
-            logging.error(
+            logger.error(
                 "ffmpeg existed unexpectedly with the following error: {}".format(e)
             )
             return False

@@ -1,4 +1,4 @@
-import logging
+from yanko import logger
 from yanko.core.config import app_config
 from queue import Queue
 from butilka.server import Server as ButilkaServer

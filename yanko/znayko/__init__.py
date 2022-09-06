@@ -1,4 +1,4 @@
-import logging
+from yanko import logger
 from yanko.core.config import app_config
 from yanko.core.cachable import Method
 from enum import Enum
@@ -39,5 +39,5 @@ class Znayko(object, metaclass=ZnaykoMeta):
             )
             return resp.json()
         except Exception as e:
-            logging.debug(e)
+            logger.debug(e)
             return None

@@ -1,4 +1,4 @@
-import logging
+from yanko import logger
 from queue import Queue, Empty
 from yanko.core.cachable import CachableDb
 from yanko.znayko import Znayko
@@ -26,14 +26,14 @@ class Beats(CachableDb):
             self._struct = self.tocache(resp)        
 
     def __fetch(self):
-        logging.debug(f"Fetching beats for {self.__path}")
+        logger.debug(f"Fetching beats for {self.__path}")
         beats = Znayko.beats(self.__path)
         return beats
 
     def _init(self):
         if self.isCached:
             self._struct = self.fromcache()
-            logging.debug(f"In DB beats for {self.__path}")
+            logger.debug(f"In DB beats for {self.__path}")
             return 
         self.fetch()
 
@@ -57,7 +57,7 @@ class FetcherMeta(type):
         for pth in paths:
             cls.queue.put_nowait(pth)
         instance = cls()
-        logging.warning(instance.is_alive())
+        logger.warning(instance.is_alive())
         if not instance.is_alive():
             instance.start(cls.queue)
         

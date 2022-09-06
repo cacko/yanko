@@ -1,4 +1,4 @@
-import logging
+from yanko import logger
 from os import environ
 from pathlib import Path
 from yanko.core.config import app_config
@@ -61,7 +61,7 @@ class LaMetric(object, metaclass=LaMetricMeta):
             )
             return response.json()
         except ConnectionError:
-            logging.debug(f"lametric is off")
+            logger.debug(f"lametric is off")
         except JSONDecodeError as e:
             pass
 

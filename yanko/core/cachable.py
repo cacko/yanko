@@ -1,5 +1,5 @@
 from enum import Enum
-import logging
+from yanko import logger
 from pathlib import Path
 from cachable import Cachable
 from yanko.db.base import YankoDb
@@ -89,7 +89,7 @@ class CachableDb(Cachable):
         q = self.__model.select().where(getattr(self.__model, self.__id_key) == self.__id_value)
         exists = q.exists()
         if exists:
-            logging.warning(f"RECORD exists {self.__model} {self.__id_key}=={self.__id_value}")
+            logger.warning(f"RECORD exists {self.__model} {self.__id_key}=={self.__id_value}")
         return exists
 
 # @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -185,7 +185,7 @@ class CachableDb(Cachable):
 #         return None
 
 #     def tocache(self, res):
-#         logging.debug(self.store_key)
+#         logger.debug(self.store_key)
 
 #         Storage.set(self.store_key, pickle.dumps(res))
 #         Storage.persist(self.store_key)

@@ -10,20 +10,22 @@ import signal
 import logging
 import colorlog
 
-log_config = {
-    "level": getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
-    "format": "%(filename)s:%(lineno)d %(message)s",
-    "datefmt": "YANKO %H:%M:%S",
-    "force": True
-}
+# log_config = {
+#     "level": 
+#     "format": 
+#     "datefmt": "YANKO %H:%M:%S",
+#     "force": True
+# }
 
-logging.basicConfig(**log_config)
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter(
 	'%(log_color)s%(filename)s:%(lineno)d %(message)s'))
 
-logging.root.addHandler(handler)
 
+logging.basicConfig(
+    level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")),
+    handlers=[handler]
+)
 
 def start():
     cache_dir = app_config.cache_dir

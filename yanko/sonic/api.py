@@ -76,7 +76,6 @@ def get_scan_status(url, manager_queue: Queue):
             break
 
 
-@lru_cache
 def make_request(url):
     try:
         r = requests.get(url=url)
@@ -274,10 +273,10 @@ class Client(object):
         return self.__toAlbums(self.get_album_list, AlbumType.NEWEST)
 
     def get_recently_played(self) -> list[Album]:
-        return self.__toAlbums(self.get_album_list, AlbumType.RECENT, ts=time.now())
+        return self.__toAlbums(self.get_album_list, AlbumType.RECENT)
 
     def get_most_played(self) -> list[Album]:
-        return self.__toAlbums(self.get_album_list, AlbumType.FREQUENT, ts=time.now())
+        return self.__toAlbums(self.get_album_list, AlbumType.FREQUENT)
 
     def get_top_songs(self, artist_id):
         artist_info = self.get_artist(artist_id)
@@ -320,7 +319,7 @@ class Client(object):
             self.playqueue.skip_to = None
             random_songs = self.make_request(
                 self.create_url(
-                    Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE, ts=time.now()
+                    Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE, ts=time.time()
                 )
             )
 
@@ -341,7 +340,7 @@ class Client(object):
                     Subsonic.SIMILAR_SONGS2,
                     id=radio_id,
                     count=self.BATCH_SIZE,
-                    ts=time.now(),
+                    ts=time.time(),
                 )
             )
             if not similar_songs:
@@ -590,7 +589,9 @@ class Client(object):
                 **{
                     **data,
                     "coverArt": self.create_url(
-                        Subsonic.COVER_ART, id=data.get("id"), size=200
+                        Subsonic.COVER_ART,
+                        id=data.get("id"),
+                        size=200,
                     ),
                 }
             )

@@ -55,9 +55,6 @@ OPTIONS = {
             "libssl.3.dylib",
             "libcrypto.3.dylib",
             "libsqlite3.dylib"
-            # 'libcblas.3.dylib',
-            # 'libgfortran.5.dylib', 'libquadmath.0.dylib',
-            # 'libgcc_s.1.1.dylib', 'liblapack.3.dylib', 'libblas.3.dylib'
         ]
     ),
 }

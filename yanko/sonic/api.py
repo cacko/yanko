@@ -75,6 +75,7 @@ def get_scan_status(url, manager_queue: Queue):
         if not status.scanning:
             break
 
+
 @lru_cache
 def make_request(url):
     try:
@@ -83,7 +84,6 @@ def make_request(url):
     except requests.exceptions.ConnectionError as e:
         logger.exception(e)
         sys.exit(1)
-
 
 
 class Client(object):
@@ -137,7 +137,9 @@ class Client(object):
 
     @property
     def api_args(self) -> dict[str, str]:
-        return ApiArguments(u=self.username, t=self.token, s=self.salt, v=self.api).to_dict()
+        return ApiArguments(
+            u=self.username, t=self.token, s=self.salt, v=self.api
+        ).to_dict()
 
     @property
     def status(self) -> Status:
@@ -190,9 +192,7 @@ class Client(object):
 
         if status == "failed":
             error = subsonic_response.get("error", {})
-            logger.error(
-                f"Command failed - {error.get('code')} {error.get('message')}"
-            )
+            logger.error(f"Command failed - {error.get('code')} {error.get('message')}")
             return None
 
         for k, v in subsonic_response.items():
@@ -274,10 +274,10 @@ class Client(object):
         return self.__toAlbums(self.get_album_list, AlbumType.NEWEST)
 
     def get_recently_played(self) -> list[Album]:
-        return self.__toAlbums(self.get_album_list, AlbumType.RECENT)
+        return self.__toAlbums(self.get_album_list, AlbumType.RECENT, ts=time.now())
 
     def get_most_played(self) -> list[Album]:
-        return self.__toAlbums(self.get_album_list, AlbumType.FREQUENT)
+        return self.__toAlbums(self.get_album_list, AlbumType.FREQUENT, ts=time.now())
 
     def get_top_songs(self, artist_id):
         artist_info = self.get_artist(artist_id)
@@ -304,8 +304,7 @@ class Client(object):
         return Artist.from_dict(artist_info)
 
     def get_artist_info(self, artist_id) -> ArtistInfoData:
-        artist_info = ArtistInfo(
-            self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
+        artist_info = ArtistInfo(self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
         if artist_info:
             return artist_info.info
 
@@ -320,7 +319,9 @@ class Client(object):
         if fetch:
             self.playqueue.skip_to = None
             random_songs = self.make_request(
-                self.create_url(Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE)
+                self.create_url(
+                    Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE, ts=time.now()
+                )
             )
 
             if not random_songs:
@@ -337,7 +338,10 @@ class Client(object):
         if fetch:
             similar_songs = self.make_request(
                 self.create_url(
-                    Subsonic.SIMILAR_SONGS2, id=radio_id, count=self.BATCH_SIZE
+                    Subsonic.SIMILAR_SONGS2,
+                    id=radio_id,
+                    count=self.BATCH_SIZE,
+                    ts=time.now(),
                 )
             )
             if not similar_songs:

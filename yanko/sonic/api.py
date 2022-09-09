@@ -75,7 +75,7 @@ def get_scan_status(url, manager_queue: Queue):
         if not status.scanning:
             break
 
-
+@lru_cache
 def make_request(url):
     try:
         r = requests.get(url=url)

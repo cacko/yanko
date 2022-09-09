@@ -1,16 +1,14 @@
-from cachable import CachableFile
+from cachable.storage.file import CachableFileImage
 from urllib.parse import parse_qs, urlparse
-from hashlib import blake2b
 from PIL import Image
+from yanko.core.string import file_hash, string_hash
 
-from yanko.core.string import file_hash
 
-
-class CoverArtFile(CachableFile):
+class CoverArtFile(CachableFileImage):
 
     _url: str = None
-    __filename: str = None
-    __filehash: str = None
+    _filename: str = None
+    _filehash: str = None
     ICON_SIZE = (22, 22)
     NOT_CACHED_HASH = [
         "b9013a23400aeab42ea7dbcd89832ed41a94ab909c1a6d91f866ccd38123515e",
@@ -19,29 +17,28 @@ class CoverArtFile(CachableFile):
 
     def __init__(self, url: str) -> None:
         self._url = url
+        super().__init__()
 
     @property
     def filename(self):
-        if not self.__filename:
+        if not self._filename:
             pu = urlparse(self._url)
             pa = parse_qs(pu.query)
             id = "".join(pa.get("id", []))
             if not id:
                 id = self._url
-            h = blake2b(digest_size=20)
-            h.update(id.encode())
-            self.__filename = f"{h.hexdigest()}.webp"
-        return self.__filename
+            self._filename = f"{string_hash(id)}.webp"
+        return self._filename
 
     @property
     def isCached(self) -> bool:
-        return self.storage_path.exists() and self.filehash not in self.NOT_CACHED_HASH
+        return self._path.exists() and self.filehash not in self.NOT_CACHED_HASH
 
     @property
     def filehash(self):
-        if not self.__filehash:
-            self.__filehash = file_hash(self.storage_path)
-        return self.__filehash
+        if not self._filehash:
+            self._filehash = file_hash(self._path)
+        return self._filehash
 
     @property
     def url(self):
@@ -50,10 +47,10 @@ class CoverArtFile(CachableFile):
     @property
     def icon_path(self):
         self._init()
-        stem = self.storage_path.stem
-        icon_path = self.storage_path.with_stem(f"{stem}_icon")
+        stem = self._path.stem
+        icon_path = self._path.with_stem(f"{stem}_icon")
         if not icon_path.exists() or file_hash(icon_path) in self.NOT_CACHED_HASH:
-            im = Image.open(self.storage_path.as_posix())
+            im = Image.open(self._path.as_posix())
             im.thumbnail(self.ICON_SIZE, Image.BICUBIC)
             im.save(icon_path.as_posix())
         return icon_path

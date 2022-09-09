@@ -43,10 +43,10 @@ from yanko.sonic import (
     TrackSearchItem,
     ScanStatusResponse,
 )
-from yanko.sonic.api_cache import ApiCache
 from yanko.sonic.artist import ArtistInfo
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
+from functools import lru_cache
 
 urllib3.disable_warnings()
 
@@ -75,6 +75,16 @@ def get_scan_status(url, manager_queue: Queue):
         if not status.scanning:
             break
 
+@lru_cache
+def make_request(url):
+    try:
+        r = requests.get(url=url)
+        return r
+    except requests.exceptions.ConnectionError as e:
+        logger.exception(e)
+        sys.exit(1)
+
+
 
 class Client(object):
     command_queue: Queue = None
@@ -88,6 +98,8 @@ class Client(object):
     player: FFMPeg = None
     scanning = False
     __threads = []
+    __salt = None
+    __token = None
 
     BATCH_SIZE = 20
 
@@ -99,6 +111,7 @@ class Client(object):
         self.api = server_config.get("api", "1.16.0")
         self.ssl = server_config.get("ssl", False)
         self.verify_ssl = server_config.get("verify_ssl", False)
+        self.token, self.salt = self.hash_password()
 
         self.search_results = []
 
@@ -124,8 +137,7 @@ class Client(object):
 
     @property
     def api_args(self) -> dict[str, str]:
-        token, salt = self.hash_password()
-        return ApiArguments(u=self.username, t=token, s=salt, v=self.api).to_dict()
+        return ApiArguments(u=self.username, t=self.token, s=self.salt, v=self.api).to_dict()
 
     @property
     def status(self) -> Status:
@@ -156,12 +168,9 @@ class Client(object):
         qs = urlencode({**kwargs, **self.api_args})
         return f"https://{self.host}/rest/{endpoint.value}?{qs}"
 
-    def make_request(self, url):
-        api_cache = ApiCache(url)
-        if api_cache.isCached:
-            return api_cache.fromcache()
+    def make_request(self, url, usecache=True):
         try:
-            r = requests.get(url=url, verify=self.verify_ssl)
+            r = make_request(url=url)
         except requests.exceptions.ConnectionError as e:
             logger.exception(e)
             sys.exit(1)
@@ -188,16 +197,14 @@ class Client(object):
 
         for k, v in subsonic_response.items():
             if k in RESULT_KEYS:
-                api_cache.tocache(v)
                 return v
-        api_cache.tocache(response)
         return response
 
     def scrobble(self, song_id):
         self.make_request(self.create_url(Subsonic.SCROBBLE, id=song_id))
 
     def startScan(self):
-        ApiCache.flush()
+        make_request.cache_clear()
         self.make_request(self.create_url(Subsonic.START_SCAN))
         url = self.create_url(Subsonic.GET_SCAN_STATUS)
         get_status = StoppableThread(
@@ -420,6 +427,7 @@ class Client(object):
         stream_url = self.create_url(Subsonic.STREAM)
         song_id = track_data.get("id")
         if not song_id:
+            logger.error(f"NO SONG ID {track_data}")
             return False
         self.scrobble(song_id)
 

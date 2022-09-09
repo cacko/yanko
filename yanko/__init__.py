@@ -1,10 +1,12 @@
 __name__ = "yanko"
 
+from turtle import st
 from yanko.core import logger
-from cachable.cacheable import Cachable
+from cachable.storage.file import FileStorage
 from yanko.db.base import YankoDb
 from yanko.ui.app import YankoApp
 from yanko.core.config import app_config
+from yanko.sonic.coverart import CoverArtFile
 import sys
 import signal
 
@@ -13,10 +15,9 @@ def start():
     cache_dir = app_config.cache_dir
     if not cache_dir.parent.exists():
         cache_dir.parent.mkdir(parents=True)
-    Cachable.register(
-        redis_url=app_config.get("redis", {}).get("url"),
-        storage_dir=cache_dir.as_posix(),
-    )
+    CoverArtFile.register(storage=FileStorage.register(
+        storage_path=cache_dir
+    ))
     try:
         app = YankoApp()
 

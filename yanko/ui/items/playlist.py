@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 from yanko.sonic import Track
 from rumps import App
-from yanko.ui.models import MusicItem
+from .actions import MusicItem
 from Cocoa import NSFont, NSFontAttributeName
 from PyObjCTools.Conversion import propertyListFromPythonCollection
 from AppKit import NSAttributedString

@@ -1,4 +1,4 @@
-from pprint import pprint
+from yanko.core import logger
 from queue import Queue
 from yanko.core.config import app_config
 from pathlib import Path
@@ -61,19 +61,24 @@ class PlayQueue:
     def load(self, songs):
         self.__idx = 0
         self.__songs = songs[:]
-        Fetcher.add(paths=[x.get("path") for x in songs])
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
+        Fetcher.add(paths=[x.get("path") for x in songs])
+
         self.__queue.put_nowait(
             (Command.PLAYER_RESPONSE,
              Playlist(start=datetime.now(tz=timezone.utc),
                       tracks=[Track(**data) for data in self.__songs])))
 
     def __iter__(self):
+        if not len(self.__songs):
+            return
         for idx, song in enumerate(self.__songs):
             self.__idx = idx
             if self.skip_to:
+                logger.debug(f"skip to {self.skip_to}, song id={song.get('id')}")
                 if song.get("id") == self.skip_to:
+                    logger.debug(f"skipped to {self.skip_to}")
                     self.skip_to = None
                 else:
                     continue

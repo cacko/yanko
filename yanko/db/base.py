@@ -2,6 +2,10 @@ from pathlib import Path
 from peewee import *
 from yanko.core.config import app_config
 from playhouse.sqlite_ext import SqliteExtDatabase
+import logging
+
+
+logging.getLogger('peewee').setLevel(level=logging.INFO)
 
 
 class YankoDbMeta(type):

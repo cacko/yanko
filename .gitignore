@@ -27,4 +27,7 @@ dist
 *.flac
 node_modules
 *.dmg
+yanko.db
 *.wav
+*.db-shm
+*.db-wal

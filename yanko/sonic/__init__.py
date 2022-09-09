@@ -11,33 +11,33 @@ import time
 import pantomime
 
 RESULT_KEYS = [
-    'searchResult3',
-    'playlists',
-    'searchResult2',
-    'searchResult',
-    'nowPlaying',
-    'randomSongs',
-    'albumList2',
-    'albumList',
-    'topSongs',
-    'similarSongs2',
-    'similarSongs',
-    'albumInfo',
-    'artistInfo2',
-    'artistInfo',
-    'song',
-    'album',
-    'artist',
-    'artists',
-    'topSongs',
-    'scanStatus'
+    "searchResult3",
+    "playlists",
+    "searchResult2",
+    "searchResult",
+    "nowPlaying",
+    "randomSongs",
+    "albumList2",
+    "albumList",
+    "topSongs",
+    "similarSongs2",
+    "similarSongs",
+    "albumInfo",
+    "artistInfo2",
+    "artistInfo",
+    "song",
+    "album",
+    "artist",
+    "artists",
+    "topSongs",
+    "scanStatus",
 ]
 
 
 class StreamFormat(Enum):
-    RAW = 'raw'
-    AAC = 'aac'
-    FLAC = 'flac'
+    RAW = "raw"
+    AAC = "aac"
+    FLAC = "flac"
 
     @classmethod
     def _missing_(cls, value):
@@ -45,91 +45,92 @@ class StreamFormat(Enum):
 
 
 class Command(Enum):
-    TOGGLE = 'toggle'
-    PLAY = 'play'
-    STOP = 'stop'
-    NEXT = 'next'
-    PREVIOUS = 'previous'
-    VOLUME_UP = 'volume_up'
-    VOLUME_DOWN = 'volume_down'
-    MUTE = 'mute'
-    RANDOM = 'random'
-    LAST_ADDED = 'last_added'
-    QUIT = 'quit'
-    RESTART = 'restart'
-    ALBUM = 'album'
-    COVER_ART = 'cover_art'
-    RECENTLY_PLAYED = 'recent'
-    SONG = 'song'
-    SEARCH = 'search'
-    ALBUMSONG = 'albumsong'
-    ARTIST = 'artist'
-    ARTIST_ALBUMS = 'artist_albums'
-    RANDOM_ALBUM = 'random_album'
-    RESCAN = 'rescan'
-    MOST_PLAYED = 'most_played'
-    LOAD_LASTPLAYLIST = 'load_lastplaylist'
-    PLAYLIST = 'playlist'
-    CURRENT_ARTIST = 'current_artist'
-    CURRENT_ALBUM = 'current_album'
-    PLAY_LAST_ADDED = 'play_last_added'
-    PLAY_MOST_PLAYED = 'play_most_played'
-    ANNOUNCE = 'announce'
+    TOGGLE = "toggle"
+    PLAY = "play"
+    STOP = "stop"
+    NEXT = "next"
+    PREVIOUS = "previous"
+    VOLUME_UP = "volume_up"
+    VOLUME_DOWN = "volume_down"
+    MUTE = "mute"
+    RANDOM = "random"
+    LAST_ADDED = "last_added"
+    QUIT = "quit"
+    RESTART = "restart"
+    ALBUM = "album"
+    COVER_ART = "cover_art"
+    RECENTLY_PLAYED = "recent"
+    SONG = "song"
+    SEARCH = "search"
+    ALBUMSONG = "albumsong"
+    ARTIST = "artist"
+    ARTIST_ALBUMS = "artist_albums"
+    RANDOM_ALBUM = "random_album"
+    RESCAN = "rescan"
+    MOST_PLAYED = "most_played"
+    LOAD_LASTPLAYLIST = "load_lastplaylist"
+    PLAYLIST = "playlist"
+    CURRENT_ARTIST = "current_artist"
+    CURRENT_ALBUM = "current_album"
+    PLAY_LAST_ADDED = "play_last_added"
+    PLAY_MOST_PLAYED = "play_most_played"
+    ANNOUNCE = "announce"
     PLAYER_RESPONSE = "player_response"
 
+
 class Action(Enum):
-    NEXT = 'next'
-    RESTART = 'restart'
-    EXIT = 'exit'
-    STOP = 'stop'
-    TOGGLE = 'toggle'
-    PREVIOUS = 'previous'
-    PAUSE = 'pause'
-    RESUME = 'resumt'
-    VOLUME_UP = 'vol_up'
-    VOLUME_DOWN = 'vol_down'
-    MUTE = 'mute'
+    NEXT = "next"
+    RESTART = "restart"
+    EXIT = "exit"
+    STOP = "stop"
+    TOGGLE = "toggle"
+    PREVIOUS = "previous"
+    PAUSE = "pause"
+    RESUME = "resumt"
+    VOLUME_UP = "vol_up"
+    VOLUME_DOWN = "vol_down"
+    MUTE = "mute"
 
 
 class Status(Enum):
-    PLAYING = 'playing'
-    PAUSED = 'paused'
-    STOPPED = 'stopped'
-    LOADING = 'loadng'
-    EXIT = 'exit'
-    RESUMED = 'resumed'
-    NEXT = 'next'
-    PREVIOUS = 'previous'
+    PLAYING = "playing"
+    PAUSED = "paused"
+    STOPPED = "stopped"
+    LOADING = "loadng"
+    EXIT = "exit"
+    RESUMED = "resumed"
+    NEXT = "next"
+    PREVIOUS = "previous"
 
 
 class Subsonic(Enum):
-    SIMILAR_SONGS2 = 'getSimilarSongs2'
-    RANDOM_SONGS = 'getRandomSongs'
-    MUSIC_FOLDERS = 'getMusicFolders'
-    ALBUM_LIST = 'getAlbumList'
-    ALBUM = 'getAlbum'
-    SCROBBLE = 'scrobble'
-    SEARCH3 = 'search3'
-    ARTISTS = 'getArtists'
-    PLAYLISTS = 'getPlaylists'
-    ARTIST = 'getArtist'
-    PLAYLIST = 'getPlaylist'
-    DOWNLOAD = 'download'
-    STREAM = 'stream'
-    COVER_ART = 'getCoverArt'
-    PING = 'ping'
-    ARTIST_INFO = 'getArtistInfo'
-    TOP_SONGS = 'getTopSongs'
-    START_SCAN = 'startScan'
-    GET_SCAN_STATUS = 'getScanStatus'
-    SONG = 'getSong'
+    SIMILAR_SONGS2 = "getSimilarSongs2"
+    RANDOM_SONGS = "getRandomSongs"
+    MUSIC_FOLDERS = "getMusicFolders"
+    ALBUM_LIST = "getAlbumList"
+    ALBUM = "getAlbum"
+    SCROBBLE = "scrobble"
+    SEARCH3 = "search3"
+    ARTISTS = "getArtists"
+    PLAYLISTS = "getPlaylists"
+    ARTIST = "getArtist"
+    PLAYLIST = "getPlaylist"
+    DOWNLOAD = "download"
+    STREAM = "stream"
+    COVER_ART = "getCoverArt"
+    PING = "ping"
+    ARTIST_INFO = "getArtistInfo"
+    TOP_SONGS = "getTopSongs"
+    START_SCAN = "startScan"
+    GET_SCAN_STATUS = "getScanStatus"
+    SONG = "getSong"
 
 
 class AlbumType(Enum):
-    NEWEST = 'newest'
-    RECENT = 'recent'
-    RANDOM = 'random'
-    FREQUENT = 'frequent'
+    NEWEST = "newest"
+    RECENT = "recent"
+    RANDOM = "random"
+    FREQUENT = "frequent"
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -282,6 +283,10 @@ class NowPlaying:
         self.song.Bpm = val
 
     @property
+    def display_bpm(self):
+        return f"{self.bpm}{'🥁' if self.beats else ''}"
+
+    @property
     def total_length(self) -> str:
         td = timedelta(seconds=int(self.track.duration))
         return str(td)[2:7]
@@ -413,7 +418,7 @@ class Search3Response:
     song: Optional[list[Track]] = None
 
     def __post_init__(self):
-        for k in ['artist', 'album', 'song']:
+        for k in ["artist", "album", "song"]:
             if not getattr(self, k):
                 setattr(self, k, [])
 

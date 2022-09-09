@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from queue import Queue, Empty
 from traceback import print_exc
 import rumps
@@ -17,11 +18,13 @@ from yanko.sonic import (
     VolumeStatus,
 )
 from yanko.ui.items.bpm import BPM, BPMEvent
-from yanko.ui.models import ActionItem, Symbol, Label, MusicItem
+from yanko.ui.icons import Symbol, Label
 from yanko.sonic.manager import Manager
+from yanko.ui.items.actions import ActionItem, MusicItem
 from yanko.ui.items.playlist import Playlist
 from yanko.ui.items.albumlist import Albumlist, ArtistAlbumsList
 from yanko.ui.items.nowplaying import NowPlayingItem
+from yanko.ui.items.servermenu import ServerMenu
 from yanko.api.server import Server
 from yanko.lametric import LaMetric, StatusFrame
 from pathlib import Path
@@ -71,7 +74,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.restart,
                 ActionItem.next,
                 None,
-                ActionItem.rescan,
+                ServerMenu.register(
+                    items=[
+                        (Label.CACHE.value, Symbol.CACHE.value),
+                        (Label.RESCAN.value, Symbol.RESCAN.value),
+                    ],
+                    callback=self.onServerMenuItem,
+                ),
                 ActionItem.quit,
             ],
             icon=Symbol.STOPPED.value,
@@ -132,9 +141,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def onRestart(self, sender):
         self.manager.commander.put_nowait((Command.RESTART, None))
 
-    @rumps.clicked(Label.RESCAN.value)
-    def onRescan(self, sender):
-        self.manager.commander.put_nowait((Command.RESCAN, None))
+    def onServerMenuItem(self, sender):
+        match (sender.title):
+            case Label.RESCAN.value:
+                self.manager.commander.put_nowait((Command.RESCAN, None))
 
     @rumps.events.on_screen_sleep
     def sleep(self):
@@ -219,7 +229,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.ARTIST, sender.id))
 
     def _onScanStatus(self, sender: ScanStatus):
-        item: ActionItem = self.menu.get(Label.RESCAN.value)
+        item: ActionItem = ServerMenu.action(Label.RESCAN)
         item.setAvailability(not sender.scanning)
         if not sender.scanning:
             self.manager.commander.put_nowait((Command.LAST_ADDED, None))

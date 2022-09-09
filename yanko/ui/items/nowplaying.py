@@ -1,12 +1,22 @@
 from yanko import logger
-from yanko.ui.models import MusicItem
+from .actions import MusicItem
 from yanko.sonic import NowPlaying, Track
 from AppKit import NSAttributedString
 from yanko.core.string import truncate
 
+
 class NowPlayingItem(MusicItem):
     __track: Track
-    def __init__(self, np: NowPlaying, callback=None, key=None, icon=None, dimensions=None, template=None):
+
+    def __init__(
+        self,
+        np: NowPlaying,
+        callback=None,
+        key=None,
+        icon=None,
+        dimensions=None,
+        template=None,
+    ):
         track = np.track
         self.__track = track
         title = f"{track.artist} - {track.title} - {track.album}"
@@ -19,7 +29,7 @@ class NowPlayingItem(MusicItem):
             track.artist,
             truncate(track.title, 100),
             f"{truncate(track.album, 100)} ({track.year})",
-            f"{track.total_time} {track.audioType.upper()} {track.bitRate}kbps / BPM: {np.bpm}"
+            f"{track.total_time} {track.audioType.upper()} {track.bitRate}kbps / BPM:{np.display_bpm}",
         ]
         tt = NSAttributedString.alloc().initWithString_("\n".join(rows))
         self._menuitem.setAttributedTitle_(tt)

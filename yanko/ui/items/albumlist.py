@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 from yanko.sonic import Album, ArtistInfo
 from rumps import Menu
-from yanko.ui.models import MusicItem
+from .actions import MusicItem
 from rumps import App
 from AppKit import NSAttributedString
 from bs4 import BeautifulSoup

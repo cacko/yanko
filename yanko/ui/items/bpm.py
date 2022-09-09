@@ -6,7 +6,7 @@ from dataclasses_json import dataclass_json, Undefined
 from dataclasses import dataclass
 from time import time, sleep
 from yanko.sonic import NowPlaying
-from yanko.ui.models import AnimatedIcon, Symbol
+from yanko.ui.icons import AnimatedIcon, Symbol
 
 PausingIcon = AnimatedIcon(icons=[Symbol.GRID1, Symbol.GRID4])
 

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, Undefined
 import queue
+from queue import Empty
 import sys
 import ffmpeg
 import sounddevice as sd
@@ -197,32 +198,34 @@ class FFMPeg(BasePlayer):
             raise sd.CallbackAbort from e
 
     def process_queue(self):
-        if self._queue.empty():
+        try:
+            command = self._queue.get_nowait()
+            self._queue.task_done()
+            match (command):
+                case Action.RESTART:
+                    return self._restart()
+                case Action.NEXT:
+                    return self._next()
+                case Action.PREVIOUS:
+                    return self._previous()
+                case Action.STOP:
+                    return self._stop()
+                case Action.EXIT:
+                    return self.exit()
+                case Action.PAUSE:
+                    self.status = Status.PAUSED
+                case Action.RESUME:
+                    self.status = Status.RESUMED
+                case Action.VOLUME_DOWN:
+                    self.volume = max(0, self.volume - self.VOLUME_STEP)
+                case Action.VOLUME_UP:
+                    self.volume = min(2, self.volume + self.VOLUME_STEP)
+                case Action.MUTE:
+                    self.muted = not self.muted
+                case _:
+                    return None
+        except Empty:
             return None
-        command = self._queue.get_nowait()
-        self._queue.task_done()
-        match (command):
-            case Action.RESTART:
-                return self._restart()
-            case Action.NEXT:
-                return self._next()
-            case Action.PREVIOUS:
-                return self._previous()
-            case Action.STOP:
-                return self._stop()
-            case Action.EXIT:
-                return self.exit()
-            case Action.PAUSE:
-                self.status = Status.PAUSED
-            case Action.RESUME:
-                self.status = Status.RESUMED
-            case Action.VOLUME_DOWN:
-                self.volume = max(0, self.volume - self.VOLUME_STEP)
-            case Action.VOLUME_UP:
-                self.volume = min(2, self.volume + self.VOLUME_STEP)
-            case Action.MUTE:
-                self.muted = not self.muted
-        return None
 
     def _stop(self):
         return Status.STOPPED

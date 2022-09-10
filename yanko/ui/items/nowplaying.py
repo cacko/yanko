@@ -2,7 +2,7 @@ from yanko import logger
 from .actions import MusicItem
 from yanko.sonic import NowPlaying, Track
 from AppKit import NSAttributedString
-from yanko.core.string import truncate
+from corestring import truncate
 
 
 class NowPlayingItem(MusicItem):

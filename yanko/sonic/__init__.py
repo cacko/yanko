@@ -5,8 +5,8 @@ from math import floor
 from marshmallow import fields
 from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional
-from yanko.core.string import truncate
-from yanko.core.date import isodate_decoder, isodate_encoder, seconds_to_duration
+from corestring import truncate
+from coretime import isodate_decoder, isodate_encoder, seconds_to_duration
 import time
 import pantomime
 

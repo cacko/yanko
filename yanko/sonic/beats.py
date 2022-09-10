@@ -11,7 +11,7 @@ def resolveBeats(audio_path):
     beats = Beats(path=audio_path)
     if not beats.isCached:
         beats.fetch()
-    return beats.beats
+    return beats
 
 class Beats(CachableDb):
 
@@ -26,6 +26,11 @@ class Beats(CachableDb):
     def beats(self) -> list[float]:
         self._init()
         return self._struct.beats
+
+    @property
+    def path(self):
+        self._init()
+        return self._struct.path
 
     def fetch(self):
         resp = self.__fetch()

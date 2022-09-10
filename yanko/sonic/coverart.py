@@ -1,7 +1,7 @@
 from cachable.storage.file import CachableFileImage
 from urllib.parse import parse_qs, urlparse
 from PIL import Image
-from yanko.core.string import file_hash, string_hash
+from corestring import file_hash, string_hash
 
 
 class CoverArtFile(CachableFileImage):

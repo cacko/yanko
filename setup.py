@@ -92,6 +92,8 @@ setup(
         "black==22.8.0",
         "prokopiy==0.1.2",
         "peewee==3.15.2",
+        "coretime",
+        "corestring"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

@@ -5,7 +5,7 @@ from butilka.server import Server as ButilkaServer
 import time
 from yanko.sonic import Command
 from yanko.api.auth import auth_required
-from yanko.core.string import string_hash
+from corestring import string_hash
 
 
 class ServerMeta(type):

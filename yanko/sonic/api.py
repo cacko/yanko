@@ -14,7 +14,7 @@ from yanko.core.thread import StoppableThread
 from dataclasses_json import dataclass_json
 from yanko.core import perftime
 from yanko.core.config import app_config
-from yanko.core.string import string_hash
+from corestring import string_hash
 from yanko.player.ffmpeg import FFMPeg
 from yanko.sonic import (
     Action,

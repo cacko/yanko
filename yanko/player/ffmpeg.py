@@ -139,12 +139,7 @@ class FFMPeg(BasePlayer):
         try:
             logger.debug("Opening stream ...")
             process = (
-                ffmpeg.input(
-                    self.stream_url,
-                    tcp_nodelay=1,
-                    reconnect_on_network_error=1,
-                    reconnect_streamed=1,
-                )
+                ffmpeg.input(self.stream_url, tcp_nodelay=1, multiple_requests=1)
                 .output(
                     "pipe:",
                     format="f32le",
@@ -203,10 +198,12 @@ class FFMPeg(BasePlayer):
             data_array = np.frombuffer(data, dtype="float32")
             volume_norm = data_array * (0 if self.muted else self.volume)
             self._time_event.set()
-            outdata[:] = volume_norm.tobytes()
+            outdata[:] = volume_norm.tobytes()[: len(outdata)]
         except queue.Empty as e:
             logger.debug("Buffer is empty: increase buffersize?")
             raise sd.CallbackAbort from e
+        except ValueError:
+            return
 
     def process_queue(self):
         try:

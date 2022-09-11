@@ -26,6 +26,8 @@ def int_or_str(text):
 class BpmExeNotFound(Exception):
     pass
 
+class StreamEnded(Exception):
+    pass
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -166,6 +168,8 @@ class FFMPeg(BasePlayer):
             with stream:
                 timeout = device.blocksize * device.buffsize / device.samplerate
                 while True:
+                    if not stream.active:
+                        raise StreamEnded
                     if self.status == Status.PAUSED:
                         self._time_event.clear()
                         sd.sleep(50)
@@ -178,6 +182,8 @@ class FFMPeg(BasePlayer):
                         self.status = Status.STOPPED
                         return queue_action
         except queue.Full:
+            pass
+        except StreamEnded:
             pass
         except Exception as e:
             logger.error(e)
@@ -203,7 +209,7 @@ class FFMPeg(BasePlayer):
             logger.debug("Buffer is empty: increase buffersize?")
             raise sd.CallbackAbort from e
         except ValueError:
-            return
+            raise StreamEnded
 
     def process_queue(self):
         try:

@@ -14,6 +14,7 @@ from yanko.player.base import BasePlayer
 from typing import Optional
 from yanko.core.bytes import nearest_bytes
 
+
 def int_or_str(text):
     """Helper function for argument parsing."""
     try:
@@ -24,6 +25,7 @@ def int_or_str(text):
 
 class BpmExeNotFound(Exception):
     pass
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -45,10 +47,12 @@ class OutputDevice:
 
     @property
     def blocksize(self) -> int:
-        latency = max(filter(lambda x: x, [
-            self.default_high_output_latency,
-            self.default_low_output_latency
-        ]))
+        latency = max(
+            filter(
+                lambda x: x,
+                [self.default_high_output_latency, self.default_low_output_latency],
+            )
+        )
         return nearest_bytes(int(self.default_samplerate * latency))
 
     @property
@@ -67,6 +71,7 @@ class OutputDevice:
     def buffsize(self) -> int:
         return 5
 
+
 class FFMPeg(BasePlayer):
 
     VOLUME_STEP = 0.05
@@ -83,13 +88,13 @@ class FFMPeg(BasePlayer):
     @volume.setter
     def volume(self, val):
         self.__volume = val
-        self._manager_queue.put_nowait((
-            Command.PLAYER_RESPONSE,
-            VolumeStatus(
-                volume=self.__volume,
-                muted=self.__muted,
-                timestamp=_time.time()
-            ))
+        self._manager_queue.put_nowait(
+            (
+                Command.PLAYER_RESPONSE,
+                VolumeStatus(
+                    volume=self.__volume, muted=self.__muted, timestamp=_time.time()
+                ),
+            )
         )
 
     @property
@@ -99,19 +104,19 @@ class FFMPeg(BasePlayer):
     @muted.setter
     def muted(self, val):
         self.__muted = val
-        self._manager_queue.put_nowait((            
-            Command.PLAYER_RESPONSE,
-            VolumeStatus(
-                volume=self.__volume,
-                muted=self.__muted,
-                timestamp=_time.time()
-            ))
+        self._manager_queue.put_nowait(
+            (
+                Command.PLAYER_RESPONSE,
+                VolumeStatus(
+                    volume=self.__volume, muted=self.__muted, timestamp=_time.time()
+                ),
+            )
         )
 
     @property
     def device(self) -> OutputDevice:
         _, device = sd.default.device
-        device_spec = sd.query_devices(device, 'output')
+        device_spec = sd.query_devices(device, "output")
         return OutputDevice(**device_spec)
 
     def probe(self):
@@ -119,10 +124,10 @@ class FFMPeg(BasePlayer):
             info = ffmpeg.probe(self.stream_url)
         except ffmpeg.Error as e:
             sys.stderr.buffer.write(e.stderr)
-        streams = info.get('streams', [])
+        streams = info.get("streams", [])
         stream = streams[0]
-        if stream.get('codec_type') != 'audio':
-            logger.warning('The stream must be an audio stream')
+        if stream.get("codec_type") != "audio":
+            logger.warning("The stream must be an audio stream")
             return Status.STOPPED
         return stream
 
@@ -132,28 +137,37 @@ class FFMPeg(BasePlayer):
         self.q = queue.Queue(maxsize=device.buffsize)
         self.status = Status.PLAYING
         try:
-            logger.debug('Opening stream ...')
-            process = ffmpeg.input(self.stream_url).output(
-                'pipe:',
-                format='f32le',
-                acodec='pcm_f32le',
-                ac=device.output_channels,
-                ar=device.samplerate,
-                loglevel='quiet',
-            ).run_async(pipe_stdout=True)
+            logger.debug("Opening stream ...")
+            process = (
+                ffmpeg.input(
+                    self.stream_url,
+                    tcp_nodelay=1,
+                    reconnect_on_network_error=1,
+                    reconnect_streamed=1,
+                )
+                .output(
+                    "pipe:",
+                    format="f32le",
+                    acodec="pcm_f32le",
+                    ac=device.output_channels,
+                    ar=device.samplerate,
+                    loglevel="quiet",
+                )
+                .run_async(pipe_stdout=True)
+            )
             stream = sd.RawOutputStream(
                 samplerate=device.samplerate,
                 blocksize=device.blocksize,
                 device=device.index,
                 channels=device.output_channels,
-                dtype='float32',
-                callback=self.callback
+                dtype="float32",
+                callback=self.callback,
             )
             read_size = device.blocksize * device.output_channels * stream.samplesize
-            logger.debug('Buffering ...')
+            logger.debug("Buffering ...")
             for _ in range(device.buffsize):
                 self.q.put_nowait(process.stdout.read(read_size))
-            logger.debug('Starting Playback ...')
+            logger.debug("Starting Playback ...")
             with stream:
                 timeout = device.blocksize * device.buffsize / device.samplerate
                 while True:
@@ -161,8 +175,7 @@ class FFMPeg(BasePlayer):
                         self._time_event.clear()
                         sd.sleep(50)
                     else:
-                        self.q.put(process.stdout.read(
-                            read_size), timeout=timeout)
+                        self.q.put(process.stdout.read(read_size), timeout=timeout)
                     if queue_action := self.process_queue():
                         self._time_event.clear()
                         process.terminate()
@@ -182,19 +195,17 @@ class FFMPeg(BasePlayer):
             sd.sleep(50)
         assert frames == self.device.blocksize
         if status.output_underflow:
-            logger.debug(
-                'Output underflow: increase blocksize?')
+            logger.debug("Output underflow: increase blocksize?")
             raise sd.CallbackAbort
         assert not status
         try:
             data = self.q.get_nowait()
-            data_array = np.frombuffer(data, dtype='float32')
+            data_array = np.frombuffer(data, dtype="float32")
             volume_norm = data_array * (0 if self.muted else self.volume)
             self._time_event.set()
             outdata[:] = volume_norm.tobytes()
         except queue.Empty as e:
-            logger.debug(
-                'Buffer is empty: increase buffersize?')
+            logger.debug("Buffer is empty: increase buffersize?")
             raise sd.CallbackAbort from e
 
     def process_queue(self):

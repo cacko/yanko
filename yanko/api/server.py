@@ -1,11 +1,12 @@
-from yanko import logger
+import logging
 from yanko.core.config import app_config
 from queue import Queue
-from butilka.server import Server as ButilkaServer
+from butilka.server import Server as ButilkaServer, request
 import time
 from yanko.sonic import Command
 from yanko.api.auth import auth_required
 from corestring import string_hash
+from yanko.sonic.beats import Beats
 
 
 class ServerMeta(type):
@@ -31,6 +32,11 @@ class ServerMeta(type):
 
     def command(cls, query):
         return cls().do_command(query)
+
+    def beats(cls, data):
+        obj = Beats.store_beats(data)
+        logging.debug(obj)
+        return obj
 
     def queue(cls, queue_id):
         if queue_id not in cls._queue:
@@ -98,6 +104,11 @@ app = Server.app
 def state():
     return Server.state()
 
+@app.route('/beats', method="POST")
+@auth_required
+def beats():
+    data = request.json
+    return Server.beats(data)
 
 @app.route('/search/<query:path>')
 @auth_required

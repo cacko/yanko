@@ -22,6 +22,14 @@ class Beats(CachableDb):
         self.__path = path
         super().__init__(model=BeatsModel, id_key="path", id_value=path)
 
+    @classmethod
+    def store_beats(cls, data: dict):
+        obj = cls(data.get("path"))
+        obj.tocache(data)
+        return [
+            "OK", obj.path
+        ]
+
     @property
     def beats(self) -> list[float]:
         self._init()

@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - bzip2=1.0.8
-  - ca-certificates=2022.6.15
+  - ca-certificates=2022.6.15.2
   - libcxx=14.0.6
   - libffi=3.4.2
   - libsqlite=3.39.3
@@ -68,7 +68,7 @@ dependencies:
     - pillow==9.2.0
     - pixelme==0.4.7
     - platformdirs==2.5.2
-    - prokopiy==0.1.2
+    - progressor==1.0.14
     - prompt-toolkit==3.0.30
     - py2app==0.28.2
     - pycodestyle==2.9.1

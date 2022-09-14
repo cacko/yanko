@@ -8,7 +8,7 @@ from dataclasses_json import dataclass_json, Undefined, config
 from dataclasses import dataclass, field
 import humanfriendly
 from humanfriendly.tables import format_smart_table
-from prokopiy import Progress
+from progressor import Progress
 
 def format_size(*args, **kwds):
     print(args, kwds)

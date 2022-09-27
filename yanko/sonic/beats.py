@@ -97,7 +97,7 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
             try:
                 audio_paths = self.__queue.get_nowait()
                 logger.debug(audio_paths)
-                with ThreadPool(10) as pool:
+                with ThreadPool(2) as pool:
                     jobs = pool.map(resolveBeats, audio_paths)
                     for res in jobs:
                         logger.debug(f"BEATS Extracted for {res.path}")

@@ -91,7 +91,7 @@ setup(
         "structlog==22.1.0",
         "black==22.8.0",
         "progressor>=1.0.14",
-        "peewee==3.15.2",
+        "peewee>=3.15.2",
         "coretime",
         "corestring"
     ],

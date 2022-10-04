@@ -101,11 +101,11 @@ class ManagerMeta(type):
 
 class Manager(StoppableThread, metaclass=ManagerMeta):
 
-    commander: Queue = None
-    alfred: Queue = None
-    api = None
-    playing_now: NowPlaying = None
-    __ui_queue: Queue = None
+    commander: Queue
+    alfred: Queue
+    api: Client
+    playing_now: NowPlaying
+    __ui_queue: Queue
 
     def __init__(self, ui_queue, time_event) -> None:
         self.__ui_queue = ui_queue

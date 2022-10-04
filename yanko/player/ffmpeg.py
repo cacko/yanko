@@ -77,8 +77,8 @@ class OutputDevice:
 class FFMPeg(BasePlayer):
 
     VOLUME_STEP = 0.05
-    q: queue.Queue = None
-    status: Status = None
+    q: queue.Queue
+    status: Status
     __volume = 1
     __muted = False
     _start = 0
@@ -137,7 +137,6 @@ class FFMPeg(BasePlayer):
         device = self.device
         logger.debug(device)
         self.q = queue.Queue(maxsize=device.buffsize)
-        self.status = Status.PLAYING
         try:
             logger.debug("Opening stream ...")
             process = (
@@ -166,6 +165,7 @@ class FFMPeg(BasePlayer):
                 self.q.put_nowait(process.stdout.read(read_size))
             logger.debug("Starting Playback ...")
             with stream:
+                self.status = Status.PLAYING
                 timeout = device.blocksize * device.buffsize / device.samplerate
                 while True:
                     if not stream.active:
@@ -214,17 +214,21 @@ class FFMPeg(BasePlayer):
     def process_queue(self):
         try:
             command = self._queue.get_nowait()
-            self._queue.task_done()
             match (command):
                 case Action.RESTART:
+                    self._queue.task_done()
                     return self._restart()
                 case Action.NEXT:
+                    self._queue.task_done()
                     return self._next()
                 case Action.PREVIOUS:
+                    self._queue.task_done()
                     return self._previous()
                 case Action.STOP:
+                    self._queue.task_done()
                     return self._stop()
                 case Action.EXIT:
+                    self._queue.task_done()
                     return self.exit()
                 case Action.PAUSE:
                     self.status = Status.PAUSED
@@ -240,6 +244,7 @@ class FFMPeg(BasePlayer):
                     return None
         except Empty:
             return None
+        self._queue.task_done()
 
     def _stop(self):
         return Status.STOPPED

@@ -44,19 +44,19 @@ class YankoAppMeta(type):
 
 class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
-    manager: Manager = None
-    __playlist: Playlist = None
-    __last_added: Albumlist = None
-    __artist_albums: Albumlist = None
-    __recent: Albumlist = None
-    __most_played: Albumlist = None
+    manager: Manager
+    __playlist: Playlist
+    __last_added: Albumlist
+    __artist_albums: Albumlist
+    __recent: Albumlist
+    __most_played: Albumlist
     __nowPlayingSection = []
     __threads = []
-    __status: Status = None
-    __nowplaying: NowPlaying = None
-    __volume: VolumeStatus = None
-    __ui_queue: Queue = None
-    __bpm: BPM = None
+    __status: Status
+    __nowplaying: NowPlaying
+    __volume: VolumeStatus
+    __ui_queue: Queue
+    __bpm: BPM
 
     def __init__(self):
         super(YankoApp, self).__init__(

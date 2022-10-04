@@ -11,8 +11,8 @@ from yanko.sonic.beats import Beats
 
 class ServerMeta(type):
 
-    _instance: 'Server' = None
-    _manager: Queue = None
+    _instance: 'Server'
+    _manager: Queue
     _queue: dict[str, Queue] = {}
 
     def __call__(self, *args, **kwds):
@@ -46,8 +46,7 @@ class ServerMeta(type):
 
 class Server(ButilkaServer, metaclass=ServerMeta):
 
-    api: Queue = None
-    state_callback = None
+    api: Queue
     config_vars = ["host", "port", "threadpool_workers"]
 
     def __init__(self, *args, **kwargs):

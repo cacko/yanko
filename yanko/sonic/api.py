@@ -75,6 +75,7 @@ def get_scan_status(url, manager_queue: Queue):
         if not status.scanning:
             break
 
+
 @lru_cache
 def make_request(url):
     try:
@@ -86,15 +87,15 @@ def make_request(url):
 
 
 class Client(object):
-    command_queue: Queue = None
-    search_queue: Queue = None
-    playback_queue: Queue = None
-    manager_queue: Queue = None
-    time_event: Queue = None
+    command_queue: Queue
+    search_queue: Queue
+    playback_queue: Queue
+    manager_queue: Queue
+    time_event: Queue
     __status: Status = Status.STOPPED
-    playqueue: PlayQueue = None
+    playqueue: PlayQueue
     playidx = 0
-    player: FFMPeg = None
+    player: FFMPeg
     scanning = False
     __threads = []
     __salt = None
@@ -153,7 +154,7 @@ class Client(object):
 
     @property
     def isPlaying(self) -> bool:
-        return self.player
+        return self.player and self.player.status != Status.STOPPED
 
     def test_config(self):
         return self.make_request(url=self.create_url(Subsonic.PING)) is not None
@@ -322,10 +323,8 @@ class Client(object):
                     Subsonic.RANDOM_SONGS, size=self.BATCH_SIZE, ts=time.time()
                 )
             )
-
             if not random_songs:
                 return
-
             self.playqueue.load(random_songs.get("song", []))
         for song in self.playqueue:
             playing = self.play_stream(dict(song))

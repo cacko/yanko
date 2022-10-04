@@ -8,7 +8,7 @@ vars:
 tasks:
   default:
     cmds:
-      - conda run --live-stream -n {{.PROJECT}} python app.py {{.CLI_ARGS}}
+      - mamba run --live-stream -n {{.PROJECT}} python app.py {{.CLI_ARGS}}
     silent: true
 
   notunes:
@@ -26,24 +26,24 @@ tasks:
   on:
     desc: activate env
     cmds:
-      - conda activate {{.PROJECT}}
+      - mamba activate {{.PROJECT}}
 
   off:
     desc: deactive env
     cmds:
-      - conda deactivate
+      - mamba deactivate
 
   export:
     desc: export env
     cmds:
-      - conda env export --no-builds  -n {{.PROJECT}} > environment.yml
+      - mamba env export --no-builds  -n {{.PROJECT}} > environment.yml
 
   build:
     cmds:
       - rm -rf build || true
       - rm -rf dist || true
       - rm -rf .eggs || true
-      - conda run --live-stream -n {{.PROJECT}} python setup.py py2app
+      - mamba run --live-stream -n {{.PROJECT}} python setup.py py2app
 
   install:
     cmds:

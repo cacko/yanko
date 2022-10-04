@@ -28,7 +28,7 @@ from yanko.ui.items.servermenu import ServerMenu
 from yanko.api.server import Server
 from yanko.lametric import LaMetric, StatusFrame
 from pathlib import Path
-
+from typing import Optional
 
 class YankoAppMeta(type):
     _instance = None
@@ -54,7 +54,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     __threads = []
     __status: Status
     __nowplaying: NowPlaying
-    __volume: VolumeStatus
+    __volume: Optional[VolumeStatus] = None
     __ui_queue: Queue
     __bpm: BPM
 

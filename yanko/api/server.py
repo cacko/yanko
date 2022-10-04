@@ -7,18 +7,18 @@ from yanko.sonic import Command
 from yanko.api.auth import auth_required
 from corestring import string_hash
 from yanko.sonic.beats import Beats
-
+from typing import Optional
 
 class ServerMeta(type):
 
-    _instance: 'Server'
+    _instance: Optional['Server'] = None
     _manager: Queue
     _queue: dict[str, Queue] = {}
 
-    def __call__(self, *args, **kwds):
-        if not self._instance:
-            self._instance = type.__call__(self, *args, **kwds)
-        return self._instance
+    def __call__(cls, *args, **kwds):
+        if not cls._instance:
+            cls._instance = type.__call__(cls, *args, **kwds)
+        return cls._instance
 
     @property
     def app(cls):

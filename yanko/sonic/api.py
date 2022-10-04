@@ -47,6 +47,7 @@ from yanko.sonic.artist import ArtistInfo
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
 from functools import lru_cache
+from typing import Optional
 
 urllib3.disable_warnings()
 
@@ -95,7 +96,7 @@ class Client(object):
     __status: Status = Status.STOPPED
     playqueue: PlayQueue
     playidx = 0
-    player: FFMPeg
+    player: Optional[FFMPeg] = None
     scanning = False
     __threads = []
     __salt = None

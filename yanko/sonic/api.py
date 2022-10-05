@@ -155,7 +155,7 @@ class Client(object):
 
     @property
     def isPlaying(self) -> bool:
-        return self.player and self.player.status != Status.STOPPED
+        return self.player is not None and self.player.status != Status.STOPPED
 
     def test_config(self):
         return self.make_request(url=self.create_url(Subsonic.PING)) is not None

@@ -1,34 +1,26 @@
-from asyncio.log import logger
-from queue import Queue, Empty
+from dataclasses import asdict
+from pathlib import Path
+from queue import Empty, Queue
 from traceback import print_exc
-import rumps
-from yanko.sonic import (
-    ArtistAlbums,
-    Command,
-    MostPlayed,
-    Playlist,
-    AlbumPlaylist,
-    NowPlaying,
-    LastAdded,
-    RecentlyPlayed,
-    Search,
-    Status,
-    Playstatus,
-    ScanStatus,
-    VolumeStatus,
-)
-from yanko.ui.items.bpm import BPM, BPMEvent
-from yanko.ui.icons import Symbol, Label
-from yanko.sonic.manager import Manager
-from yanko.ui.items.actions import ActionItem, MusicItem
-from yanko.ui.items.playlist import Playlist
-from yanko.ui.items.albumlist import Albumlist, ArtistAlbumsList
-from yanko.ui.items.nowplaying import NowPlayingItem
-from yanko.ui.items.servermenu import ServerMenu
+from typing import Optional
+
+from rumps import rumps
+
 from yanko.api.server import Server
 from yanko.lametric import LaMetric, StatusFrame
-from pathlib import Path
-from typing import Optional
+from yanko.sonic import (AlbumPlaylist, ArtistAlbums, Command, LastAdded,
+                         MostPlayed, NowPlaying, Playlist, Playstatus,
+                         RecentlyPlayed, ScanStatus, Search, Status,
+                         VolumeStatus)
+from yanko.sonic.manager import Manager
+from yanko.ui.icons import Label, Symbol
+from yanko.ui.items.actions import ActionItem, MusicItem
+from yanko.ui.items.albumlist import Albumlist, ArtistAlbumsList
+from yanko.ui.items.bpm import BPM, BPMEvent
+from yanko.ui.items.nowplaying import NowPlayingItem
+from yanko.ui.items.playlist import Playlist as UIPlaylist
+from yanko.ui.items.servermenu import ServerMenu
+
 
 class YankoAppMeta(type):
     _instance = None
@@ -45,7 +37,7 @@ class YankoAppMeta(type):
 class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     manager: Manager
-    __playlist: Playlist
+    __playlist: UIPlaylist
     __last_added: Albumlist
     __artist_albums: Albumlist
     __recent: Albumlist
@@ -90,7 +82,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__ui_queue = Queue()
         self.menu.setAutoenablesItems = False
         self.__status = Status.STOPPED
-        self.__playlist = Playlist(self, Label.RANDOM.value)
+        self.__playlist = UIPlaylist(Label.RANDOM.value, self)
         self.__last_added = Albumlist(self, Label.LAST_ADDED.value)
         self.__artist_albums = ArtistAlbumsList(self, Label.ARTIST.value)
         self.__most_played = Albumlist(self, Label.MOST_PLAYED.value)
@@ -185,10 +177,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__nowplaying = resp
         LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
         self.title = resp.menubar_title
-        self.__playlist.setNowPlaying(track)
         for itm in self.__nowPlayingSection:
             self._menu.pop(itm)
-        top = self.menu.keys()[0]
+        top = self.__playlist.insert_before
         self.__nowPlayingSection = [
             self.menu.insert_before(
                 top, NowPlayingItem(resp, callback=self._onNowPlayClick)
@@ -203,7 +194,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         if self.__status in [Status.PLAYING] and self.__nowplaying:
             track = self.__nowplaying.track
             LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
-        return StatusFrame(status=self.__status.value).to_dict()
+        return asdict(StatusFrame(status=self.__status.value))
 
     def _onSearch(self, resp: Search):
         Server.queue(resp.queue_id).put_nowait(resp.to_dict())

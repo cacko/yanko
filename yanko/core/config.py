@@ -1,6 +1,7 @@
 from pathlib import Path
+
 from appdir import get_app_dir
-from yaml import load, Loader
+from yaml import Loader, load
 
 
 class app_config_meta(type):
@@ -25,7 +26,7 @@ class app_config_meta(type):
 
 class app_config(object, metaclass=app_config_meta):
 
-    _config: dict = None
+    _config: dict
 
     def __init__(self) -> None:
         pth = __class__.app_dir / "config.yaml"

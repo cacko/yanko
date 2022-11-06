@@ -21,7 +21,6 @@ def cli():
 
 @cli.command("config", short_help="Config")
 def cli_config():
-    print("this is config")
     input()
 
 

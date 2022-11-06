@@ -30,7 +30,8 @@ APP = ["app.py"]
 DATA_FILES = []
 OPTIONS = {
     "iconfile": "icon.icns",
-    "argv_emulation": True,
+    "argv_emulation": False,
+    "emulate_shell_environment": True,
     "plist": {
         "LSUIElement": True,
         "CFBundleIdentifier": "net.cacko.yanko",
@@ -54,7 +55,7 @@ OPTIONS = {
             "libtk8.6.dylib",
             "libssl.3.dylib",
             "libcrypto.3.dylib",
-            "libsqlite3.dylib"
+            "libsqlite3.dylib",
         ]
     ),
 }
@@ -93,7 +94,7 @@ setup(
         "progressor>=1.0.14",
         "peewee>=3.15.2",
         "coretime",
-        "corestring"
+        "corestring",
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

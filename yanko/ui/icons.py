@@ -1,5 +1,5 @@
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 
 
 class Label(Enum):
@@ -56,6 +56,9 @@ class Symbol(Enum):
     VOLUME3 = "speaker.wave.3"
     CACHE = "photo"
     ADVANCED = "hammer"
+    HOURGLASS = "hourglass"
+    HOURGLASS_BOTTOM = "hourglass.bottomhalf.filled"
+    HOURGLASS_TOP = "hourglass.tophalf.filled"
 
 
 class Icon(Enum):

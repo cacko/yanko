@@ -20,6 +20,13 @@ from yanko.ui.items.bpm import BPM, BPMEvent
 from yanko.ui.items.nowplaying import NowPlayingItem
 from yanko.ui.items.playlist import Playlist as UIPlaylist
 from yanko.ui.items.servermenu import ServerMenu
+from yanko.ui.icons import AnimatedIcon, Symbol
+
+LoadingIcon = AnimatedIcon([
+  Symbol.HOURGLASS,
+  Symbol.HOURGLASS_BOTTOM, 
+  Symbol.HOURGLASS_TOP
+])
 
 
 class YankoAppMeta(type):
@@ -164,6 +171,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 if hasattr(self, method):
                     getattr(self, method)(resp)
                 self.__ui_queue.task_done()
+                if self.__status == Status.LOADING:
+                    self.icon = next(LoadingIcon).value
         except Empty:
             pass
 
@@ -175,7 +184,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         track = resp.track
         self.__bpm.now_playing = resp
         self.__nowplaying = resp
-        LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
+        LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))  # type: ignore
         self.title = resp.menubar_title
         for itm in self.__nowPlayingSection:
             self._menu.pop(itm)
@@ -220,7 +229,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.ARTIST, sender.id))
 
     def _onScanStatus(self, sender: ScanStatus):
-        item: ActionItem = ServerMenu.action(Label.RESCAN)
+        item: ActionItem = ServerMenu.action(Label.RESCAN)  # type: ignore
         item.setAvailability(not sender.scanning)
         if not sender.scanning:
             self.manager.commander.put_nowait((Command.LAST_ADDED, None))
@@ -228,23 +237,26 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onPlaystatus(self, resp: Playstatus):
         self.__status = resp.status
         LaMetric.status(resp.status)
-        if resp.status == Status.PLAYING:
-            if len(self.__playlist):
-                ActionItem.next.show()
-                ActionItem.previous.show()
-            ActionItem.restart.show()
-        elif resp.status == Status.STOPPED:
-            self.icon = Symbol.STOPPED.value
-            self.title = ""
-            if len(self.__playlist):
-                ActionItem.next.show()
-                ActionItem.previous.show()
-            else:
-                ActionItem.next.hide()
-                ActionItem.previous.hide()
-            ActionItem.restart.hide()
-        elif resp.status == Status.EXIT:
-            rumps.quit_application()
+        match resp.status:
+            case Status.PLAYING:
+                if len(self.__playlist):
+                    ActionItem.next.show()
+                    ActionItem.previous.show()
+                ActionItem.restart.show()
+            case Status.STOPPED:
+                self.icon = Symbol.STOPPED.value
+                self.title = ""
+                if len(self.__playlist):
+                    ActionItem.next.show()
+                    ActionItem.previous.show()
+                else:
+                    ActionItem.next.hide()
+                    ActionItem.previous.hide()
+                ActionItem.restart.hide()
+            case Status.LOADING:
+                self.icon = next(LoadingIcon).value
+            case Status.EXIT:
+                rumps.quit_application()
 
     def _onVolumeStatus(self, resp: VolumeStatus):
         self.__volume = resp

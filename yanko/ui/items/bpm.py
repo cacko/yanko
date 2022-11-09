@@ -1,10 +1,12 @@
-from yanko import logger
+from dataclasses import dataclass
 from queue import Queue
 from threading import Event
+from time import sleep, time
+
+from dataclasses_json import Undefined, dataclass_json
+
+from yanko import logger
 from yanko.core.thread import StoppableThread
-from dataclasses_json import dataclass_json, Undefined
-from dataclasses import dataclass
-from time import time, sleep
 from yanko.sonic import NowPlaying
 from yanko.ui.icons import AnimatedIcon, Symbol
 

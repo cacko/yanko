@@ -427,6 +427,7 @@ class Client(object):
         return None
 
     def play_stream(self, track_data):
+        self.status = Status.LOADING
         stream_url = self.create_url(Subsonic.STREAM)
         song_id = track_data.get("id")
         if not song_id:
@@ -435,7 +436,6 @@ class Client(object):
         self.scrobble(song_id)
 
         try:
-            self.status = Status.PLAYING
             coverArt = track_data.get("coverArt")
             coverArtUrl = coverArt
             if coverArt:

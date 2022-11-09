@@ -97,7 +97,7 @@ class Status(Enum):
     PLAYING = "playing"
     PAUSED = "paused"
     STOPPED = "stopped"
-    LOADING = "loadng"
+    LOADING = "loading"
     EXIT = "exit"
     RESUMED = "resumed"
     NEXT = "next"

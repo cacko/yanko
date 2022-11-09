@@ -9,7 +9,7 @@ from yanko import logger
 import numpy as np
 import time as _time
 from yanko.player.base import BasePlayer
-from yanko.sonic import Command, Status, Action, VolumeStatus
+from yanko.sonic import Command, Status, Action, VolumeStatus, Playstatus
 from yanko.player.base import BasePlayer
 from typing import Optional
 from yanko.core.bytes import nearest_bytes
@@ -78,10 +78,19 @@ class FFMPeg(BasePlayer):
 
     VOLUME_STEP = 0.05
     q: queue.Queue
-    status: Status
     __volume = 1
     __muted = False
+    __status: Status
     _start = 0
+    
+    @property
+    def status(self) -> Status:
+        return self.__status
+
+    @status.setter
+    def status(self, val: Status):
+        self.__status = val
+        self._manager_queue.put_nowait((Command.PLAYER_RESPONSE, Playstatus(status=val)))
 
     @property
     def volume(self):

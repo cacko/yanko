@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from queue import Queue
 from threading import Event
 from time import sleep, time
+from typing import Optional
 
 from dataclasses_json import Undefined, dataclass_json
 
@@ -31,15 +32,15 @@ class BPMEvent:
 
 class BPM(StoppableThread):
 
-    time_event: Event = None
-    __ui_queue: Queue = None
-    __now_playing: NowPlaying = None
-    __time_start: int = None
-    __time_paused: int = None
-    __time_current: int = None
-    __time_total: int = None
-    __bpm: int = None
-    __beats: list[float] = None
+    time_event: Event
+    __ui_queue: Queue
+    __now_playing: Optional[NowPlaying] = None
+    __time_start: float = 0
+    __time_paused: float = 0
+    __time_current: float = 0
+    __time_total: float = 0
+    __bpm: int = 0
+    __beats: Optional[list[float]] = None
     __last_measure: float = 0
     __beat_count: int = 0
 
@@ -49,7 +50,7 @@ class BPM(StoppableThread):
         super().__init__(*args, **kwargs)
 
     @property
-    def now_playing(self) -> NowPlaying:
+    def now_playing(self) -> Optional[NowPlaying]:
         return self.__now_playing
 
     def get_static_beats(self):
@@ -59,11 +60,11 @@ class BPM(StoppableThread):
     @now_playing.setter
     def now_playing(self, np: NowPlaying):
         self.__now_playing = np
-        self.__time_start = None
-        self.__time_current = None
+        self.__time_start = 0
+        self.__time_current = 0
         self.__time_paused = 0
         self.__time_total = np.track.duration
-        self.__last_measure = None
+        self.__last_measure = 0
         self.__bpm = np.bpm
         self.__beats = np.beats
         self.__beat_count = 1
@@ -114,8 +115,8 @@ class BPM(StoppableThread):
             BPMEvent(
                 icon=icon,
                 beat_no=self.__beat_count,
-                tempo=self.__bpm,
-                time_elapsed=self.__time_current,
+                tempo=str(self.__bpm),
+                time_elapsed=int(self.__time_current),
                 expires=time() + 0.14,
             )
         )

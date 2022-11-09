@@ -1,7 +1,6 @@
 from dataclasses import asdict
 from pathlib import Path
 from queue import Empty, Queue
-from traceback import print_exc
 from typing import Optional
 
 from rumps import rumps
@@ -13,14 +12,13 @@ from yanko.sonic import (AlbumPlaylist, ArtistAlbums, Command, LastAdded,
                          RecentlyPlayed, ScanStatus, Search, Status,
                          VolumeStatus)
 from yanko.sonic.manager import Manager
-from yanko.ui.icons import Label, Symbol
+from yanko.ui.icons import AnimatedIcon, Label, Symbol
 from yanko.ui.items.actions import ActionItem, MusicItem
 from yanko.ui.items.albumlist import Albumlist, ArtistAlbumsList
 from yanko.ui.items.bpm import BPM, BPMEvent
 from yanko.ui.items.nowplaying import NowPlayingItem
 from yanko.ui.items.playlist import Playlist as UIPlaylist
 from yanko.ui.items.servermenu import ServerMenu
-from yanko.ui.icons import AnimatedIcon, Symbol
 
 LoadingIcon = AnimatedIcon([
   Symbol.HOURGLASS,
@@ -282,7 +280,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         albums.reverse()
         artistInfo = resp.artistInfo
         self.__artist_albums.update(
-            artistInfo, albums, self._onAlbumClick, self._onArtistClick
+            artistInfo, albums, self._onAlbumClick, self._onArtistClick  # type: ignore
         )
 
     @rumps.events.before_quit
@@ -292,9 +290,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             try:
                 th.stop()
             except Exception as e:
-                print_exc(e)
                 pass
         try:
             rumps.quit_application()
         except Exception as e:
-            print_exc(e)
+            pass

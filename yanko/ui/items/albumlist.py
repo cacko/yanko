@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json, Undefined
-from yanko.sonic import Album, ArtistInfo
-from rumps import Menu
-from .actions import MusicItem
-from rumps import App
-from AppKit import NSAttributedString
-from bs4 import BeautifulSoup
 from textwrap import wrap
+
+from AppKit import NSAttributedString  # type: ignore
+from bs4 import BeautifulSoup
+from dataclasses_json import Undefined, dataclass_json
+from rumps import App, Menu
+
+from yanko.sonic import Album, ArtistInfo
+
+from .actions import MusicItem
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -18,7 +20,7 @@ class AlbumItem:
 
 class ArtistInfoItem(MusicItem):
     def __init__(self, id, artist: str, info: ArtistInfo, callback=None, key=None, icon=None, dimensions=None, template=None):
-        bio_bs = BeautifulSoup(info.biography, features="html.parser")
+        bio_bs = BeautifulSoup(info.biography, features="html.parser")  # type: ignore
         biography = "\n".join(wrap(bio_bs.get_text(), width=50, max_lines=4))
         title = f"{artist} - {biography}"
         dimensions = [70, 70]
@@ -45,56 +47,56 @@ class AlbumMenuItem(MusicItem):
 class Albumlist:
 
     items: list[AlbumItem] = []
-    app: App = None
-    menu_key: str = None
+    app: App
+    menu_key: str
 
     def __init__(self, app: App, menu_key: str) -> None:
         self.app = app
         self.menu_key = menu_key
 
     def __len__(self):
-        return len(self.__items)
+        return len(self.items)
 
     def __getitem__(self, key):
         # if key is of invalid type or value, the list values will raise the error
-        return self.__items[key]
+        return self.items[key]
 
     def __setitem__(self, key, value):
-        self.__items[key] = value
+        self.items[key] = value
 
     def __delitem__(self, key):
-        del self.__items[key]
+        del self.items[key]
 
     def __iter__(self):
-        return iter(self.__items)
+        return iter(self.items)
 
     def __reversed__(self):
-        return reversed(self.__items)
+        return reversed(self.items)
 
     @property
     def menu(self) -> Menu:
-        return self.app.menu.get(self.menu_key)
+        return self.app.menu.get(self.menu_key)  # type: ignore
 
     def append(self, item: AlbumItem):
-        self.__items.append(item)
+        self.items.append(item)
 
-    def update(self, albums: Album, callback):
+    def update(self, albums: list[Album], callback):
         if len(self.menu.keys()):
             self.menu.clear()
         menu = []
         for album in albums:
             menu.append(AlbumMenuItem(album, callback=callback))
         self.menu.update(menu)
-        self.menu._menuitem.setEnabled_(True)
+        self.menu._menuitem.setEnabled_(True)  # type: ignore
 
     def reset(self):
-        for item in self.__items:
+        for item in self.items:
             self.menu.pop(item.key)
 
 
 class ArtistAlbumsList(Albumlist):
 
-    def update(self, info: ArtistInfo, albums: Album, callback, callback_artist):
+    def update(self, info: ArtistInfo, albums: list[Album], callback, callback_artist):
         try:
             self.menu._menu.removeAllItems()
         except AttributeError:
@@ -107,4 +109,4 @@ class ArtistAlbumsList(Albumlist):
         ))
         for album in albums:
             self.menu.add(AlbumMenuItem(album, callback=callback))
-        self.menu._menuitem.setEnabled_(True)
+        self.menu._menuitem.setEnabled_(True)  # type: ignore

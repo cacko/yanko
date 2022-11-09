@@ -1,18 +1,19 @@
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json, Undefined
 import queue
-from queue import Empty
 import sys
-import ffmpeg
-import sounddevice as sd
-from yanko import logger
-import numpy as np
 import time as _time
-from yanko.player.base import BasePlayer
-from yanko.sonic import Command, Status, Action, VolumeStatus, Playstatus
-from yanko.player.base import BasePlayer
+from dataclasses import dataclass
+from queue import Empty
 from typing import Optional
+
+import ffmpeg
+import numpy as np
+import sounddevice as sd
+from dataclasses_json import Undefined, dataclass_json
+
+from yanko import logger
 from yanko.core.bytes import nearest_bytes
+from yanko.player.base import BasePlayer
+from yanko.sonic import Action, Command, Playstatus, Status, VolumeStatus
 
 
 def int_or_str(text):
@@ -26,8 +27,10 @@ def int_or_str(text):
 class BpmExeNotFound(Exception):
     pass
 
+
 class StreamEnded(Exception):
     pass
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
@@ -49,24 +52,37 @@ class OutputDevice:
 
     @property
     def blocksize(self) -> int:
-        latency = max(
+        return nearest_bytes(int(self.samplerate * self.latency))
+
+    @property
+    def latency(self) -> float:
+        if not self.default_high_output_latency:
+            self.default_high_output_latency = 1
+        if not self.default_low_output_latency:
+            self.default_low_output_latency = 1
+        return max(
             filter(
                 lambda x: x,
                 [self.default_high_output_latency, self.default_low_output_latency],
             )
         )
-        return nearest_bytes(int(self.default_samplerate * latency))
 
     @property
     def output_channels(self) -> int:
+        if not self.max_output_channels:
+            return 2
         return int(self.max_output_channels)
 
     @property
     def input_channels(self) -> int:
+        if not self.max_input_channels:
+            return 2
         return int(self.max_input_channels)
 
     @property
     def samplerate(self) -> float:
+        if not self.default_samplerate:
+            return 0
         return float(self.default_samplerate)
 
     @property
@@ -82,7 +98,7 @@ class FFMPeg(BasePlayer):
     __muted = False
     __status: Status
     _start = 0
-    
+
     @property
     def status(self) -> Status:
         return self.__status
@@ -90,7 +106,9 @@ class FFMPeg(BasePlayer):
     @status.setter
     def status(self, val: Status):
         self.__status = val
-        self._manager_queue.put_nowait((Command.PLAYER_RESPONSE, Playstatus(status=val)))
+        self._manager_queue.put_nowait(
+            (Command.PLAYER_RESPONSE, Playstatus(status=val))
+        )
 
     @property
     def volume(self):
@@ -128,19 +146,19 @@ class FFMPeg(BasePlayer):
     def device(self) -> OutputDevice:
         _, device = sd.default.device
         device_spec = sd.query_devices(device, "output")
-        return OutputDevice(**device_spec)
+        return OutputDevice(**device_spec)  # type: ignore
 
     def probe(self):
         try:
             info = ffmpeg.probe(self.stream_url)
+            streams = info.get("streams", [])
+            stream = streams[0]
+            if stream.get("codec_type") != "audio":
+                logger.warning("The stream must be an audio stream")
+                return Status.STOPPED
+            return stream
         except ffmpeg.Error as e:
             sys.stderr.buffer.write(e.stderr)
-        streams = info.get("streams", [])
-        stream = streams[0]
-        if stream.get("codec_type") != "audio":
-            logger.warning("The stream must be an audio stream")
-            return Status.STOPPED
-        return stream
 
     def play(self):
         device = self.device

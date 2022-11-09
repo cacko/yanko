@@ -1,53 +1,36 @@
-from dataclasses import dataclass
 import hashlib
-from yanko import logger
 import string
 import sys
 import time
-import urllib3
-import requests
-from queue import Queue
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
+from queue import Queue
 from random import SystemRandom, choice
+from typing import Optional
 from urllib.parse import urlencode
-from yanko.core.thread import StoppableThread
+
+import requests
+import urllib3
+from corestring import string_hash
 from dataclasses_json import dataclass_json
+
+from yanko import logger
 from yanko.core import perftime
 from yanko.core.config import app_config
-from corestring import string_hash
+from yanko.core.thread import StoppableThread
 from yanko.player.ffmpeg import FFMPeg
-from yanko.sonic import (
-    Action,
-    AlbumSearchItem,
-    Artist,
-    ArtistAlbums,
-    ArtistSearchItem,
-    Command,
-    MostPlayed,
-    NowPlaying,
-    Playstatus,
-    RecentlyPlayed,
-    ScanStatus,
-    Search,
-    Search3Response,
-    SearchItemIcon,
-    Song,
-    Track,
-    Status,
-    LastAdded,
-    Album,
-    Subsonic,
-    AlbumType,
-    ArtistInfo as ArtistInfoData,
-    RESULT_KEYS,
-    TrackSearchItem,
-    ScanStatusResponse,
-)
+from yanko.sonic import (RESULT_KEYS, Action, Album, AlbumSearchItem,
+                         AlbumType, Artist, ArtistAlbums)
+from yanko.sonic import ArtistInfo as ArtistInfoData
+from yanko.sonic import (ArtistSearchItem, Command, LastAdded, MostPlayed,
+                         NowPlaying, Playstatus, RecentlyPlayed, ScanStatus,
+                         ScanStatusResponse, Search, Search3Response,
+                         SearchItemIcon, Song, Status, Subsonic, Track,
+                         TrackSearchItem)
 from yanko.sonic.artist import ArtistInfo
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
-from functools import lru_cache
-from typing import Optional
 
 urllib3.disable_warnings()
 
@@ -140,7 +123,7 @@ class Client(object):
     def api_args(self) -> dict[str, str]:
         return ApiArguments(
             u=self.username, t=self.token, s=self.salt, v=self.api
-        ).to_dict()
+        ).to_dict()  # type: ignore
 
     @property
     def status(self) -> Status:
@@ -282,36 +265,44 @@ class Client(object):
 
     def get_top_songs(self, artist_id):
         artist_info = self.get_artist(artist_id)
+        if not artist_info:
+            return None
         top_songs = self.make_request(
             self.create_url(Subsonic.TOP_SONGS, artist=artist_info.name)
         )
-        return top_songs.get("song")
+        return top_songs.get("song") if top_songs else None
 
     def get_album_tracks(self, album_id):
         album_info = self.make_request(self.create_url(Subsonic.ALBUM, id=album_id))
+        if not album_info:
+            return None
         songs = album_info.get("song", [])
         return songs
 
     def get_song_data(self, song_id) -> Song:
         song_data = self.make_request(self.create_url(Subsonic.SONG, id=song_id))
-        return Song.from_dict(song_data)
+        return Song.from_dict(song_data)  # type: ignore
 
-    def get_artist(self, artist_id) -> Artist:
+    def get_artist(self, artist_id) -> Optional[Artist]:
         if not artist_id:
             return
         artist_info = self.make_request(self.create_url(Subsonic.ARTIST, id=artist_id))
         if not artist_info:
             return
-        return Artist.from_dict(artist_info)
+        return Artist.from_dict(artist_info)  # type: ignore
 
-    def get_artist_info(self, artist_id) -> ArtistInfoData:
+    def get_artist_info(self, artist_id) -> Optional[ArtistInfoData]:
         artist_info = ArtistInfo(self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
         if artist_info:
             return artist_info.info
 
     def get_artist_albums(self, artist_id) -> list[Album]:
         artist = self.get_artist(artist_id)
+        if not artist:
+            return []
         albums = artist.album
+        if not albums:
+            return []
         for album in albums:
             album.coverArt = self.create_url(Subsonic.COVER_ART, id=album.id, size=200)
         return albums
@@ -403,13 +394,17 @@ class Client(object):
 
     def play_random_album(self):
         albums = self.get_album_list(AlbumType.RANDOM)
-        album = choice(albums)
+        if not albums:
+            return None
+        album = choice(albums)  # type: ignore
         return self.play_album(album.get("id"))
 
     def play_playlist(self, playlist_id):
         playlist_info = self.make_request(
             self.create_url(Subsonic.PLAYLIST, id=playlist_id)
         )
+        if not playlist_info:
+            return None
         songs = playlist_info["entry"]
 
         playing = True
@@ -418,7 +413,7 @@ class Client(object):
             for song in songs:
                 if not playing:
                     return
-                playing = self.play_stream(dict(song))
+                playing = self.play_stream(dict(song))  # type: ignore
 
     def load_beats(self, path: str):
         beats = Beats(path)

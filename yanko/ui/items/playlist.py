@@ -1,10 +1,9 @@
-import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from AppKit import NSAttributedString
-from Cocoa import NSFont, NSFontAttributeName
+from AppKit import NSAttributedString  # type: ignore
+from Cocoa import NSFont, NSFontAttributeName  # type: ignore
 from dataclasses_json import Undefined, dataclass_json
 from PyObjCTools.Conversion import propertyListFromPythonCollection
 from rumps import App, Menu
@@ -51,7 +50,7 @@ class PlaylistMenuItem(MusicItem):
             conversionHelper=lambda x: x,
         )
 
-    def setAttrTitle(self, title=None, font: Font = None):
+    def setAttrTitle(self, title=None, font: Optional[Font] = None):
         if not title:
             title = self.title
         if not font:

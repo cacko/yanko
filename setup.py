@@ -1,10 +1,11 @@
-import logging
-from setuptools import setup
+import sys
 from pathlib import Path
+
+import semver
+from setuptools import setup
+
 from yanko import __name__
 from yanko.version import __version__
-import sys
-import semver
 
 
 def resolve_libs(libs):

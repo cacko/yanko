@@ -1,14 +1,17 @@
-from enum import Enum
-from yanko import logger
-from pathlib import Path
-from cachable import Cachable
-from yanko.db.base import YankoDb
-from yanko.db.models import BaseModel
-from dataclasses_json import dataclass_json, Undefined, config
 from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+
 import humanfriendly
+from cachable import Cachable
+from dataclasses_json import Undefined, config, dataclass_json
 from humanfriendly.tables import format_smart_table
 from progressor import Progress
+
+from yanko import logger
+from yanko.db.base import YankoDb
+from yanko.db.models import BaseModel
+
 
 def format_size(*args, **kwds):
     print(args, kwds)
@@ -46,7 +49,7 @@ class Cache:
     beats_json: CacheType
 
     def to_table(self):
-        data = [map(str, v.values()) for v in self.to_dict().values()]
+        data = [map(str, v.values()) for v in self.to_dict().values()]  # type: ignore
 
         return format_smart_table(
             data,
@@ -62,9 +65,9 @@ class Method(Enum):
 
 class CachableDb(Cachable):
 
-    __model: BaseModel = None
-    __id_key: str = None
-    __id_value: str = None
+    __model: BaseModel
+    __id_key: str
+    __id_value: str
 
     def __init__(self, model: BaseModel, id_key: str, id_value: str) -> None:
         self.__model = model
@@ -80,7 +83,7 @@ class CachableDb(Cachable):
 
     def tocache(self, res: dict):
         with YankoDb.db.atomic():
-            model = self.__model(**res)
+            model = self.__model(**res)  # type: ignore
             model.save()
             return model
 

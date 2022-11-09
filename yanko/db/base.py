@@ -1,9 +1,9 @@
-from pathlib import Path
-from peewee import *
-from yanko.core.config import app_config
-from playhouse.sqlite_ext import SqliteExtDatabase
 import logging
+from pathlib import Path
 
+from playhouse.sqlite_ext import SqliteExtDatabase
+
+from yanko.core.config import app_config
 
 logging.getLogger('peewee').setLevel(level=logging.INFO)
 
@@ -29,7 +29,7 @@ class YankoDbMeta(type):
 
 
 class YankoDb(object, metaclass=YankoDbMeta):
-    __db: SqliteExtDatabase = None
+    __db: SqliteExtDatabase
 
     def __init__(self):
         self.__db = SqliteExtDatabase(

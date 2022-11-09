@@ -1,11 +1,11 @@
-from contextlib import contextmanager
-import time
 import logging
-import structlog
+import time
+from contextlib import contextmanager
 from os import environ
 
+import structlog
 
-logging.basicConfig(level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")), format=None)
+logging.basicConfig(level=getattr(logging, environ.get("YANKO_LOG_LEVEL", "DEBUG")))
 
 
 logger = structlog.wrap_logger(

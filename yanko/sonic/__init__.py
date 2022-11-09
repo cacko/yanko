@@ -1,14 +1,15 @@
+import time
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from dataclasses import dataclass, field
 from math import floor
-from marshmallow import fields
-from dataclasses_json import dataclass_json, Undefined, config
 from typing import Optional
+
+import pantomime
 from corestring import truncate
 from coretime import isodate_decoder, isodate_encoder, seconds_to_duration
-import time
-import pantomime
+from dataclasses_json import Undefined, config, dataclass_json
+from marshmallow import fields
 
 RESULT_KEYS = [
     "searchResult3",
@@ -204,7 +205,7 @@ class Track:
     @property
     def audioType(self) -> str:
         info = pantomime.parse_mimetype(self.contentType)
-        return info.label
+        return info.label if info.label else ""
 
     @property
     def total_time(self) -> str:

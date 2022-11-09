@@ -1,12 +1,14 @@
-from yanko import logger
+from base64 import b64encode
+from pathlib import Path
 from queue import Queue
+
 import requests
 from requests import ConnectionError
+
+from yanko import logger
 from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
 from yanko.sonic import Track
-from pathlib import Path
-from base64 import b64encode
 
 
 class AnnounceMeta(type):
@@ -26,7 +28,7 @@ class AnnounceMeta(type):
 class Announce(StoppableThread, metaclass=AnnounceMeta):
 
     __to = []
-    queue: Queue = None
+    queue: Queue
 
     def __init__(self):
         self.queue = Queue()
@@ -42,7 +44,7 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
     def post(self, track: Track):
         if not len(self.__to):
             return
-        payload = track.to_dict()
+        payload = track.to_dict()  # type: ignore
         payload["coverArt"] = b64encode(
             Path(payload["coverArt"]).read_bytes()).decode()
         for url in self.__to:

@@ -1,10 +1,11 @@
 import click
+from requests import get
+from requests.exceptions import ConnectionError
+
 from yanko.core.cachable import Cache, CacheType
 from yanko.core.config import app_config
 from yanko.db.base import YankoDb
 from yanko.sonic import Command
-from requests import get
-from requests.exceptions import ConnectionError
 from yanko.sonic.coverart import CoverArtFile
 
 
@@ -57,12 +58,13 @@ def cli_search(query: str):
 
 @cli.command("dbinit", short_help="Init DB")
 @click.option("-d", "--drop_table", default=None)
-def cli_dbinit(drop_table:str = None):
+def cli_dbinit(drop_table: str):
     try:
-        from yanko.db.models.beets import Beats
         from yanko.db.models.album import Album
         from yanko.db.models.artist import Artist
         from yanko.db.models.artist_info import ArtistInfo
+        from yanko.db.models.beets import Beats
+
         with YankoDb.db as db:
             # drop_tables = [ArtistInfo]
             # # if drop_table:
@@ -76,7 +78,7 @@ def cli_dbinit(drop_table:str = None):
 
 @cli.command("cache", short_help="Cache")
 @click.option("-d", "--delete", default=None)
-def cli_cache(delete: str = None):
+def cli_cache(delete: str):
     cache_struct = Cache(
         cover_art=CacheType("cover_art", count=0, size=0),
         cover_icon=CacheType("cover_icon", count=0, size=0),

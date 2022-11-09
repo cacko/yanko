@@ -80,7 +80,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             template=True,
         )
         self.__ui_queue = Queue()
-        self.menu.setAutoenablesItems = False
+        self.menu.setAutoenablesItems = False  # type: ignore
         self.__status = Status.STOPPED
         self.__playlist = UIPlaylist(Label.RANDOM.value, self)
         self.__last_added = Albumlist(self, Label.LAST_ADDED.value)
@@ -193,11 +193,11 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         LaMetric.status(status=self.__status)
         if self.__status in [Status.PLAYING] and self.__nowplaying:
             track = self.__nowplaying.track
-            LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
+            LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))  # type: ignore
         return asdict(StatusFrame(status=self.__status.value))
 
     def _onSearch(self, resp: Search):
-        Server.queue(resp.queue_id).put_nowait(resp.to_dict())
+        Server.queue(resp.queue_id).put_nowait(resp.to_dict())  # type: ignore
 
     def _onPlaylist(self, resp: Playlist):
         list = resp.tracks

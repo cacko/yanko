@@ -1,8 +1,9 @@
-from yanko import logger
-from bottle import request, HTTPError
-import pyotp
-from yanko.core.config import app_config
 from functools import wraps
+
+import pyotp
+from bottle import HTTPError, request
+
+from yanko.core.config import app_config
 
 ALLOWED_IPS = ['127.0.0.1']
 

@@ -1,5 +1,5 @@
-from re import M
-from peewee import *
+from peewee import CharField, IntegerField
+
 from . import BaseModel
 
 

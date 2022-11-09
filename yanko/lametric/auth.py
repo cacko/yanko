@@ -1,4 +1,5 @@
 import pyotp
+
 from yanko.core.config import app_config
 
 
@@ -22,7 +23,7 @@ class OTPMeta(type):
 
 class OTP(object, metaclass=OTPMeta):
 
-    __totp = None
+    __totp: pyotp.TOTP
 
     def __init__(self) -> None:
         conf = app_config.get("lametric")

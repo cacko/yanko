@@ -1,11 +1,14 @@
+from typing import Optional
+
 from rumps import MenuItem
+
 from yanko.ui.icons import Label, Symbol
 from yanko.ui.items.actions import ActionItem
 
 
 class ServerMenuMeta(type):
 
-    __instance: "ServerMenu" = None
+    __instance: Optional["ServerMenu"] = None
 
 
     def __call__(cls, *args, **kwds):
@@ -17,11 +20,10 @@ class ServerMenuMeta(type):
         return cls(items, callback=callback)
 
     def action(cls, label: Label):
-        return cls.__instance.get(label.value)
+        return cls().get(label.value)
 
 
 class ServerMenu(MenuItem, metaclass=ServerMenuMeta):
-    callback = None
 
     def __init__(self, items=[], callback=None):
         super().__init__(

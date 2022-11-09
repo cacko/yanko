@@ -59,6 +59,7 @@ tasks:
       - ./node_modules/.bin/appdmg {{.PROJECT}}.json {{.PROJECT}}.dmg
 
   deploy:
+    desc: push + build + dmg + install
     cmds:
       - task: push
       - task: build

@@ -1,4 +1,6 @@
-from peewee import *
+from peewee import (BooleanField, CharField, ForeignKeyField, IntegerField,
+                    TimestampField)
+
 from . import BaseModel
 from .artist import Artist
 

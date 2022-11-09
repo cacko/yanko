@@ -1,18 +1,18 @@
+from pathlib import Path
 from queue import Queue
 from threading import Event
-from yanko.sonic import Status, StreamFormat
+from typing import Optional
+from urllib.parse import parse_qs, urlencode, urlparse
+
 from yanko.core.config import app_config
-from urllib.parse import urlparse, parse_qs, urlencode
-from pathlib import Path
+from yanko.sonic import Status, StreamFormat
 
 
 class BasePlayer(object):
 
-    _queue: Queue = None
-    _manager_queue: Queue = None
-    _time_event: Event = None
-    _url = None
-    _data = None
+    _queue: Queue
+    _manager_queue: Queue
+    _time_event: Event
     _format = "raw"
 
     def __init__(
@@ -22,7 +22,7 @@ class BasePlayer(object):
             stream_url,
             track_data,
             time_event,
-            format: StreamFormat = None
+            format: Optional[StreamFormat] = None
     ):
         self.lock_file.unlink(missing_ok=True)
         self._queue = queue

@@ -6,6 +6,8 @@ from yanko.core.thread import StoppableThread
 from yanko.db.models.beets import Beats as BeatsModel
 from time import sleep
 from multiprocessing.pool import ThreadPool
+from typing import Optional
+
 
 def resolveBeats(audio_path):
     beats = Beats(path=audio_path)
@@ -13,10 +15,11 @@ def resolveBeats(audio_path):
         beats.fetch()
     return beats
 
+
 class Beats(CachableDb):
 
-    __path: str = None
-    _struct: BeatsModel = None
+    __path: str
+    _struct: Optional[BeatsModel] = None
 
     def __init__(self, path) -> None:
         self.__path = path
@@ -26,24 +29,22 @@ class Beats(CachableDb):
     def store_beats(cls, data: dict):
         obj = cls(data.get("path"))
         obj.tocache(data)
-        return [
-            "OK", obj.path
-        ]
+        return ["OK", obj.path]
 
     @property
     def beats(self) -> list[float]:
         self._init()
-        return self._struct.beats
+        return self._struct.beats if self._struct else []
 
     @property
     def path(self):
         self._init()
-        return self._struct.path
+        return self._struct.path if self._struct else None
 
     def fetch(self):
         resp = self.__fetch()
         if resp:
-            self._struct = self.tocache(resp)        
+            self._struct = self.tocache(resp)
 
     def __fetch(self):
         logger.debug(f"Fetching beats for {self.__path}")
@@ -54,13 +55,14 @@ class Beats(CachableDb):
         if self.isCached:
             self._struct = self.fromcache()
             logger.debug(f"In DB beats for {self.__path}")
-            return 
+            return
         self.fetch()
+
 
 class FetcherMeta(type):
 
-    __instance: 'Fetcher' = None
-    __queue: Queue = None
+    __instance: Optional["Fetcher"] = None
+    __queue: Optional[Queue] = None
 
     def __call__(cls, *args, **kwds):
         if not cls.__instance or not cls.__instance.is_alive():
@@ -79,11 +81,11 @@ class FetcherMeta(type):
         logger.warning(instance.is_alive())
         if not instance.is_alive():
             instance.start(cls.queue)
-        
-     
+
+
 class Fetcher(StoppableThread, metaclass=FetcherMeta):
 
-    __queue: Queue = None
+    __queue: Optional[Queue] = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -109,4 +111,3 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
                 return
             finally:
                 sleep(0.1)
-

@@ -33,8 +33,13 @@ class Beats(CachableDb):
 
     @property
     def beats(self) -> list[float]:
-        self._init()
-        return self._struct.beats if self._struct else []
+        try:
+            self._init()
+            assert self._struct
+            assert isinstance(self._struct.beats, list)
+            return self._struct.beats
+        except AssertionError:
+            return []
 
     @property
     def path(self):
@@ -95,19 +100,23 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
         return super().start()
 
     def run(self):
-        while True:
-            try:
-                audio_paths = self.__queue.get_nowait()
-                logger.debug(audio_paths)
-                with ThreadPool(2) as pool:
-                    jobs = pool.map(resolveBeats, audio_paths)
-                    for res in jobs:
-                        logger.debug(f"BEATS Extracted for {res.path}")
-                    pool.close()
-                    pool.join()
-
-                self.__queue.task_done()
-            except Empty:
-                return
-            finally:
-                sleep(0.1)
+        try:
+            assert self.__queue
+            while True:
+                try:
+                    audio_paths = self.__queue.get_nowait()
+                    logger.debug(audio_paths)
+                    with ThreadPool(2) as pool:
+                        jobs = pool.map(resolveBeats, audio_paths)
+                        for res in jobs:
+                            logger.debug(f"BEATS Extracted for {res.path}")
+                        pool.close()
+                        pool.join()
+                except Empty:
+                    return
+                except Exception:
+                    self.__queue.task_done()
+                finally:
+                    sleep(0.1)
+        except AssertionError:
+            return

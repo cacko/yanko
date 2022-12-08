@@ -1,18 +1,18 @@
-from cachable.storage.file import CachableFileImage
+from cachable.storage.filestorage.image import CachableFileImage
 from urllib.parse import parse_qs, urlparse
 from PIL import Image
 from corestring import file_hash, string_hash
+from typing import Optional
 
 
 class CoverArtFile(CachableFileImage):
 
-    _url: str = None
-    _filename: str = None
-    _filehash: str = None
+    _filename: Optional[str] = None
+    _filehash: Optional[str] = None
     ICON_SIZE = (22, 22)
     NOT_CACHED_HASH = [
         "b9013a23400aeab42ea7dbcd89832ed41a94ab909c1a6d91f866ccd38123515e",
-        "decfd6156ee93368160d76849f377ad65d540c80061a24b673b98ffbf805f026"
+        "decfd6156ee93368160d76849f377ad65d540c80061a24b673b98ffbf805f026",
     ]
 
     def __init__(self, url: str) -> None:
@@ -32,11 +32,16 @@ class CoverArtFile(CachableFileImage):
 
     @property
     def isCached(self) -> bool:
-        return self._path.exists() and self.filehash not in self.NOT_CACHED_HASH
+        try:
+            assert self._path
+            return self._path.exists() and self.filehash not in self.NOT_CACHED_HASH
+        except AssertionError:
+            return False
 
     @property
     def filehash(self):
         if not self._filehash:
+            assert self._path
             self._filehash = file_hash(self._path)
         return self._filehash
 
@@ -47,6 +52,7 @@ class CoverArtFile(CachableFileImage):
     @property
     def icon_path(self):
         self._init()
+        assert self._path
         stem = self._path.stem
         icon_path = self._path.with_stem(f"{stem}_icon")
         if not icon_path.exists() or file_hash(icon_path) in self.NOT_CACHED_HASH:

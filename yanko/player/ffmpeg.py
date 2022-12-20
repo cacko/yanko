@@ -53,7 +53,7 @@ class OutputDevice:
 
     @property
     def blocksize(self) -> int:
-        return nearest_bytes(int(self.samplerate * self.latency))
+        return nearest_bytes(int(self.samplerate * self.latency)) + 4096
 
     @property
     def latency(self) -> float:

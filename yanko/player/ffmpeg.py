@@ -4,7 +4,8 @@ import time as _time
 from dataclasses import dataclass
 from queue import Empty
 from typing import Optional
-
+import os
+import psutil
 import ffmpeg
 import numpy as np
 import sounddevice as sd
@@ -178,6 +179,8 @@ class FFMPeg(BasePlayer):
                 )
                 .run_async(pipe_stdout=True)
             )
+            pr = psutil.Process(os.getpid())
+            pr.nice(0)
             stream = sd.RawOutputStream(
                 samplerate=device.samplerate,
                 blocksize=device.blocksize,

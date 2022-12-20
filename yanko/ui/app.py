@@ -7,10 +7,21 @@ from rumps import rumps
 
 from yanko.api.server import Server
 from yanko.lametric import LaMetric, StatusFrame
-from yanko.sonic import (AlbumPlaylist, ArtistAlbums, Command, LastAdded,
-                         MostPlayed, NowPlaying, Playlist, Playstatus,
-                         RecentlyPlayed, ScanStatus, Search, Status,
-                         VolumeStatus)
+from yanko.sonic import (
+    AlbumPlaylist,
+    ArtistAlbums,
+    Command,
+    LastAdded,
+    MostPlayed,
+    NowPlaying,
+    Playlist,
+    Playstatus,
+    RecentlyPlayed,
+    ScanStatus,
+    Search,
+    Status,
+    VolumeStatus,
+)
 from yanko.sonic.manager import Manager
 from yanko.ui.icons import AnimatedIcon, Label, Symbol
 from yanko.ui.items.actions import ActionItem, MusicItem
@@ -20,11 +31,9 @@ from yanko.ui.items.nowplaying import NowPlayingItem
 from yanko.ui.items.playlist import Playlist as UIPlaylist
 from yanko.ui.items.servermenu import ServerMenu
 
-LoadingIcon = AnimatedIcon([
-  Symbol.HOURGLASS,
-  Symbol.HOURGLASS_BOTTOM, 
-  Symbol.HOURGLASS_TOP
-])
+LoadingIcon = AnimatedIcon(
+    [Symbol.HOURGLASS, Symbol.HOURGLASS_BOTTOM, Symbol.HOURGLASS_TOP]
+)
 
 
 class YankoAppMeta(type):
@@ -83,6 +92,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             icon=Symbol.STOPPED.value,
             quit_button=None,
             template=True,
+            nosleep=True,
         )
         self.__ui_queue = Queue()
         self.menu.setAutoenablesItems = False  # type: ignore

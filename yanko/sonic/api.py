@@ -9,7 +9,7 @@ from queue import Queue
 from random import SystemRandom, choice
 from typing import Optional
 from urllib.parse import urlencode
-
+import psutil
 import requests
 import urllib3
 from corestring import string_hash

@@ -15,7 +15,7 @@ from yanko.sonic.beats import Beats
 
 class ServerMeta(type):
 
-    _instance: Optional['Server'] = None
+    _instance: Optional["Server"] = None
     _manager: Queue
     _queue: dict[str, Queue] = {}
 
@@ -55,10 +55,7 @@ class Server(ButilkaServer, metaclass=ServerMeta):
 
     def __init__(self, *args, **kwargs):
         conf = app_config.get("api")
-        bottle_config = {
-            k: v
-            for k, v in conf.items() if k in self.config_vars
-        }
+        bottle_config = {k: v for k, v in conf.items() if k in self.config_vars}
         super().__init__(**bottle_config)
 
     def start(
@@ -102,24 +99,26 @@ class Server(ButilkaServer, metaclass=ServerMeta):
 app = Server.app
 
 
-@app.route('/state')
+@app.route("/state")
 @auth_required
 def state():
     return Server.state()
 
-@app.route('/beats', method="POST")
+
+@app.route("/beats", method="POST")
 @auth_required
 def beats():
     data = request.json
     return Server.beats(data)
 
-@app.route('/search/<query:path>')
+
+@app.route("/search/<query:path>")
 @auth_required
 def search(query):
     return Server.search(query)
 
 
-@app.route('/command/<query:path>')
+@app.route("/command/<query:path>")
 @auth_required
 def command(query):
     return Server.command(query)

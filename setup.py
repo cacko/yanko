@@ -64,7 +64,7 @@ setup(
     app=APP,
     name=__name__,
     install_requires=[
-        "rumps >= 5.14.21",
+        "rumps >= 5.14.22",
         "dataclasses_json >= 0.5.7",
         "requests >= 2.28.1",
         "tld >= 0.12.6",

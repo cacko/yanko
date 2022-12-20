@@ -210,7 +210,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         LaMetric.status(status=self.__status)
         if self.__status in [Status.PLAYING] and self.__nowplaying:
             track = self.__nowplaying.track
-            LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))  # type: ignore
+            LaMetric.nowplaying(
+                f"{track.artist} / {track.title}", Path(track.coverArt)
+            )
         return asdict(StatusFrame(status=self.__status.value))
 
     def _onSearch(self, resp: Search):

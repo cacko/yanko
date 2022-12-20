@@ -1,7 +1,6 @@
 __name__ = "yanko"
 
 from pathlib import Path
-from turtle import st
 from yanko.core import logger
 from cachable.storage.file import FileStorage
 from yanko.db.base import YankoDb

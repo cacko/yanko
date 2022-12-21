@@ -179,7 +179,7 @@ class FFMPeg(BasePlayer):
                 )
                 .run_async(pipe_stdout=True)
             )
-            run(["sudo", "renice", "-15", f"{os.getpid()}"])
+            run(["sudo", "renice", "-20", f"{os.getpid()}"])
             stream = sd.RawOutputStream(
                 samplerate=device.samplerate,
                 blocksize=device.blocksize,

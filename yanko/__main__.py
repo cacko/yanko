@@ -10,5 +10,5 @@ if len(argv) > 1:
 else:
     from yanko import start
 
-    run(["sudo", "renice", "-10", f"{os.getpid()}"])
+    run(["sudo", "renice", "-20", f"{os.getpid()}"])
     start()

@@ -4,12 +4,10 @@ import time as _time
 from dataclasses import dataclass
 from queue import Empty
 from typing import Optional
-import os
 import ffmpeg
 import numpy as np
 import sounddevice as sd
 from dataclasses_json import Undefined, dataclass_json
-from subprocess import run
 
 from yanko import logger
 from yanko.core.bytes import nearest_bytes
@@ -186,7 +184,6 @@ class FFMPeg(BasePlayer):
                 )
                 .run_async(pipe_stdout=True)
             )
-            run(["sudo", "renice", "-20", f"{os.getpid()}"])
             stream = sd.RawOutputStream(
                 samplerate=device.samplerate,
                 blocksize=device.blocksize,

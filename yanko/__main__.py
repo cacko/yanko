@@ -1,7 +1,4 @@
 from sys import argv
-import os
-from subprocess import run
-
 
 if len(argv) > 1:
     from yanko.cli import cli
@@ -10,5 +7,4 @@ if len(argv) > 1:
 else:
     from yanko import start
 
-    run(["sudo", "renice", "-20", f"{os.getpid()}"])
     start()

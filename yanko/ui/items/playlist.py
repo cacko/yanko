@@ -98,7 +98,7 @@ class Playlist:
 
     def append(self, item: PlaylistItem):
         self.__items.append(item)
-        
+
     @property
     def insert_before(self):
         if not len(self.__items):
@@ -145,17 +145,17 @@ class Playlist:
             except KeyError:
                 pass
 
-    def setNowPlaying(self, menu: Menu, track: Track):
-        pass
-        # for idx, item in enumerate(self.__items):
-        #     menu_item = menu.get(item.key)
-        #     if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
-        #         if menu_item.id == track.id:
-        #             menu_item.setAttrTitle(
-        #                 f"🔈 {item.track.displayTitle(isAlbum=self.__isAlbum)}",
-        #                 Font.BOLD,
-        #             )
-        #         else:
-        #             menu_item.setAttrTitle(
-        #                 item.track.displayTitle(idx, isAlbum=self.__isAlbum)
-        #             )
+    def setNowPlaying(self, track: Track):
+        menu = self.__app.menu
+        for idx, item in enumerate(self.__items):
+            menu_item = menu.get(item.key)
+            if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
+                if menu_item.id == track.id:
+                    menu_item.setAttrTitle(
+                        f"🔈 {item.track.displayTitle(isAlbum=self.__isAlbum)}",
+                        Font.BOLD,
+                    )
+                else:
+                    menu_item.setAttrTitle(
+                        item.track.displayTitle(idx, isAlbum=self.__isAlbum)
+                    )

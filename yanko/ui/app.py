@@ -203,6 +203,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             ),
             self.menu.insert_before(top, None),
         ]
+        self.__playlist.setNowPlaying(resp.track)
         self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
 

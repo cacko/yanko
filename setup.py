@@ -88,7 +88,7 @@ setup(
         "pyyaml>=6.0",
         "redis>=4.3.4",
         "hiredis>=2.0.0",
-        "cachable>=0.3.12",
+        "cachable>=0.3.34",
         "arrow>=1.2.2",
         "structlog>=22.1.0",
         "black>=22.8.0",

@@ -15,6 +15,7 @@ from yanko import logger
 from yanko.core.bytes import nearest_bytes
 from yanko.player.base import BasePlayer
 from yanko.sonic import Action, Command, Playstatus, Status, VolumeStatus
+import logging
 
 
 def int_or_str(text):
@@ -88,7 +89,7 @@ class OutputDevice:
 
     @property
     def buffsize(self) -> int:
-        return 5
+        return 20
 
 
 class FFMPeg(BasePlayer):
@@ -153,7 +154,9 @@ class FFMPeg(BasePlayer):
         try:
             info = ffmpeg.probe(self.stream_url)
             streams = info.get("streams", [])
+            logging.warning(info)
             stream = streams[0]
+            logging.warning(stream)
             if stream.get("codec_type") != "audio":
                 logger.warning("The stream must be an audio stream")
                 return Status.STOPPED
@@ -168,7 +171,12 @@ class FFMPeg(BasePlayer):
         try:
             logger.debug("Opening stream ...")
             process = (
-                ffmpeg.input(self.stream_url, tcp_nodelay=1, multiple_requests=1)
+                ffmpeg.input(
+                    self.stream_url,
+                    tcp_nodelay=1,
+                    reconnect_on_network_error=1,
+                    reconnect_streamed=1,
+                )
                 .output(
                     "pipe:",
                     format="f32le",

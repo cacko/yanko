@@ -54,7 +54,7 @@ class OutputDevice:
 
     @property
     def blocksize(self) -> int:
-        return nearest_bytes(int(self.samplerate * self.latency)) + 4096
+        return nearest_bytes(int(self.samplerate * self.latency))
 
     @property
     def latency(self) -> float:
@@ -89,7 +89,7 @@ class OutputDevice:
 
     @property
     def buffsize(self) -> int:
-        return 20
+        return 5
 
 
 class FFMPeg(BasePlayer):
@@ -176,6 +176,8 @@ class FFMPeg(BasePlayer):
                     tcp_nodelay=1,
                     reconnect_on_network_error=1,
                     reconnect_streamed=1,
+                    multiple_requests=1,
+                    reconnect_at_eof=1
                 )
                 .output(
                     "pipe:",

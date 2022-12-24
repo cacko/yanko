@@ -65,10 +65,6 @@ class Method(Enum):
 
 class CachableDb(Cachable):
 
-    __model: BaseModel
-    __id_key: str
-    __id_value: str
-
     def __init__(self, model: BaseModel, id_key: str, id_value: str) -> None:
         self.__model = model
         self.__id_key = id_key

@@ -112,6 +112,7 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
                             logger.debug(f"BEATS Extracted for {res.path}")
                         pool.close()
                         pool.join()
+                        self.__queue.task_done()
                 except Empty:
                     return
                 except Exception:

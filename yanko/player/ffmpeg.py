@@ -173,6 +173,7 @@ class FFMPeg(BasePlayer):
                     reconnect_on_network_error=1,
                     reconnect_streamed=1,
                     multiple_requests=1,
+                    reconnect_delay_max=5,
                 )
                 .output(
                     "pipe:",

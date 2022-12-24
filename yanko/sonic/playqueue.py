@@ -15,6 +15,7 @@ class PlayQueue:
     __songs: list = []
     __idx: int = 0
     __last_id: str = None
+    __skip_error: int = 0
     skip_to = None
 
     def __init__(self, manager_queue: Queue) -> None:
@@ -66,9 +67,14 @@ class PlayQueue:
         Fetcher.add(paths=[x.get("path") for x in songs])
 
         self.__queue.put_nowait(
-            (Command.PLAYER_RESPONSE,
-             Playlist(start=datetime.now(tz=timezone.utc),
-                      tracks=[Track(**data) for data in self.__songs])))
+            (
+                Command.PLAYER_RESPONSE,
+                Playlist(
+                    start=datetime.now(tz=timezone.utc),
+                    tracks=[Track(**data) for data in self.__songs],
+                ),
+            )
+        )
 
     def __iter__(self):
         if not len(self.__songs):
@@ -91,9 +97,17 @@ class PlayQueue:
 
     def next(self):
         if self.skip_to:
-            return next(
-                filter(lambda x: x.get("id") == self.skip_to, self.__songs),
-                None)
+            match = next(
+                filter(lambda x: x.get("id") == self.skip_to, self.__songs), None
+            )
+            if not match:
+                self.__skip_error += 1
+                if self.__skip_error > len(self.__songs):
+                    self.skip_to = None
+                    self.__skip_error = 0
+            else:
+                self.__skip_error = 0
+            return match
         res = self.__songs[min(len(self.__songs) - 1, self.__idx + 1)]
         self.skip_to = res.get("id")
         return res

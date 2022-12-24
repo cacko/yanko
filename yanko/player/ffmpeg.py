@@ -154,9 +154,7 @@ class FFMPeg(BasePlayer):
         try:
             info = ffmpeg.probe(self.stream_url)
             streams = info.get("streams", [])
-            logging.warning(info)
             stream = streams[0]
-            logging.warning(stream)
             if stream.get("codec_type") != "audio":
                 logger.warning("The stream must be an audio stream")
                 return Status.STOPPED
@@ -177,7 +175,6 @@ class FFMPeg(BasePlayer):
                     reconnect_on_network_error=1,
                     reconnect_streamed=1,
                     multiple_requests=1,
-                    reconnect_at_eof=1
                 )
                 .output(
                     "pipe:",

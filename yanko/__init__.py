@@ -1,4 +1,4 @@
-__name__ = "yanko"
+__name__ = "Yanko"
 
 from pathlib import Path
 from yanko.core import logger

@@ -31,7 +31,7 @@ dependencies:
     - bottle==0.12.23
     - bs4==0.0.1
     - butilka==0.1.18
-    - cachable==0.3.33
+    - cachable==0.3.34
     - cassidy==0.1.4
     - certifi==2022.6.15
     - cffi==1.15.1

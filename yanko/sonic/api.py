@@ -495,6 +495,7 @@ class Client(object):
                 case Command.RANDOM_ALBUM:
                     self.play_random_album()
                 case Command.ALBUM:
+                    self.playqueue.skip_to = None
                     self.play_album(payload)
                 case Command.ARTIST:
                     self.play_artist(payload)

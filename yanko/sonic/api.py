@@ -493,11 +493,13 @@ class Client(object):
                 case Command.PLAYLIST:
                     self.play_random_songs(fetch=False)
                 case Command.RANDOM_ALBUM:
+                    self.playqueue.skip_to = None
                     self.play_random_album()
                 case Command.ALBUM:
                     self.playqueue.skip_to = None
                     self.play_album(payload)
                 case Command.ARTIST:
+                    self.playqueue.skip_to = None
                     self.play_artist(payload)
                 case Command.PLAY_LAST_ADDED:
                     self.play_last_added()

@@ -80,7 +80,7 @@ setup(
         "sounddevice>=0.4.4",
         "cffi >= 1.15.1",
         "pycparser >= 2.21",
-        "olefile >= ^0.46",
+        "olefile >= 0.46",
         "pantomime >= 0.5.1",
         "pyfiglet>=0.7",
         "questionary>=1.10.0",

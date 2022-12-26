@@ -87,7 +87,7 @@ class OutputDevice:
 
     @property
     def buffsize(self) -> int:
-        return 5
+        return 20
 
 
 class FFMPeg(BasePlayer):

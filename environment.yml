@@ -56,7 +56,7 @@ dependencies:
     - marshmallow==3.17.1
     - marshmallow-enum==1.5.1
     - mccabe==0.7.0
-    - modulegraph==0.19.2
+    - modulegraph==0.19.3
     - mypy-extensions==0.4.3
     - normality==2.4.0
     - numpy==1.23.2
@@ -73,7 +73,7 @@ dependencies:
     - progressor==1.0.14
     - prompt-toolkit==3.0.30
     - psutil==5.9.4
-    - py2app==0.28.2
+    - py2app==0.28.4
     - pycodestyle==2.9.1
     - pycparser==2.21
     - pyfiglet==0.8.post1

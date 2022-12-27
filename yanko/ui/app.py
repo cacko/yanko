@@ -181,7 +181,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             if self.__status == Status.LOADING:
                 self.icon = next(LoadingIcon).value
             resp = self.__ui_queue.get_nowait()
-            logging.warning(f"UI QUEUE {resp.__class__}")
             if resp:
                 method = f"_on{resp.__class__.__name__}"
                 if hasattr(self, method):
@@ -199,8 +198,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             self.__initCommands = list(filter(
                 lambda x: x[1] != executed_Cmd.__class__, self.__initCommands
             ))
-            logging.warning(self.__initCommands)
-            logging.warning(executed_Cmd)
             if not len(self.__initCommands):
                 self._onPlaystatus(Playstatus(status=Status.STOPPED))
 

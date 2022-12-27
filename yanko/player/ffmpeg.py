@@ -152,6 +152,7 @@ class FFMPeg(BasePlayer):
             info = ffmpeg.probe(self.stream_url)
             streams = info.get("streams", [])
             stream = streams[0]
+            logging.warning(stream)
             if stream.get("codec_type") != "audio":
                 logging.warning("The stream must be an audio stream")
                 return Status.STOPPED
@@ -162,6 +163,7 @@ class FFMPeg(BasePlayer):
     def play(self):
         device = self.device
         logging.debug(device)
+        self.probe()
         self.q = queue.Queue(maxsize=device.buffsize)
         try:
             logging.debug("Opening stream ...")

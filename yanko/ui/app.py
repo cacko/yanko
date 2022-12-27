@@ -1,8 +1,8 @@
 from dataclasses import asdict
 from pathlib import Path
 from queue import Empty, Queue
-from typing import Optional
-
+from typing import Optional, Any
+import logging
 from rumps import rumps
 
 from yanko.api.server import Server
@@ -63,6 +63,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     __volume: Optional[VolumeStatus] = None
     __ui_queue: Queue
     __bpm: BPM
+    __initCommands: list[Command] = []
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -94,9 +95,14 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             template=True,
             nosleep=True,
         )
+        self.__status = Status.LOADING
+        self.__initCommands = [
+            (Command.LAST_ADDED, LastAdded),
+            (Command.RECENTLY_PLAYED, RecentlyPlayed),
+            (Command.MOST_PLAYED, MostPlayed),
+        ]
         self.__ui_queue = Queue()
         self.menu.setAutoenablesItems = False  # type: ignore
-        self.__status = Status.STOPPED
         self.__playlist = UIPlaylist(Label.RANDOM.value, self)
         self.__last_added = Albumlist(self, Label.LAST_ADDED.value)
         self.__artist_albums = ArtistAlbumsList(self, Label.ARTIST.value)
@@ -116,9 +122,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         api_server = Server()
         api_server.start(self.manager.commander, self._onLaMetricInit)
         self.__threads.append(api_server)
-        self.manager.commander.put_nowait((Command.LAST_ADDED, None))
-        self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
-        self.manager.commander.put_nowait((Command.MOST_PLAYED, None))
+        for cmd, _ in self.__initCommands:
+            self.manager.commander.put_nowait((cmd, None))
 
     @property
     def threads(self):
@@ -173,16 +178,31 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     @rumps.timer(0.1)
     def process_ui_queue(self, sender):
         try:
+            if self.__status == Status.LOADING:
+                self.icon = next(LoadingIcon).value
             resp = self.__ui_queue.get_nowait()
+            logging.warning(f"UI QUEUE {resp.__class__}")
             if resp:
                 method = f"_on{resp.__class__.__name__}"
                 if hasattr(self, method):
                     getattr(self, method)(resp)
                 self.__ui_queue.task_done()
-                if self.__status == Status.LOADING:
-                    self.icon = next(LoadingIcon).value
+                self.__checkInit(resp)
         except Empty:
             pass
+
+    def __checkInit(self, executed_Cmd: Any):
+        if all([not len(self.__initCommands), self.__status == Status.LOADING]):
+            self.__status = Status.STOPPED
+        elif executed_Cmd.__class__ in [*map(lambda x: x[1], self.__initCommands)]:
+
+            self.__initCommands = list(filter(
+                lambda x: x[1] != executed_Cmd.__class__, self.__initCommands
+            ))
+            logging.warning(self.__initCommands)
+            logging.warning(executed_Cmd)
+            if not len(self.__initCommands):
+                self._onPlaystatus(Playstatus(status=Status.STOPPED))
 
     def _onBPMEvent(self, resp: BPMEvent):
         if not resp.hasExpired:
@@ -211,9 +231,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         LaMetric.status(status=self.__status)
         if self.__status in [Status.PLAYING] and self.__nowplaying:
             track = self.__nowplaying.track
-            LaMetric.nowplaying(
-                f"{track.artist} / {track.title}", Path(track.coverArt)
-            )
+            LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
         return asdict(StatusFrame(status=self.__status.value))
 
     def _onSearch(self, resp: Search):

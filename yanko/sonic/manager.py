@@ -197,11 +197,13 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __random(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.playqueue.skip_to = None
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     def __random_album(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
+        self.api.playqueue.skip_to = None
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
 
     def __toggle(self):
@@ -230,6 +232,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
             self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
 
     def __album(self, albumId):
+        self.api.playqueue.skip_to = None
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
@@ -239,16 +242,19 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
             return  self.__album(self.playing_now.track.albumId)
 
     def __play_last_added(self):
+        self.api.playqueue.skip_to = None
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.PLAY_LAST_ADDED, None))
 
     def __play_most_played(self):
+        self.api.playqueue.skip_to = None
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.PLAY_MOST_PLAYED, None))
 
     def __artist(self, artistId):
+        self.api.playqueue.skip_to = None
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.STOP)
         self.api.command_queue.put_nowait((Command.ARTIST, artistId))

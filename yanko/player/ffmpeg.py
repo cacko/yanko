@@ -1,7 +1,7 @@
 import queue
 import sys
 import time as _time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from queue import Empty
 from typing import Optional
 import ffmpeg
@@ -44,6 +44,7 @@ class OutputDevice:
     default_high_input_latency: Optional[float] = None
     default_high_output_latency: Optional[float] = None
     default_samplerate: Optional[float] = None
+    prime_output_buffers_using_stream_callback: bool = field(default=True)
 
     def __post_init__(self):
         if not self.default_samplerate:
@@ -163,7 +164,6 @@ class FFMPeg(BasePlayer):
     def play(self):
         device = self.device
         logging.debug(device)
-        self.probe()
         self.q = queue.Queue(maxsize=device.buffsize)
         try:
             logging.debug("Opening stream ...")
@@ -236,15 +236,17 @@ class FFMPeg(BasePlayer):
         assert not status
         try:
             data = self.q.get_nowait()
-            data_array = np.frombuffer(data, dtype="float32")
-            volume_norm = data_array * (0 if self.muted else self.volume)
-            self._time_event.set()
-            outdata[:] = volume_norm.tobytes()[: len(outdata)]
         except queue.Empty as e:
             logging.debug("Buffer is empty: increase buffersize?")
             raise sd.CallbackAbort from e
-        except ValueError:
+        except ValueError as e:
+            logging.error(3)
             raise StreamEnded
+        assert len(data) == len(outdata)
+        data_array = np.frombuffer(data, dtype="float32")
+        volume_norm = data_array * (0 if self.muted else self.volume)
+        self._time_event.set()
+        outdata[:] = volume_norm.tobytes()[: len(outdata)]
 
     def process_queue(self):
         try:

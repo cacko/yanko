@@ -38,6 +38,7 @@ dependencies:
     - chardet==5.0.0
     - charset-normalizer==2.1.1
     - click==8.1.3
+    - colorama==0.4.6
     - commonmark==0.9.1
     - corestring==0.1.2
     - coretime==0.1.4

@@ -1,9 +1,8 @@
-from yanko import logger
 from yanko.core.config import app_config
 from yanko.core.cachable import Method
 from enum import Enum
 from requests import request
-
+import logging
 
 class Endpoints(Enum):
     BEATS = 'beats'
@@ -39,5 +38,5 @@ class Znayko(object, metaclass=ZnaykoMeta):
             )
             return resp.json()
         except Exception as e:
-            logger.debug(e)
+            logging.debug(e)
             return None

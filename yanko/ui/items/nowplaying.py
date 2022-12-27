@@ -1,4 +1,4 @@
-from yanko import logger
+import logging
 from .actions import MusicItem
 from yanko.sonic import NowPlaying, Track
 from AppKit import NSAttributedString
@@ -21,7 +21,7 @@ class NowPlayingItem(MusicItem):
         self.__track = track
         title = f"{track.artist} - {track.title} - {track.album}"
         id = track.albumId
-        logger.debug(track)
+        logging.debug(track)
         dimensions = [80, 80]
         icon = track.coverArt
         super().__init__(title, id, callback, key, icon, dimensions, template)

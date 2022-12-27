@@ -1,4 +1,3 @@
-from yanko import logger
 from pathlib import Path
 from queue import Queue
 from yanko.core import perftime
@@ -22,6 +21,7 @@ from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
 from multiprocessing.pool import ThreadPool
+import logging
 
 
 def resolveCoverArt(obj):
@@ -69,7 +69,7 @@ def resolveSearch(items):
             try:
                 items[find_idx_by_id(items, res, 'uid')] = res
             except Exception as e:
-                logger.error(e, exc_info=True)
+                logging.error(e, exc_info=True)
         pool.close()
         pool.join()
     return items
@@ -83,7 +83,7 @@ def resolveAlbums(albums):
                 try:
                     albums[find_idx_by_id(albums, res)] = res
                 except Exception as e:
-                    logger.error(e, exc_info=True)
+                    logging.error(e, exc_info=True)
             pool.close()
             pool.join()
         return albums

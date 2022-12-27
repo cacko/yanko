@@ -1,4 +1,3 @@
-from yanko import logger
 from queue import Queue, Empty
 from yanko.core.cachable import CachableDb
 from yanko.znayko import Znayko
@@ -7,6 +6,7 @@ from yanko.db.models.beets import Beats as BeatsModel
 from time import sleep
 from multiprocessing.pool import ThreadPool
 from typing import Optional
+import logging
 
 
 def resolveBeats(audio_path):
@@ -52,14 +52,14 @@ class Beats(CachableDb):
             self._struct = self.tocache(resp)
 
     def __fetch(self):
-        logger.debug(f"Fetching beats for {self.__path}")
+        logging.debug(f"Fetching beats for {self.__path}")
         beats = Znayko.beats(self.__path)
         return beats
 
     def _init(self):
         if self.isCached:
             self._struct = self.fromcache()
-            logger.debug(f"In DB beats for {self.__path}")
+            logging.debug(f"In DB beats for {self.__path}")
             return
         self.fetch()
 
@@ -83,7 +83,7 @@ class FetcherMeta(type):
     def add(cls, paths: list[str]):
         cls.queue.put_nowait(paths)
         instance = cls()
-        logger.warning(instance.is_alive())
+        logging.warning(instance.is_alive())
         if not instance.is_alive():
             instance.start(cls.queue)
 
@@ -105,11 +105,11 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
             while True:
                 try:
                     audio_paths = self.__queue.get_nowait()
-                    logger.debug(audio_paths)
+                    logging.debug(audio_paths)
                     with ThreadPool(2) as pool:
                         jobs = pool.map(resolveBeats, audio_paths)
                         for res in jobs:
-                            logger.debug(f"BEATS Extracted for {res.path}")
+                            logging.debug(f"BEATS Extracted for {res.path}")
                         pool.close()
                         pool.join()
                         self.__queue.task_done()

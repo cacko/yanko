@@ -1,4 +1,3 @@
-from yanko.core import logger
 from queue import Queue
 from yanko.core.config import app_config
 from pathlib import Path
@@ -7,6 +6,7 @@ import pickle
 from yanko.sonic import Command, Playlist, Track
 from datetime import datetime, timezone
 from yanko.sonic.beats import Fetcher
+import logging
 
 
 class PlayQueue:
@@ -82,9 +82,9 @@ class PlayQueue:
         for idx, song in enumerate(self.__songs):
             self.__idx = idx
             if self.skip_to:
-                logger.debug(f"skip to {self.skip_to}, song id={song.get('id')}")
+                logging.debug(f"skip to {self.skip_to}, song id={song.get('id')}")
                 if song.get("id") == self.skip_to:
-                    logger.debug(f"skipped to {self.skip_to}")
+                    logging.debug(f"skipped to {self.skip_to}")
                     self.skip_to = None
                 else:
                     continue
@@ -100,13 +100,14 @@ class PlayQueue:
             match = next(
                 filter(lambda x: x.get("id") == self.skip_to, self.__songs), None
             )
-            if not match:
+            try:
+                assert match
+                self.__skip_error = 0
+            except AssertionError:
                 self.__skip_error += 1
                 if self.__skip_error > len(self.__songs):
                     self.skip_to = None
                     self.__skip_error = 0
-            else:
-                self.__skip_error = 0
             return match
         res = self.__songs[min(len(self.__songs) - 1, self.__idx + 1)]
         self.skip_to = res.get("id")

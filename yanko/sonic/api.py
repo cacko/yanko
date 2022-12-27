@@ -13,8 +13,7 @@ import requests
 import urllib3
 from corestring import string_hash
 from dataclasses_json import dataclass_json
-
-from yanko import logger
+import logging
 from yanko.core import perftime
 from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
@@ -65,7 +64,7 @@ def make_request(url):
         r = requests.get(url=url)
         return r
     except requests.exceptions.ConnectionError as e:
-        logger.exception(e)
+        logging.exception(e)
         sys.exit(1)
 
 
@@ -157,7 +156,7 @@ class Client(object):
         try:
             r = make_request(url=url)
         except requests.exceptions.ConnectionError as e:
-            logger.exception(e)
+            logging.exception(e)
             sys.exit(1)
 
         try:
@@ -175,7 +174,7 @@ class Client(object):
 
         if status == "failed":
             error = subsonic_response.get("error", {})
-            logger.error(f"Command failed - {error.get('code')} {error.get('message')}")
+            logging.error(f"Command failed - {error.get('code')} {error.get('message')}")
             return None
 
         for k, v in subsonic_response.items():
@@ -425,7 +424,7 @@ class Client(object):
         stream_url = self.create_url(Subsonic.STREAM)
         song_id = track_data.get("id")
         if not song_id:
-            logger.error(f"NO SONG ID {track_data}")
+            logging.error(f"NO SONG ID {track_data}")
             return False
         self.scrobble(song_id)
 
@@ -470,12 +469,12 @@ class Client(object):
             return self.status not in [Status.EXIT, Status.STOPPED]
 
         except OSError as err:
-            logger.error(
+            logging.error(
                 f"Could not run ffmpeg. Please make sure it is installed, {str(err)}"
             )
             return False
         except Exception as e:
-            logger.error(
+            logging.error(
                 "ffmpeg existed unexpectedly with the following error: {}".format(e)
             )
             return False

@@ -9,7 +9,6 @@ import numpy as np
 import sounddevice as sd
 from dataclasses_json import Undefined, dataclass_json
 
-from yanko import logger
 from yanko.core.bytes import nearest_bytes
 from yanko.player.base import BasePlayer
 from yanko.sonic import Action, Command, Playstatus, Status, VolumeStatus
@@ -154,7 +153,7 @@ class FFMPeg(BasePlayer):
             streams = info.get("streams", [])
             stream = streams[0]
             if stream.get("codec_type") != "audio":
-                logger.warning("The stream must be an audio stream")
+                logging.warning("The stream must be an audio stream")
                 return Status.STOPPED
             return stream
         except ffmpeg.Error as e:
@@ -162,10 +161,10 @@ class FFMPeg(BasePlayer):
 
     def play(self):
         device = self.device
-        logger.debug(device)
+        logging.debug(device)
         self.q = queue.Queue(maxsize=device.buffsize)
         try:
-            logger.debug("Opening stream ...")
+            logging.debug("Opening stream ...")
             process = (
                 ffmpeg.input(
                     self.stream_url,
@@ -194,10 +193,10 @@ class FFMPeg(BasePlayer):
                 callback=self.callback,
             )
             read_size = device.blocksize * device.output_channels * stream.samplesize
-            logger.debug("Buffering ...")
+            logging.debug("Buffering ...")
             for _ in range(device.buffsize):
                 self.q.put_nowait(process.stdout.read(read_size))
-            logger.debug("Starting Playback ...")
+            logging.debug("Starting Playback ...")
             with stream:
                 self.status = Status.PLAYING
                 timeout = device.blocksize * device.buffsize / device.samplerate
@@ -220,7 +219,7 @@ class FFMPeg(BasePlayer):
         except StreamEnded:
             pass
         except Exception as e:
-            logger.error(e)
+            logging.error(e)
         self._time_event.clear()
         return Status.PLAYING
 
@@ -230,7 +229,7 @@ class FFMPeg(BasePlayer):
             sd.sleep(50)
         assert frames == self.device.blocksize
         if status.output_underflow:
-            logger.debug("Output underflow: increase blocksize?")
+            logging.debug("Output underflow: increase blocksize?")
             raise sd.CallbackAbort
         assert not status
         try:
@@ -240,7 +239,7 @@ class FFMPeg(BasePlayer):
             self._time_event.set()
             outdata[:] = volume_norm.tobytes()[: len(outdata)]
         except queue.Empty as e:
-            logger.debug("Buffer is empty: increase buffersize?")
+            logging.debug("Buffer is empty: increase buffersize?")
             raise sd.CallbackAbort from e
         except ValueError:
             raise StreamEnded

@@ -4,8 +4,7 @@ from queue import Queue
 
 import requests
 from requests import ConnectionError
-
-from yanko import logger
+import logging
 from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
 from yanko.sonic import Track
@@ -50,6 +49,6 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
         for url in self.__to:
             try:
                 resp = requests.post(url, json=payload)
-                logger.debug(resp.status_code)
+                logging.debug(resp.status_code)
             except ConnectionError:
-                logger.warn(f"Announer failer for {url}")
+                logging.warn(f"Announer failer for {url}")

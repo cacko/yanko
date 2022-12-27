@@ -17,8 +17,8 @@ def resolve_libs(libs):
 def version():
     if len(sys.argv) > 1 and sys.argv[1] == "py2app":
         init = Path(__file__).parent / __name__.lower() / "version.py"
-        _, v = init.read_text().split(" = ")
-        cv = semver.VersionInfo.parse(v.strip('"'))
+        _, v = init.read_text().split("=")
+        cv = semver.VersionInfo.parse(v.strip().strip('"'))
         nv = f"{cv.bump_patch()}"
         init.write_text(f'__version__ = "{nv}"')
         return nv

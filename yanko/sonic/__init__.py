@@ -194,7 +194,7 @@ class Track:
     discNumber: Optional[int] = None
 
     def displayTitle(self, idx=None, isAlbum=False) -> str:
-        parts = [self.artist, truncate(self.title)]
+        parts = [self.artist, truncate(self.title, size=35)]
         if isAlbum:
             parts = [self.title]
         if idx is None:

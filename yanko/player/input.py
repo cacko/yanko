@@ -44,6 +44,8 @@ class Input(StoppableThread):
                 reconnect_streamed=1,
                 multiple_requests=1,
                 reconnect_delay_max=5,
+            ).audio.filter(
+                'loudnorm',  I=-16, TP=-1.5, LRA=11
             )
             .output(
                 "pipe:",

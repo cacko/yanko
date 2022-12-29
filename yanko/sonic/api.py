@@ -91,7 +91,6 @@ def make_request(url):
 
 
 class Client(object):
-    VOLUME_STEP = 0.05
     command_queue: Queue
     search_queue: Queue
     playback_queue: Queue
@@ -103,8 +102,6 @@ class Client(object):
     player: Optional[FFMPeg] = None
     scanning = False
     __threads = []
-    __salt = None
-    __token = None
     __volume: float = 1
     __muted: bool = False
 
@@ -166,7 +163,7 @@ class Client(object):
     @volume.setter
     def volume(self, val):
         self.__volume = val
-        self._manager_queue.put_nowait(
+        self.manager_queue.put_nowait(
             (
                 Command.PLAYER_RESPONSE,
                 VolumeStatus(
@@ -182,7 +179,7 @@ class Client(object):
     @muted.setter
     def muted(self, val):
         self.__muted = val
-        self._manager_queue.put_nowait(
+        self.manager_queue.put_nowait(
             (
                 Command.PLAYER_RESPONSE,
                 VolumeStatus(
@@ -606,8 +603,6 @@ class Client(object):
                     )
                 case Command.RESCAN:
                     self.startScan()
-                case Command.TOGGLE:
-                    self.togglePlay()
                 case Command.RECENTLY_PLAYED:
                     self.manager_queue.put_nowait(
                         (
@@ -653,11 +648,3 @@ class Client(object):
             )
             for data in fnc(*args)
         ]
-
-    def togglePlay(self):
-        if self.status == Status.PLAYING:
-            self.playback_queue.put_nowait(Action.PAUSE)
-            self.status = Status.PAUSED
-        elif self.status == Status.PAUSED:
-            self.playback_queue.put_nowait(Action.RESUME)
-            self.status = Status.RESUMED

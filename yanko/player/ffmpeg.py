@@ -64,6 +64,7 @@ class FFMPeg(BasePlayer):
                 muted=self.muted,
                 end_event=end_event,
             )
+            self._control = self.__writer.control_queue
             logging.debug("Opening stream ...")
             self.__reader = Input(
                 url=self.stream_url,
@@ -75,6 +76,7 @@ class FFMPeg(BasePlayer):
             )
             self.__writer.start()
             self.__reader.start()
+            self.status = Status.PLAYING
             while not end_event.is_set():
                 if queue_action := self.process_queue():
                     self._time_event.clear()
@@ -93,7 +95,7 @@ class FFMPeg(BasePlayer):
 
     def process_queue(self):
         try:
-            command = self._queue.get_nowait()
+            command, payload = self._queue.get_nowait()
             match (command):
                 case Action.RESTART:
                     self._queue.task_done()
@@ -111,20 +113,17 @@ class FFMPeg(BasePlayer):
                     self._queue.task_done()
                     return self.exit()
                 case Action.PAUSE:
-                    self.__writer.paused_event.set()
+                    self._control.put_nowait((Action.PAUSE,None))
                     self.status = Status.PAUSED
                 case Action.RESUME:
-                    self.__writer.paused_event.clear()
+                    self._control.put_nowait((Action.RESUME,None))
                     self.status = Status.RESUMED
-                # case Action.VOLUME_DOWN:
-                #     self.volume = max(0, self.volume - self.VOLUME_STEP)
-                #     self.__writer.volume = self.volume
-                # case Action.VOLUME_UP:
-                #     self.volume = min(2, self.volume + self.VOLUME_STEP)
-                #     self.__writer.volume = self.volume
-                # case Action.MUTE:
-                #     self.muted = not self.muted
-                #     self.__writer.muted = self.muted
+                case Action.VOLUME_DOWN:
+                    self._control.put_nowait((Action.VOLUME_DOWN, payload))
+                case Action.VOLUME_UP:
+                    self._control.put_nowait((Action.VOLUME_UP, payload))
+                case Action.MUTE:
+                    self._control.put_nowait((Action.MUTE, payload))
                 case _:
                     return None
         except Empty:

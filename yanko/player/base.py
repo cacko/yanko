@@ -10,6 +10,7 @@ from yanko.sonic import Status, StreamFormat
 class BasePlayer(object):
 
     _queue: Queue
+    _control: Optional[Queue] = None
     _manager_queue: Queue
     _time_event: Event
     _format = "raw"

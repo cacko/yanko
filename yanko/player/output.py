@@ -16,8 +16,8 @@ class Output(StoppableThread):
     data_queue: Queue
     control_queue: Queue
     time_event: Event
-    paused_event: Event
     end_event: Event
+    paused: bool
     muted: bool
     volume: int
     needs_buffering = True
@@ -34,11 +34,11 @@ class Output(StoppableThread):
     ):
         self.volume = volume
         self.muted = muted
+        self.paused = False
         self.data_queue = Queue(maxsize=Device.buffsize * 10)
         self.control_queue = Queue()
         self.time_event = time_event
         self.end_event = end_event
-        self.paused_event = Event()
         self.__stream = sd.RawOutputStream(
             samplerate=Device.samplerate,
             blocksize=Device.blocksize,
@@ -63,10 +63,11 @@ class Output(StoppableThread):
             logging.debug(f"Buffered {self.data_queue.qsize()} blocks")
             while not self.stopped():
                 try:
-                    if self.paused_event.is_set():
+                    if self.paused:
                         sd.sleep(50)
                     else:
                         self.__output()
+                        self.__control()
                 except Empty:
                     self.end_event.set()
                     break
@@ -85,7 +86,19 @@ class Output(StoppableThread):
 
     def __control(self):
         try:
-            cmd = self.control_queue.get_nowait()
-            self.control_queue.task_done()
+            command, payload = self.control_queue.get_nowait()
+            match (command):
+                case Action.VOLUME_DOWN:
+                    self.volume = payload
+                case Action.VOLUME_UP:
+                    self.volume = payload
+                case Action.MUTE:
+                    self.muted = payload
+                case Action.PAUSE:
+                    self.paused = True
+                case Action.RESUME:
+                    self.paused = False
+                case _:
+                    return None
         except Empty:
             pass

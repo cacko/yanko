@@ -3,7 +3,6 @@ from queue import Queue
 from threading import Event
 from typing import Optional
 from urllib.parse import parse_qs, urlencode, urlparse
-
 from yanko.core.config import app_config
 from yanko.sonic import Status, StreamFormat
 
@@ -14,16 +13,22 @@ class BasePlayer(object):
     _manager_queue: Queue
     _time_event: Event
     _format = "raw"
+    volume: float
+    muted: bool
 
     def __init__(
-            self,
-            queue,
-            manager_queue,
-            stream_url,
-            track_data,
-            time_event,
-            format: Optional[StreamFormat] = None
+        self,
+        queue,
+        manager_queue,
+        stream_url,
+        track_data,
+        time_event,
+        volume = 1,
+        muted = False,
+        format: Optional[StreamFormat] = None,
     ):
+        self.volume = volume
+        self.muted = muted
         self.lock_file.unlink(missing_ok=True)
         self._queue = queue
         self._manager_queue = manager_queue

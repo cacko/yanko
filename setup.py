@@ -95,8 +95,10 @@ setup(
         "progressor>=1.0.14",
         "peewee>=3.15.2",
         "coretime==0.1.4",
-        "corestring==0.1.2",
+        "corestring==0.1.10",
         "colorama==0.4.6",
+        "corethread==0.1.3",
+        "corelog==0.0.7"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

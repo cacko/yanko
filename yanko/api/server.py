@@ -39,7 +39,6 @@ class ServerMeta(type):
 
     def beats(cls, data):
         obj = Beats.store_beats(data)
-        logging.debug(obj)
         return obj
 
     def queue(cls, queue_id):

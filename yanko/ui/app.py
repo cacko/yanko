@@ -4,7 +4,7 @@ from queue import Empty, Queue
 from typing import Optional, Any
 import logging
 from rumps import rumps
-
+from yanko.player.device import Device
 from yanko.api.server import Server
 from yanko.lametric import LaMetric, StatusFrame
 from yanko.sonic import (
@@ -95,6 +95,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             template=True,
             nosleep=True,
         )
+        Device.register()
         self.__status = Status.LOADING
         self.__initCommands = [
             (Command.LAST_ADDED, LastAdded),
@@ -115,7 +116,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__bpm.start()
         self.__threads.append(self.__bpm)
         self.manager = Manager(
-            ui_queue=self.__ui_queue, time_event=self.__bpm.time_event
+            ui_queue=self.__ui_queue, 
+            time_event=self.__bpm.time_event,
         )
         self.manager.start()
         self.__threads.append(self.manager)
@@ -289,7 +291,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         if self.__status == Status.PLAYING:
             self.title = f"{self.__nowplaying.menubar_title} [VOLUME {self.__volume.volume:.02f}]"
         else:
-            self.title = "V:{self.__volume}"
+            self.title = f"V:{self.__volume.volume}"
 
     def _onLastAdded(self, resp: LastAdded):
         albums = resp.albums

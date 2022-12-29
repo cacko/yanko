@@ -14,7 +14,8 @@ from yanko.sonic import (
     Search,
     Status,
     RecentlyPlayed,
-    ArtistInfo as ArtistInfoData
+    ArtistInfo as ArtistInfoData,
+    VolumeStatus,
 )
 from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
@@ -22,6 +23,7 @@ from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
 from multiprocessing.pool import ThreadPool
 import logging
+import time as _time
 
 
 def resolveCoverArt(obj):
@@ -56,7 +58,7 @@ def resolveIcon(obj):
     return obj
 
 
-def find_idx_by_id(items, item, k='id'):
+def find_idx_by_id(items, item, k="id"):
     for idx, itm in enumerate(items):
         if getattr(itm, k) == getattr(item, k):
             return idx
@@ -67,7 +69,7 @@ def resolveSearch(items):
         jobs = pool.map(resolveIcon, items)
         for res in jobs:
             try:
-                items[find_idx_by_id(items, res, 'uid')] = res
+                items[find_idx_by_id(items, res, "uid")] = res
             except Exception as e:
                 logging.error(e, exc_info=True)
         pool.close()
@@ -110,89 +112,93 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __init__(self, ui_queue, time_event) -> None:
         self.__ui_queue = ui_queue
         self.commander = Queue()
-        self.api = Client(self.commander, time_event)
+        self.api = Client(
+            self.commander,
+            time_event,
+        )
         super().__init__()
+
 
     def run(self):
         while not self.stopped():
             cmd, payload = self.commander.get()
-            match(cmd):
+            match (cmd):
                 case Command.TOGGLE:
                     self.__toggle()
                 case Command.STOP:
-                     self.__stop()
+                    self.__stop()
                 case Command.RANDOM:
-                     self.__random()
+                    self.__random()
                 case Command.RANDOM_ALBUM:
-                     self.__random_album()
+                    self.__random_album()
                 case Command.QUIT:
-                     self.__quit()
+                    self.__quit()
                 case Command.NEXT:
-                     self.__next()
+                    self.__next()
                 case Command.PREVIOUS:
-                     self.__previous()
+                    self.__previous()
                 case Command.VOLUME_UP:
-                     self.__volume_up()
+                    self.__volume_up()
                 case Command.VOLUME_DOWN:
-                     self.__volume_down()
+                    self.__volume_down()
                 case Command.MUTE:
-                     self.__mute()
+                    self.__mute()
                 case Command.RESTART:
-                     self.__restart()
+                    self.__restart()
                 case Command.LAST_ADDED:
-                     self.__newest()
+                    self.__newest()
                 case Command.RECENTLY_PLAYED:
-                     self.__recently_played()
+                    self.__recently_played()
                 case Command.MOST_PLAYED:
-                     self.__most_played()
+                    self.__most_played()
                 case Command.ALBUM:
-                     self.__album(payload)
+                    self.__album(payload)
                 case Command.ARTIST:
-                     self.__artist(payload)
+                    self.__artist(payload)
                 case Command.SONG:
-                     self.__song(payload)
+                    self.__song(payload)
                 case Command.SEARCH:
-                     self.__search(payload)
+                    self.__search(payload)
                 case Command.ALBUMSONG:
-                     self.__albumsong(*payload.split('/'))
+                    self.__albumsong(*payload.split("/"))
                 case Command.ARTIST_ALBUMS:
-                     self.__artist_albums(payload)
+                    self.__artist_albums(payload)
                 case Command.RESCAN:
-                     self.__rescan()
+                    self.__rescan()
                 case Command.CURRENT_ALBUM:
-                     self.__current_album()
+                    self.__current_album()
                 case Command.CURRENT_ARTIST:
-                     self.__current_artist()
+                    self.__current_artist()
                 case Command.PLAY_LAST_ADDED:
-                     self.__play_last_added()
+                    self.__play_last_added()
                 case Command.PLAY_MOST_PLAYED:
-                     self.__play_most_played()
+                    self.__play_most_played()
                 case Command.ANNOUNCE:
                     Announce.announce(payload)
                 case Command.PLAYER_RESPONSE:
-                     self.player_processor(payload)
+                    self.player_processor(payload)
             self.commander.task_done()
 
     def player_processor(self, cmd):
-            if isinstance(cmd, Playstatus):
-                if cmd == Status.EXIT:
-                    self.stop()
-            elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
-                cmd.track = resolveCoverArt(cmd.track)
-                Announce.announce(cmd.track)
-                self.playing_now = cmd
-            elif isinstance(cmd, Search) and len(cmd.items):
-                cmd.items = resolveSearch(cmd.items)
-            elif isinstance(cmd, LastAdded):
-                cmd.albums = resolveAlbums(cmd.albums)
-            elif isinstance(cmd, RecentlyPlayed):
-                cmd.albums = resolveAlbums(cmd.albums)
-            elif isinstance(cmd, MostPlayed):
-                cmd.albums = resolveAlbums(cmd.albums)
-            elif isinstance(cmd, ArtistAlbums):
-                cmd.artistInfo = resolveArtistImage(cmd.artistInfo)
-                cmd.albums = resolveAlbums(cmd.albums)
-            self.__ui_queue.put_nowait(cmd)
+        if isinstance(cmd, Playstatus):
+            if cmd == Status.EXIT:
+                self.stop()
+        elif isinstance(cmd, NowPlaying) and cmd.track.coverArt:
+            cmd.track = resolveCoverArt(cmd.track)
+            Announce.announce(cmd.track)
+            self.playing_now = cmd
+        elif isinstance(cmd, Search) and len(cmd.items):
+            cmd.items = resolveSearch(cmd.items)
+        elif isinstance(cmd, LastAdded):
+            cmd.albums = resolveAlbums(cmd.albums)
+        elif isinstance(cmd, RecentlyPlayed):
+            cmd.albums = resolveAlbums(cmd.albums)
+        elif isinstance(cmd, MostPlayed):
+            cmd.albums = resolveAlbums(cmd.albums)
+        elif isinstance(cmd, ArtistAlbums):
+            cmd.artistInfo = resolveArtistImage(cmd.artistInfo)
+            cmd.albums = resolveAlbums(cmd.albums)
+        self.__ui_queue.put_nowait(cmd)
 
     def __random(self):
         if self.api.isPlaying:
@@ -239,7 +245,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
 
     def __current_album(self):
         if self.playing_now:
-            return  self.__album(self.playing_now.track.albumId)
+            return self.__album(self.playing_now.track.albumId)
 
     def __play_last_added(self):
         self.api.playqueue.skip_to = None
@@ -261,7 +267,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
 
     def __current_artist(self):
         if self.playing_now:
-            return  self.__artist(self.playing_now.track.artistId)
+            return self.__artist(self.playing_now.track.artistId)
 
     def __albumsong(self, albumId, songId):
         self.api.playqueue.skip_to = songId
@@ -279,7 +285,9 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __quit(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait(Action.EXIT)
-        self.commander.put_nowait((Command.PLAYER_RESPONSE, Playstatus(status=Status.EXIT)))
+        self.commander.put_nowait(
+            (Command.PLAYER_RESPONSE, Playstatus(status=Status.EXIT))
+        )
 
     def __stop(self):
         self.api.playback_queue.put_nowait(Action.STOP)

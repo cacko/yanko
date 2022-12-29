@@ -18,14 +18,36 @@ from yanko.core import perftime
 from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
 from yanko.player.ffmpeg import FFMPeg
-from yanko.sonic import (RESULT_KEYS, Action, Album, AlbumSearchItem,
-                         AlbumType, Artist, ArtistAlbums)
+from yanko.sonic import (
+    RESULT_KEYS,
+    Action,
+    Album,
+    AlbumSearchItem,
+    AlbumType,
+    Artist,
+    ArtistAlbums,
+)
 from yanko.sonic import ArtistInfo as ArtistInfoData
-from yanko.sonic import (ArtistSearchItem, Command, LastAdded, MostPlayed,
-                         NowPlaying, Playstatus, RecentlyPlayed, ScanStatus,
-                         ScanStatusResponse, Search, Search3Response,
-                         SearchItemIcon, Song, Status, Subsonic, Track,
-                         TrackSearchItem)
+from yanko.sonic import (
+    ArtistSearchItem,
+    Command,
+    LastAdded,
+    MostPlayed,
+    NowPlaying,
+    Playstatus,
+    RecentlyPlayed,
+    ScanStatus,
+    ScanStatusResponse,
+    Search,
+    Search3Response,
+    SearchItemIcon,
+    Song,
+    Status,
+    Subsonic,
+    Track,
+    TrackSearchItem,
+    VolumeStatus
+)
 from yanko.sonic.artist import ArtistInfo
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
@@ -69,6 +91,7 @@ def make_request(url):
 
 
 class Client(object):
+    VOLUME_STEP = 0.05
     command_queue: Queue
     search_queue: Queue
     playback_queue: Queue
@@ -82,6 +105,8 @@ class Client(object):
     __threads = []
     __salt = None
     __token = None
+    __volume: float = 1
+    __muted: bool = False
 
     BATCH_SIZE = 20
 
@@ -135,6 +160,39 @@ class Client(object):
             self.status = Status.PLAYING
 
     @property
+    def volume(self):
+        return self.__volume
+
+    @volume.setter
+    def volume(self, val):
+        self.__volume = val
+        self._manager_queue.put_nowait(
+            (
+                Command.PLAYER_RESPONSE,
+                VolumeStatus(
+                    volume=self.__volume, muted=self.__muted, timestamp=time.time()
+                ),
+            )
+        )
+
+    @property
+    def muted(self):
+        return self.__muted
+
+    @muted.setter
+    def muted(self, val):
+        self.__muted = val
+        self._manager_queue.put_nowait(
+            (
+                Command.PLAYER_RESPONSE,
+                VolumeStatus(
+                    volume=self.__volume, muted=self.__muted, timestamp=time.time()
+                ),
+            )
+        )
+
+
+    @property
     def isPlaying(self) -> bool:
         return self.player is not None and self.player.status != Status.STOPPED
 
@@ -174,7 +232,9 @@ class Client(object):
 
         if status == "failed":
             error = subsonic_response.get("error", {})
-            logging.error(f"Command failed - {error.get('code')} {error.get('message')}")
+            logging.error(
+                f"Command failed - {error.get('code')} {error.get('message')}"
+            )
             return None
 
         for k, v in subsonic_response.items():
@@ -452,6 +512,7 @@ class Client(object):
                 stream_url=stream_url,
                 time_event=self.time_event,
                 track_data=track_data,
+                
             )
 
             self.playqueue.last_id = song_id

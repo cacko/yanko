@@ -88,8 +88,4 @@ class CachableDb(Cachable):
             getattr(self.__model, self.__id_key) == self.__id_value
         )
         exists = q.exists()
-        if exists:
-            logging.warning(
-                f"RECORD exists {self.__model} {self.__id_key}=={self.__id_value}"
-            )
         return exists

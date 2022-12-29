@@ -2,7 +2,7 @@ import logging
 from .actions import MusicItem
 from yanko.sonic import NowPlaying, Track
 from AppKit import NSAttributedString
-from corestring import truncate
+from corestring import truncate_to_rows
 
 
 class NowPlayingItem(MusicItem):
@@ -27,8 +27,8 @@ class NowPlayingItem(MusicItem):
         super().__init__(title, id, callback, key, icon, dimensions, template)
         rows = [
             track.artist,
-            truncate(track.title, 100),
-            f"{truncate(track.album, 100)} ({track.year})",
+            truncate_to_rows(track.title, 40),
+            f"{truncate_to_rows(track.album, 40)} ({track.year})",
             f"{track.total_time} {track.audioType.upper()} {track.bitRate}kbps / BPM:{np.display_bpm}",
         ]
         tt = NSAttributedString.alloc().initWithString_("\n".join(rows))

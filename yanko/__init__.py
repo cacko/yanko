@@ -9,34 +9,11 @@ from yanko.sonic.coverart import CoverArtFile
 import sys
 import signal
 import traceback
-import structlog
 import logging
 import os
+import corelog
 
-
-structlog.configure(
-    processors=[
-        # Prepare event dict for `ProcessorFormatter`.
-        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-    ],
-    logger_factory=structlog.stdlib.LoggerFactory(),
-)
-
-formatter = structlog.stdlib.ProcessorFormatter(
-    processors=[
-        structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-        structlog.dev.ConsoleRenderer()
-    ],
-)
-
-handler = logging.StreamHandler()
-# Use OUR `ProcessorFormatter` to format all `logging` entries.
-handler.setFormatter(formatter)
-root_logger = logging.getLogger()
-root_logger.addHandler(handler)
-root_logger.setLevel(
-    getattr(logging, os.environ.get("YANKO_LOG_LEVEL", "INFO"))
-)
+corelog.register(os.environ.get("YANKO_LOG_LEVEL", "INFO"))
 
 def start():
     cache_dir = app_config.cache_dir

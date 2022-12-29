@@ -512,7 +512,6 @@ class Client(object):
                 stream_url=stream_url,
                 time_event=self.time_event,
                 track_data=track_data,
-                
             )
 
             self.playqueue.last_id = song_id

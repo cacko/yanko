@@ -2,7 +2,14 @@ import logging
 from .actions import MusicItem
 from yanko.sonic import NowPlaying, Track
 from AppKit import NSAttributedString
+from Cocoa import NSFont, NSFontAttributeName  # type: ignore
 from corestring import truncate_to_rows
+from PyObjCTools.Conversion import propertyListFromPythonCollection
+from enum import Enum
+
+
+class Font(Enum):
+    REGULAR = NSFont.fontWithName_size_("Atami", 14)
 
 
 class NowPlayingItem(MusicItem):
@@ -26,13 +33,23 @@ class NowPlayingItem(MusicItem):
         icon = track.coverArt
         super().__init__(title, id, callback, key, icon, dimensions, template)
         rows = [
-            track.artist,
-            truncate_to_rows(track.title, 40),
-            f"{truncate_to_rows(track.album, 40)} ({track.year})",
-            f"{track.total_time} {track.audioType.upper()} {track.bitRate}kbps / BPM:{np.display_bpm}",
+            f"🎸 {track.artist}",
+            f"🎤 {truncate_to_rows(track.title, 40)}",
+            f"💿 {truncate_to_rows(track.album, 40)} ({track.year})",
+            f"ℹ️ {track.total_time} {track.audioType.upper()} {track.bitRate}kbps / BPM:{np.display_bpm}",
         ]
-        tt = NSAttributedString.alloc().initWithString_("\n".join(rows))
+        tt = NSAttributedString.alloc().initWithString_attributes_(
+            "\n".join(rows), self.string_attributes(Font.REGULAR)
+        )
         self._menuitem.setAttributedTitle_(tt)
+
+    def string_attributes(self, font: Font):
+        return propertyListFromPythonCollection(
+            {
+                NSFontAttributeName: font.value,
+            },
+            conversionHelper=lambda x: x,
+        )
 
     @property
     def track(self) -> Track:

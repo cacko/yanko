@@ -1,6 +1,6 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 vars:
   PROJECT: Yanko
@@ -22,16 +22,6 @@ tasks:
       - git add .  || true
       - git commit -am "$(curl -s https://commit.cacko.net/index.txt)" || true
       - git push || true
-      
-  on:
-    desc: activate env
-    cmds:
-      - mamba activate {{.PROJECT}}
-
-  off:
-    desc: deactive env
-    cmds:
-      - mamba deactivate
 
   export:
     desc: export env
@@ -65,4 +55,3 @@ tasks:
       - task: push
       - task: dmg
       - task: install
-

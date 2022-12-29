@@ -44,9 +44,8 @@ class Input(StoppableThread):
                 reconnect_streamed=1,
                 multiple_requests=1,
                 reconnect_delay_max=5,
-            ).audio.filter(
-                'loudnorm',  I=-16, TP=-1.5, LRA=11
             )
+            .audio.filter("loudnorm", I=-16, TP=-1.5, LRA=11)
             .output(
                 "pipe:",
                 format="f32le",
@@ -62,5 +61,9 @@ class Input(StoppableThread):
                 sleep(0.1)
             else:
                 data = process.stdout.read(read_size)
-                self.queue.put_nowait(data)
+                if data:
+                    self.queue.put_nowait(data)
+                else:
+                    break
+
         process.terminate()

@@ -34,7 +34,7 @@ class Output(StoppableThread):
     ):
         self.volume = volume
         self.muted = muted
-        self.data_queue = Queue(maxsize=100)
+        self.data_queue = Queue(maxsize=Device.buffsize * 10)
         self.control_queue = Queue()
         self.time_event = time_event
         self.end_event = end_event
@@ -58,7 +58,7 @@ class Output(StoppableThread):
         with self.__stream:
             logging.debug(f"Buffering {Device.buffsize} blocks")
             while self.needs_buffering:
-                sd.sleep(10)
+                sd.sleep(50)
                 self.needs_buffering = self.data_queue.qsize() < Device.buffsize
             logging.debug(f"Buffered {self.data_queue.qsize()} blocks")
             while not self.stopped():
@@ -73,12 +73,15 @@ class Output(StoppableThread):
             self.__stream.close()
 
     def __output(self):
-        data = self.data_queue.get_nowait()
-        data_array = np.frombuffer(data, dtype="float32")
-        volume_norm = data_array * (0 if self.muted else self.volume)
-        self.__stream.write(volume_norm.tobytes())
-        self.time_event.set()
-        self.data_queue.task_done()
+        if self.__stream.write_available:
+            data = self.data_queue.get_nowait()
+            data_array = np.frombuffer(data, dtype="float32")
+            volume_norm = data_array * (0 if self.muted else self.volume)
+            self.__stream.write(volume_norm.tobytes())
+            self.time_event.set()
+            self.data_queue.task_done()
+        else:
+            sd.sleep(20)
 
     def __control(self):
         try:

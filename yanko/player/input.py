@@ -3,39 +3,32 @@ from queue import Queue
 import ffmpeg
 import logging
 from time import sleep
+from yanko.player.device import Device
 
 
 class Input(StoppableThread):
 
     url: str
     queue: Queue
-    blocksize: int
-    output_channels: int
     samplesize: int
-    samplerate: int
 
     def __init__(
         self,
         url: str,
         outputQueue: Queue,
-        blocksize: int,
-        output_channels: int,
         samplesize: int,
-        samplerate: int,
         *args,
         **kwargs,
     ):
         self.url = url
-        self.blocksize = blocksize
-        self.output_channels = output_channels
         self.samplesize = samplesize
-        self.samplerate = samplerate
         self.queue = outputQueue
         super().__init__(*args, **kwargs)
 
     def run(self):
         logging.debug(f"Reader started for {self.url}")
-        read_size = self.blocksize * self.output_channels * self.samplesize
+        read_size = Device.blocksize * Device.output_channels * self.samplesize
+        timeout = Device.blocksize * Device.buffsize / Device.samplerate
         process = (
             ffmpeg.input(
                 self.url,
@@ -50,8 +43,8 @@ class Input(StoppableThread):
                 "pipe:",
                 format="f32le",
                 acodec="pcm_f32le",
-                ac=self.output_channels,
-                ar=self.samplerate,
+                ac=Device.output_channels,
+                ar=Device.samplerate,
                 loglevel="quiet",
             )
             .run_async(pipe_stdout=True)
@@ -62,8 +55,7 @@ class Input(StoppableThread):
             else:
                 data = process.stdout.read(read_size)
                 if data:
-                    self.queue.put_nowait(data)
+                    self.queue.put(data, timeout=timeout)
                 else:
                     break
-
-        process.terminate()
+        process.wait()

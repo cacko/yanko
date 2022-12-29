@@ -1,12 +1,8 @@
-import queue
 import sys
 import time as _time
 from queue import Empty
 from typing import Optional
 import ffmpeg
-import numpy as np
-import sounddevice as sd
-from .device import Device
 from yanko.player.base import BasePlayer
 from yanko.sonic import Action, Command, Playstatus, Status, VolumeStatus
 import logging
@@ -69,9 +65,6 @@ class FFMPeg(BasePlayer):
             self.__reader = Input(
                 url=self.stream_url,
                 outputQueue=self.__writer.data_queue,
-                blocksize=Device.blocksize,
-                output_channels=Device.output_channels,
-                samplerate=Device.samplerate,
                 samplesize=self.__writer.samplesize,
             )
             self.__writer.start()
@@ -84,6 +77,7 @@ class FFMPeg(BasePlayer):
                     self.__writer.stop()
                     self.status = Status.STOPPED
                     return queue_action
+                _time.sleep(0.1)
         except StreamEnded:
             pass
         except Exception as e:
@@ -95,7 +89,7 @@ class FFMPeg(BasePlayer):
 
     def process_queue(self):
         try:
-            command, payload = self._queue.get_nowait()
+            command, payload = self._queue.get()
             match (command):
                 case Action.RESTART:
                     self._queue.task_done()
@@ -113,10 +107,10 @@ class FFMPeg(BasePlayer):
                     self._queue.task_done()
                     return self.exit()
                 case Action.PAUSE:
-                    self._control.put_nowait((Action.PAUSE,None))
+                    self._control.put_nowait((Action.PAUSE, None))
                     self.status = Status.PAUSED
                 case Action.RESUME:
-                    self._control.put_nowait((Action.RESUME,None))
+                    self._control.put_nowait((Action.RESUME, None))
                     self.status = Status.RESUMED
                 case Action.VOLUME_DOWN:
                     self._control.put_nowait((Action.VOLUME_DOWN, payload))

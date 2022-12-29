@@ -1,5 +1,4 @@
 from queue import Empty
-from typing import Optional, Any
 import numpy as np
 import sounddevice as sd
 import logging
@@ -7,8 +6,7 @@ from queue import Queue
 from corethread import StoppableThread
 from threading import Event
 from yanko.player.device import Device
-from yanko.sonic import Action, Command, Playstatus, Status, VolumeStatus
-from .exceptions import StreamEnded
+from yanko.sonic import Action
 
 
 class Output(StoppableThread):
@@ -35,7 +33,7 @@ class Output(StoppableThread):
         self.volume = volume
         self.muted = muted
         self.paused = False
-        self.data_queue = Queue(maxsize=Device.buffsize * 10)
+        self.data_queue = Queue(maxsize=Device.buffsize)
         self.control_queue = Queue()
         self.time_event = time_event
         self.end_event = end_event
@@ -58,31 +56,29 @@ class Output(StoppableThread):
         with self.__stream:
             logging.debug(f"Buffering {Device.buffsize} blocks")
             while self.needs_buffering:
-                sd.sleep(50)
+                sd.sleep(500)
                 self.needs_buffering = self.data_queue.qsize() < Device.buffsize
             logging.debug(f"Buffered {self.data_queue.qsize()} blocks")
             while not self.stopped():
                 try:
                     if self.paused:
-                        sd.sleep(50)
+                        self.time_event.clear()
+                        sd.sleep(100)
                     else:
                         self.__output()
-                        self.__control()
+                    self.__control()
                 except Empty:
                     self.end_event.set()
                     break
             self.__stream.close()
 
     def __output(self):
-        if self.__stream.write_available:
-            data = self.data_queue.get_nowait()
-            data_array = np.frombuffer(data, dtype="float32")
-            volume_norm = data_array * (0 if self.muted else self.volume)
-            self.__stream.write(volume_norm.tobytes())
-            self.time_event.set()
-            self.data_queue.task_done()
-        else:
-            sd.sleep(20)
+        data = self.data_queue.get()
+        data_array = np.frombuffer(data, dtype="float32")
+        volume_norm = data_array * (0 if self.muted else self.volume)
+        self.__stream.write(volume_norm.tobytes())
+        self.time_event.set()
+        self.data_queue.task_done()
 
     def __control(self):
         try:

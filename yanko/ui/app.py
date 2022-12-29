@@ -265,7 +265,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onPlaystatus(self, resp: Playstatus):
         self.__status = resp.status
         LaMetric.status(resp.status)
+        logging.debug(f"status={resp.status}")
         match resp.status:
+            case Status.PAUSED:
+                self.icon = Symbol.PAUSE.value
             case Status.PLAYING:
                 if len(self.__playlist):
                     ActionItem.next.show()

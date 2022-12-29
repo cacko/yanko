@@ -53,12 +53,11 @@ class FFMPeg(BasePlayer):
 
     def play(self):
         try:
-            end_event = Event()
             self.__writer = Output(
                 time_event=self._time_event,
                 volume=self.volume,
                 muted=self.muted,
-                end_event=end_event,
+                end_event=self._end_event,
             )
             self._control = self.__writer.control_queue
             logging.debug("Opening stream ...")
@@ -70,7 +69,10 @@ class FFMPeg(BasePlayer):
             self.__writer.start()
             self.__reader.start()
             self.status = Status.PLAYING
-            while not end_event.is_set():
+            while True:
+                if not self.__writer.is_alive():
+                    logging.debug("end event set")
+                    break
                 if queue_action := self.process_queue():
                     self._time_event.clear()
                     self.__reader.stop()
@@ -78,18 +80,17 @@ class FFMPeg(BasePlayer):
                     self.status = Status.STOPPED
                     return queue_action
                 _time.sleep(0.1)
-        except StreamEnded:
-            pass
+        except StreamEnded as e:
+            logging.error(e)
         except Exception as e:
             logging.error(e)
-        self.__reader.stop()
-        self.__writer.stop()
+        logging.debug(f"Ending stream")
         self._time_event.clear()
         return Status.PLAYING
 
     def process_queue(self):
         try:
-            command, payload = self._queue.get()
+            command, payload = self._queue.get_nowait()
             match (command):
                 case Action.RESTART:
                     self._queue.task_done()

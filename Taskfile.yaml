@@ -61,8 +61,8 @@ tasks:
   deploy:
     desc: push + build + dmg + install
     cmds:
-      - task: push
       - task: build
+      - task: push
       - task: dmg
       - task: install
 

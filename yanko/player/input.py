@@ -28,7 +28,6 @@ class Input(StoppableThread):
     def run(self):
         logging.debug(f"Reader started for {self.url}")
         read_size = Device.blocksize * Device.output_channels * self.samplesize
-        timeout = Device.blocksize * Device.buffsize / Device.samplerate
         process = (
             ffmpeg.input(
                 self.url,
@@ -55,7 +54,8 @@ class Input(StoppableThread):
             else:
                 data = process.stdout.read(read_size)
                 if data:
-                    self.queue.put(data, timeout=timeout)
+                    self.queue.put_nowait(data)
                 else:
                     break
-        process.wait()
+        logging.debug("Reading finished.")
+        process.terminate()

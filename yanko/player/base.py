@@ -13,6 +13,7 @@ class BasePlayer(object):
     _control: Optional[Queue] = None
     _manager_queue: Queue
     _time_event: Event
+    _end_event: Event
     _format = "raw"
     volume: float
     muted: bool
@@ -34,6 +35,7 @@ class BasePlayer(object):
         self._queue = queue
         self._manager_queue = manager_queue
         self._time_event = time_event
+        self._end_event = Event()
         self._url = stream_url
         self._data = track_data
         self._format = format.value if format else StreamFormat.RAW.value

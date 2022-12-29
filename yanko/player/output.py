@@ -11,13 +11,6 @@ from yanko.sonic import Action
 
 class Output(StoppableThread):
 
-    data_queue: Queue
-    control_queue: Queue
-    time_event: Event
-    end_event: Event
-    paused: bool
-    muted: bool
-    volume: int
     needs_buffering = True
     __stream: sd.RawOutputStream
 
@@ -33,7 +26,7 @@ class Output(StoppableThread):
         self.volume = volume
         self.muted = muted
         self.paused = False
-        self.data_queue = Queue(maxsize=Device.buffsize)
+        self.data_queue = Queue(maxsize=Device.buffsize * 100)
         self.control_queue = Queue()
         self.time_event = time_event
         self.end_event = end_event
@@ -56,28 +49,27 @@ class Output(StoppableThread):
         with self.__stream:
             logging.debug(f"Buffering {Device.buffsize} blocks")
             while self.needs_buffering:
-                sd.sleep(500)
+                sd.sleep(20)
                 self.needs_buffering = self.data_queue.qsize() < Device.buffsize
             logging.debug(f"Buffered {self.data_queue.qsize()} blocks")
             while not self.stopped():
                 try:
                     if self.paused:
-                        self.time_event.clear()
                         sd.sleep(100)
                     else:
                         self.__output()
                     self.__control()
                 except Empty:
-                    self.end_event.set()
                     break
-            self.__stream.close()
+        logging.debug("Writing finished")
+        self.end_event.set()
 
     def __output(self):
-        data = self.data_queue.get()
+        data = self.data_queue.get_nowait()
         data_array = np.frombuffer(data, dtype="float32")
         volume_norm = data_array * (0 if self.muted else self.volume)
-        self.__stream.write(volume_norm.tobytes())
         self.time_event.set()
+        self.__stream.write(volume_norm.tobytes())
         self.data_queue.task_done()
 
     def __control(self):
@@ -92,6 +84,7 @@ class Output(StoppableThread):
                     self.muted = payload
                 case Action.PAUSE:
                     self.paused = True
+                    self.time_event.clear()
                 case Action.RESUME:
                     self.paused = False
                 case _:

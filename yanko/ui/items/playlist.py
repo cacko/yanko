@@ -178,3 +178,4 @@ class Playlist:
                     menu_item.setAttrTitle(
                         item.track.displayTitle(idx, isAlbum=self.__isAlbum)
                     )
+                    menu_item.state = 0

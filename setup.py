@@ -38,7 +38,8 @@ OPTIONS = {
         "CFBundleIdentifier": "net.cacko.yanko",
         "CFBundleVersion": f"{version()}",
         "LSEnvironment": dict(
-            PATH="/opt/homebrew/bin:/opt/homebrew/sbin", YANKO_LOG_LEVEL="FATAL"
+            PATH="/usr/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin", YANKO_LOG_LEVEL="FATAL",
+            LD_LIBRARY_PATH="/Users/jago/.local/lib:$LD_LIBRARY_PATH"
         ),
     },
     "packages": [

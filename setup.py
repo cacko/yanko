@@ -70,7 +70,7 @@ setup(
         "requests >= 2.28.1",
         "tld >= 0.12.6",
         "Pillow >= 9.2.0",
-        "appdir >= 0.2",
+        "appdirs >= 1.4.4",
         "pyotp >= 2.6.0",
         "click >= 8.1.3",
         "pixelme>= 0.4.7",

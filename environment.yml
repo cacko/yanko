@@ -22,7 +22,7 @@ dependencies:
   - xz=5.2.6
   - pip:
     - altgraph==0.17.2
-    - appdir==0.2
+    - appdirs==1.4.4
     - arrow==1.2.2
     - asitop==0.0.21
     - async-timeout==4.0.2

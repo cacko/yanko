@@ -1,8 +1,8 @@
 from pathlib import Path
-
-from appdir import get_app_dir
+from yanko import __name__
+from appdirs import user_config_dir, user_cache_dir, user_data_dir
 from yaml import Loader, load
-
+import logging
 
 class app_config_meta(type):
     _instance = None
@@ -16,13 +16,27 @@ class app_config_meta(type):
         return cls().getvar(var, *args, **kwargs)
 
     @property
-    def app_dir(cls):
-        return Path(get_app_dir("Yanko")).expanduser()
+    def app_dir(cls) -> Path:
+        res = Path(user_config_dir(__name__))
+        if not res.exists():
+            res.mkdir(parents=True)
+        return res
 
     @property
-    def cache_dir(cls):
-        return cls.app_dir / "cache"
+    def cache_dir(cls) -> Path:
+        res = Path(user_cache_dir(__name__))
+        if not res.exists():
+            res.mkdir(parents=True)
+        logging.debug(res)
+        return res
 
+    @property
+    def data_dir(cls) -> Path:
+        res = Path(user_data_dir(__name__))
+        if not res.exists():
+            res.mkdir(parents=True)
+        logging.debug(res)
+        return res
 
 class app_config(object, metaclass=app_config_meta):
 

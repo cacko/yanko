@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Event
 from time import sleep, time
 from typing import Optional
-
+from yanko.player.device import Device
 from dataclasses_json import Undefined, dataclass_json
 import logging
 from yanko.core.thread import StoppableThread
@@ -90,7 +90,7 @@ class BPM(StoppableThread):
                         self.__last_measure = time()
                 else:
                     if not self.__time_start:
-                        self.__time_start = time()
+                        self.__time_start = time() + Device.latency
                     self.__time_current = (
                         time() - self.__time_start - self.__time_paused
                     )

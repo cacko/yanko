@@ -66,7 +66,7 @@ setup(
     name=__name__,
     install_requires=[
         "rumps >= 5.14.23",
-        "dataclasses_json >= 0.5.7",
+        "pydantic>=1.10.4",
         "requests >= 2.28.1",
         "tld >= 0.12.6",
         "Pillow >= 9.2.0",
@@ -89,7 +89,6 @@ setup(
         "pyyaml>=6.0",
         "redis>=4.3.4",
         "hiredis>=2.0.0",
-        "cachable == 0.3.34",
         "arrow>=1.2.2",
         "structlog>=22.1.0",
         "black>=22.8.0",
@@ -99,7 +98,8 @@ setup(
         "corestring==0.1.10",
         "colorama==0.4.6",
         "corethread==0.1.3",
-        "corelog==0.0.7"
+        "corelog==0.0.7",
+        "cachable>=0.3.35"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

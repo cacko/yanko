@@ -1,15 +1,12 @@
 import time
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from math import floor
 from typing import Optional
-
+from pydantic import BaseModel, Extra
 import pantomime
 from corestring import truncate
-from coretime import isodate_decoder, isodate_encoder, seconds_to_duration
-from dataclasses_json import Undefined, config, dataclass_json
-from marshmallow import fields
+from coretime import seconds_to_duration
 
 RESULT_KEYS = [
     "searchResult3",
@@ -134,9 +131,7 @@ class AlbumType(Enum):
     FREQUENT = "frequent"
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Song:
+class Song(BaseModel, extra=Extra.ignore):
     album: Optional[str] = None
     albumId: Optional[str] = None
     artist: Optional[str] = None
@@ -161,9 +156,7 @@ class Song:
     Bpm: Optional[int] = None
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Track:
+class Track(BaseModel, extra=Extra.ignore):
     id: str
     parent: str
     isDir: bool
@@ -172,13 +165,7 @@ class Track:
     artist: str
 
     duration: int
-    created: datetime = field(
-        metadata=config(
-            encoder=isodate_encoder,
-            decoder=isodate_decoder,
-            mm_field=fields.DateTime(format="iso", tzinfo=timezone.utc),
-        )
-    )
+    created: datetime
     size: int
     albumId: Optional[str] = None
     artistId: Optional[str] = None
@@ -212,9 +199,7 @@ class Track:
         return seconds_to_duration(self.duration)
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Album:
+class Album(BaseModel, extra=Extra.ignore):
     id: str
     parent: str
     isDir: bool
@@ -222,13 +207,7 @@ class Album:
     album: str
     artist: str
     duration: int
-    created: datetime = field(
-        metadata=config(
-            encoder=isodate_encoder,
-            decoder=isodate_decoder,
-            mm_field=fields.DateTime(format="iso", tzinfo=timezone.utc),
-        )
-    )
+    created: datetime
     artistId: Optional[str] = None
     year: Optional[int] = None
     genre: Optional[str] = None
@@ -237,9 +216,7 @@ class Album:
     songCount: Optional[int] = None
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Artist:
+class Artist(BaseModel, extra=Extra.ignore):
     id: str
     name: str
     albumCount: Optional[int] = 0
@@ -253,9 +230,7 @@ class Artist:
             self.album = []
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class ArtistInfo:
+class ArtistInfo(BaseModel, extra=Extra.ignore):
     biography: Optional[str] = None
     musicBrainzId: Optional[str] = None
     lastFmUrl: Optional[str] = None
@@ -265,9 +240,7 @@ class ArtistInfo:
     image: Optional[str] = None
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class NowPlaying:
+class NowPlaying(BaseModel, extra=Extra.ignore):
     track: Track
     song: Song
     start: datetime
@@ -279,8 +252,7 @@ class NowPlaying:
             return int(bpm)
         return 120
 
-    @bpm.setter
-    def bpm(self, val):
+    def setBpm(self, val):
         self.song.Bpm = val
 
     @property
@@ -302,28 +274,20 @@ class NowPlaying:
         return f"{self.track.artist} / {truncate(self.track.title)}"
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Playlist:
+class Playlist(BaseModel, extra=Extra.ignore):
     tracks: list[Track]
     start: datetime
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
 class AlbumPlaylist(Playlist):
     pass
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Playstatus:
+class Playstatus(BaseModel, extra=Extra.ignore):
     status: Status
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class VolumeStatus:
+class VolumeStatus(BaseModel, extra=Extra.ignore):
     volume: float
     muted: bool
     timestamp: float
@@ -333,40 +297,28 @@ class VolumeStatus:
         return floor(time.time() - self.timestamp) > 3
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class LastAdded:
+class LastAdded(BaseModel, extra=Extra.ignore):
     albums: list[Album]
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class RecentlyPlayed:
+class RecentlyPlayed(BaseModel, extra=Extra.ignore):
     albums: list[Album]
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class MostPlayed:
+class MostPlayed(BaseModel, extra=Extra.ignore):
     albums: list[Album]
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class ArtistAlbums:
+class ArtistAlbums(BaseModel, extra=Extra.ignore):
     albums: list[Album]
     artistInfo: Optional[ArtistInfo] = None
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class SearchItemIcon:
+class SearchItemIcon(BaseModel, extra=Extra.ignore):
     path: str
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class SearchItem:
+class SearchItem(BaseModel, extra=Extra.ignore):
     uid: str
     title: str
     subtitle: str
@@ -387,23 +339,17 @@ class TrackSearchItem(SearchItem):
     pass
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Search:
+class Search(BaseModel, extra=Extra.ignore):
     queue_id: str
     items: list[SearchItem]
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class ScanStatus:
+class ScanStatus(BaseModel, extra=Extra.ignore):
     scanning: bool
     count: int
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Response:
+class Response(BaseModel, extra=Extra.ignore):
     status: Optional[str] = None
     serverVersion: Optional[str] = None
     type: Optional[str] = None
@@ -411,26 +357,15 @@ class Response:
     error: Optional[dict] = None
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Search3Response:
-    artist: Optional[list[Artist]] = None
-    album: Optional[list[Album]] = None
-    song: Optional[list[Track]] = None
-
-    def __post_init__(self):
-        for k in ["artist", "album", "song"]:
-            if not getattr(self, k):
-                setattr(self, k, [])
+class Search3Response(BaseModel, extra=Extra.ignore):
+    artist: list[Artist] = []
+    album: list[Album] = []
+    song: list[Track] = []
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
 class ArtistInfoResponse(Response):
     artistInfo: Optional[ArtistInfo] = None
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
 class ScanStatusResponse(Response):
     scanStatus: Optional[ScanStatus] = None

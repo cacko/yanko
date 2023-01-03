@@ -34,7 +34,7 @@ dependencies:
     - bottle==0.12.23
     - bs4==0.0.1
     - butilka==0.1.18
-    - cachable==0.3.34
+    - cachable==0.3.35
     - cassidy==0.1.4
     - certifi==2022.6.15
     - cffi==1.15.1
@@ -83,6 +83,7 @@ dependencies:
     - py2app==0.28.4
     - pycodestyle==2.9.1
     - pycparser==2.21
+    - pydantic==1.10.4
     - pyfiglet==0.8.post1
     - pyflakes==2.5.0
     - pygments==2.13.0

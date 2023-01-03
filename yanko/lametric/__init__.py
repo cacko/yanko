@@ -1,11 +1,9 @@
 import logging
-from dataclasses import asdict, dataclass
 from os import environ
 from pathlib import Path
 from typing import Optional
-
+from pydantic import BaseModel
 import requests
-from dataclasses_json import Undefined, dataclass_json
 from pixelme import Pixelate
 from requests.exceptions import ConnectionError, JSONDecodeError
 
@@ -15,15 +13,12 @@ from yanko.lametric.auth import OTP
 from yanko.sonic import Status
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class NowPlayingFrame:
+class NowPlayingFrame(BaseModel):
     text: str
     icon: Optional[str] = None
 
 
-@dataclass
-class StatusFrame:
+class StatusFrame(BaseModel):
     status: str
 
 
@@ -66,9 +61,9 @@ class LaMetric(object, metaclass=LaMetricMeta):
         pix = Pixelate(icon, padding=200, block_size=25)
         pix.resize((8, 8))
         model = NowPlayingFrame(text=text, icon=pix.base64)
-        return self.__make_request(Method.POST, "api/nowplaying", json=asdict(model))
+        return self.__make_request(Method.POST, "api/nowplaying", json=model.dict())
 
     def send_status(self, status: Status = Status.STOPPED):
         return self.__make_request(
-            Method.POST, "api/status", json=asdict(StatusFrame(status=status.value))
+            Method.POST, "api/status", json=StatusFrame(status=status.value).dict()
         )

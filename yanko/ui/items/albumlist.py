@@ -1,19 +1,13 @@
-from dataclasses import dataclass
 from textwrap import wrap
-
-from AppKit import NSAttributedString  # type: ignore
 from bs4 import BeautifulSoup
-from dataclasses_json import Undefined, dataclass_json
 from rumps import App, Menu
-
+from pydantic import BaseModel
 from yanko.sonic import Album, ArtistInfo
 
 from .actions import MusicItem
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class AlbumItem:
+class AlbumItem(BaseModel):
     album: Album
     key: str
 

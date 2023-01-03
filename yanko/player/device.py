@@ -1,14 +1,11 @@
-from dataclasses import dataclass, field
 from typing import Optional, Any
-from dataclasses_json import Undefined, dataclass_json
 from yanko.core.bytes import nearest_bytes
+from pydantic import BaseModel, Extra, Field
 import sounddevice as sd
 import logging
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class DeviceParams:
+class DeviceParams(BaseModel, extra=Extra.ignore):
     name: Optional[str] = None
     index: Optional[int] = None
     hostapi: Optional[int] = None
@@ -18,12 +15,8 @@ class DeviceParams:
     default_low_output_latency: Optional[float] = None
     default_high_input_latency: Optional[float] = None
     default_high_output_latency: Optional[float] = None
-    default_samplerate: Optional[float] = None
-    prime_output_buffers_using_stream_callback: bool = field(default=True)
-
-    def __post_init__(self):
-        if not self.default_samplerate:
-            self.default_samplerate = 44100.0
+    default_samplerate: float = 44100.0
+    prime_output_buffers_using_stream_callback: bool = Field(default=True)
 
     @property
     def blocksize(self) -> int:

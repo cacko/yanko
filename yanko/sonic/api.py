@@ -2,7 +2,6 @@ import hashlib
 import string
 import sys
 import time
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
 from queue import Queue
@@ -12,7 +11,6 @@ from urllib.parse import urlencode
 import requests
 import urllib3
 from corestring import string_hash
-from dataclasses_json import dataclass_json
 import logging
 from yanko.core import perftime
 from yanko.core.config import app_config
@@ -51,13 +49,12 @@ from yanko.sonic import (
 from yanko.sonic.artist import ArtistInfo
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
-
+from pydantic import BaseModel
 urllib3.disable_warnings()
 
 
-@dataclass_json()
-@dataclass()
-class ApiArguments:
+
+class ApiArguments(BaseModel):
     u: str
     t: str
     s: str
@@ -71,8 +68,8 @@ def get_scan_status(url, manager_queue: Queue):
         time.sleep(2)
         res = requests.get(url)
         data = res.json()
-        response: ScanStatusResponse = ScanStatusResponse.from_dict(
-            data.get("subsonic-response")
+        response: ScanStatusResponse = ScanStatusResponse(
+            **data.get("subsonic-response")
         )
         status: ScanStatus = response.scanStatus
         manager_queue.put_nowait((Command.PLAYER_RESPONSE, status))
@@ -143,7 +140,7 @@ class Client(object):
     def api_args(self) -> dict[str, str]:
         return ApiArguments(
             u=self.username, t=self.token, s=self.salt, v=self.api
-        ).to_dict()  # type: ignore
+        ).dict()
 
     @property
     def status(self) -> Status:
@@ -254,8 +251,9 @@ class Client(object):
     def search(self, query):
         with perftime("search"):
             results = self.make_request(self.create_url(Subsonic.SEARCH3, query=query))
+            logging.warning(results)
             if results:
-                results: Search3Response = Search3Response.from_dict(results)
+                results = Search3Response(**results)
                 response = []
                 for artist in results.artist:
                     iconUrl = self.create_url(Subsonic.ARTIST_INFO, id=artist.id)
@@ -336,7 +334,7 @@ class Client(object):
 
     def get_song_data(self, song_id) -> Song:
         song_data = self.make_request(self.create_url(Subsonic.SONG, id=song_id))
-        return Song.from_dict(song_data)  # type: ignore
+        return Song(**song_data)
 
     def get_artist(self, artist_id) -> Optional[Artist]:
         if not artist_id:
@@ -344,7 +342,7 @@ class Client(object):
         artist_info = self.make_request(self.create_url(Subsonic.ARTIST, id=artist_id))
         if not artist_info:
             return
-        return Artist.from_dict(artist_info)  # type: ignore
+        return Artist(**artist_info)
 
     def get_artist_info(self, artist_id) -> Optional[ArtistInfoData]:
         artist_info = ArtistInfo(self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
@@ -497,7 +495,7 @@ class Client(object):
                     NowPlaying(
                         start=datetime.now(tz=timezone.utc),
                         track=Track(**{**track_data, "coverArt": coverArtUrl}),
-                        song=Song.from_dict(self.get_song_data(song_id)),
+                        song=self.get_song_data(song_id),
                         beats=self.load_beats(track_data.get("path")),
                     ),
                 )

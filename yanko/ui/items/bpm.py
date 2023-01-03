@@ -1,23 +1,20 @@
-from dataclasses import dataclass
 from queue import Queue
 from threading import Event
 from time import sleep, time
 from typing import Optional
 from yanko.player.device import Device
-from dataclasses_json import Undefined, dataclass_json
 import logging
 from yanko.core.thread import StoppableThread
 from yanko.sonic import NowPlaying
 from yanko.ui.icons import AnimatedIcon, Symbol
+from pydantic import BaseModel, Extra
 
 PausingIcon = AnimatedIcon(icons=[Symbol.GRID1, Symbol.GRID4])
 
 PlayingIcon = AnimatedIcon(icons=[Symbol.GRID2, Symbol.GRID3])
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class BPMEvent:
+class BPMEvent(BaseModel, extra=Extra.ignore):
     icon: str
     tempo: str
     beat_no: int
@@ -70,7 +67,7 @@ class BPM(StoppableThread):
         if self.__beats:
             total_beats = len(self.__beats)
             beats_bmp = total_beats / (self.__time_total / 60)
-            np.bpm = int(beats_bmp)
+            np.setBpm(int(beats_bmp))
             logging.debug(f"USING {beats_bmp} BEATS for BPM {self.__bpm}")
         else:
             self.__beats = self.get_static_beats()

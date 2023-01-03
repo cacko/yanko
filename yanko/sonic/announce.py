@@ -9,6 +9,8 @@ from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
 from yanko.sonic import Track
 
+class Payload(Track):
+    pass
 
 class AnnounceMeta(type):
 
@@ -43,12 +45,12 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
     def post(self, track: Track):
         if not len(self.__to):
             return
-        payload = track.to_dict()  # type: ignore
+        payload = track.dict()
         payload["coverArt"] = b64encode(
             Path(payload["coverArt"]).read_bytes()).decode()
         for url in self.__to:
             try:
-                resp = requests.post(url, json=payload)
+                resp = requests.post(url, json=Payload(**payload).json())
                 logging.debug(resp.status_code)
             except ConnectionError:
                 logging.warn(f"Announer failer for {url}")

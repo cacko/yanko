@@ -1,31 +1,24 @@
-from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
 import humanfriendly
 from cachable import Cachable
-from dataclasses_json import Undefined, config, dataclass_json
 from humanfriendly.tables import format_smart_table
 from progressor import Progress
 import logging
 from yanko.db.base import YankoDb
 from yanko.db.models import BaseModel
-
+from pydantic import BaseModel, Extra, Field
 
 def format_size(*args, **kwds):
     print(args, kwds)
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class CacheType:
+
+class CacheType(BaseModel, extra=Extra.ignore):
     name: str
     count: int
-    size: int = field(
-        metadata=config(
-            encoder=humanfriendly.format_size,
-        )
-    )
+    size: int = Field()
 
     def __post_init__(self):
         self.__files = []
@@ -42,15 +35,14 @@ class CacheType:
                 fp.unlink(missing_ok=True)
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass
-class Cache:
+
+class Cache(BaseModel, extra=Extra.ignore):
     cover_art: CacheType
     cover_icon: CacheType
     beats_json: CacheType
 
     def to_table(self):
-        data = [map(str, v.values()) for v in self.to_dict().values()]  # type: ignore
+        data = [map(str, v.values()) for v in self.dict().values()]
 
         return format_smart_table(data, ["Name", "Count", "Size"])
 

@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Optional, Any
@@ -231,10 +230,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         if self.__status in [Status.PLAYING] and self.__nowplaying:
             track = self.__nowplaying.track
             LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
-        return asdict(StatusFrame(status=self.__status.value))
+        return StatusFrame(status=self.__status.value).dict()
 
     def _onSearch(self, resp: Search):
-        Server.queue(resp.queue_id).put_nowait(resp.to_dict())  # type: ignore
+        Server.queue(resp.queue_id).put_nowait(resp.dict())
 
     def _onPlaylist(self, resp: Playlist):
         list = resp.tracks

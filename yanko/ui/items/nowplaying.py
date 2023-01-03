@@ -1,9 +1,6 @@
 import logging
 from .actions import MusicItem
 from yanko.sonic import NowPlaying, Track
-from AppKit import (
-    NSAttributedString,
-)
 from corestring import truncate_to_rows
 
 

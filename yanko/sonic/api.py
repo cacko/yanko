@@ -18,7 +18,6 @@ from yanko.core.thread import StoppableThread
 from yanko.player.ffmpeg import FFMPeg
 from yanko.sonic import (
     RESULT_KEYS,
-    Action,
     Album,
     AlbumSearchItem,
     AlbumType,

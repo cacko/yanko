@@ -142,3 +142,10 @@ class FFMPeg(BasePlayer):
 
     def resume(self):
         self._queue.put_nowait(Action.RESUME)
+
+    def exit(self):
+        if self.__reader:
+            self.__reader.stop()
+        if self.__writer:
+            self.__writer.stop()
+        return super().exit()

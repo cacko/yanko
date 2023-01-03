@@ -19,29 +19,42 @@ class AlbumItem:
 
 
 class ArtistInfoItem(MusicItem):
-    def __init__(self, id, artist: str, info: ArtistInfo, callback=None, key=None, icon=None, dimensions=None, template=None):
+    def __init__(
+        self,
+        id,
+        artist: str,
+        info: ArtistInfo,
+        callback=None,
+        key=None,
+        icon=None,
+        dimensions=None,
+        template=False,
+    ):
         bio_bs = BeautifulSoup(info.biography, features="html.parser")  # type: ignore
         biography = "\n".join(wrap(bio_bs.get_text(), width=50, max_lines=4))
         title = f"{artist} - {biography}"
         dimensions = [70, 70]
         icon = info.image
         super().__init__(title, id, callback, key, icon, dimensions, template)
-        tt = NSAttributedString.alloc().initWithString_(
-            f"{artist.upper()}\n{biography}")
-        self._menuitem.setAttributedTitle_(tt)
+        self.setAttrTitle(f"{artist.upper()}\n{biography}")
 
 
 class AlbumMenuItem(MusicItem):
-
-    def __init__(self, album: Album, callback=None, key=None, icon=None, dimensions=None, template=None):
+    def __init__(
+        self,
+        album: Album,
+        callback=None,
+        key=None,
+        icon=None,
+        dimensions=None,
+        template=False,
+    ):
         title = f"{album.album} / {album.title}"
         icon = album.coverArt
         id = album.id
         dimensions = [35, 35]
         super().__init__(title, id, callback, key, icon, dimensions, template)
-        tt = NSAttributedString.alloc().initWithString_(
-            f"{album.artist}\n{album.title} ({album.year})")
-        self._menuitem.setAttributedTitle_(tt)
+        self.setAttrTitle(f"{album.artist}\n{album.title} ({album.year})")
 
 
 class Albumlist:
@@ -95,18 +108,19 @@ class Albumlist:
 
 
 class ArtistAlbumsList(Albumlist):
-
     def update(self, info: ArtistInfo, albums: list[Album], callback, callback_artist):
         try:
             self.menu._menu.removeAllItems()
         except AttributeError:
             pass
-        self.menu.add(ArtistInfoItem(
-            id=albums[0].artistId,
-            artist=albums[0].artist,
-            info=info,
-            callback=callback_artist
-        ))
+        self.menu.add(
+            ArtistInfoItem(
+                id=albums[0].artistId,
+                artist=albums[0].artist,
+                info=info,
+                callback=callback_artist,
+            )
+        )
         for album in albums:
             self.menu.add(AlbumMenuItem(album, callback=callback))
         self.menu._menuitem.setEnabled_(True)  # type: ignore

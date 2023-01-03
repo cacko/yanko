@@ -1,4 +1,4 @@
-from rumps import MenuItem
+from .baseitem import MenuItem
 from yanko.ui.icons import Label, Symbol
 
 

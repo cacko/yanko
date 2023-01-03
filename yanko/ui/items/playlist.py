@@ -11,7 +11,6 @@ from AppKit import (
 )
 from dataclasses_json import Undefined, dataclass_json
 from PyObjCTools.Conversion import propertyListFromPythonCollection
-from rumps import App, Menu
 
 from yanko.sonic import Track
 

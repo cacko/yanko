@@ -33,8 +33,7 @@ class NowPlayingItem(MusicItem):
             f"💿 {truncate_to_rows(track.album, 40)} ({track.year})",
             f"ℹ️ {track.total_time} {track.audioType.upper()} {track.bitRate}kbps / BPM:{np.display_bpm}",
         ]
-        tt = NSAttributedString.alloc().initWithString_("\n".join(rows))
-        self._menuitem.setAttributedTitle_(tt)
+        self.setAttrTitle("\n".join(rows))
 
     @property
     def track(self) -> Track:

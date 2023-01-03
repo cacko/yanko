@@ -4,7 +4,7 @@ from yanko.sonic import ArtistInfo as ArtistInfoData, ArtistInfoResponse
 from yanko.core.cachable import CachableDb
 from yanko.db.models.artist_info import ArtistInfo as ArtistInfoModel
 import requests
-
+import logging
 
 class ArtistInfo(CachableDb):
 
@@ -42,8 +42,8 @@ class ArtistInfo(CachableDb):
         rq = requests.get(self._url)
         json = rq.json()
         if json:
-            resp = ArtistInfoResponse.from_dict(json.get("subsonic-response"))
-            info = resp.artistInfo.to_dict()
+            resp = ArtistInfoResponse(**json.get("subsonic-response"))
+            info = resp.artistInfo.dict()
             self._struct = self.tocache({"artist_id": self.artist_id, **info})
 
     @property

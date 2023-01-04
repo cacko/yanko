@@ -14,7 +14,7 @@ class Payload(Track):
     
     @property
     def payload(self) -> dict:
-        return json.loads(self.dict())
+        return json.loads(self.json())
 
 class AnnounceMeta(type):
 

@@ -99,7 +99,8 @@ setup(
         "colorama==0.4.6",
         "corethread==0.1.3",
         "corelog==0.0.7",
-        "cachable>=0.3.35"
+        "cachable>=0.3.35",
+        "osascript>=2020.12.3"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

@@ -7,12 +7,15 @@ from corethread import StoppableThread
 from threading import Event
 from yanko.player.device import Device
 from yanko.sonic import Action
+import osascript
 
 
 class Output(StoppableThread):
 
     needs_buffering = True
     __stream: sd.RawOutputStream
+    __volume: float = 1.0
+    __muted: bool = False
 
     def __init__(
         self,
@@ -38,6 +41,25 @@ class Output(StoppableThread):
             dtype="float32",
         )
         super().__init__(*args, **kwargs)
+
+    @property
+    def volume(self) -> int:
+        return self.__volume
+
+    @volume.setter
+    def volume(self, val: float = 1.0):
+        self.__volume = int(50 * val)
+        osascript.osascript(f"set volume output volume {self.__volume}")
+
+    @property
+    def muted(self) -> bool:
+        return self.__muted
+
+    @muted.setter
+    def muted(self, val: bool = False):
+        self.__muted = val
+        mode = "with" if val else "without"
+        osascript.osascript(f"set volume {mode} output muted")
 
     @property
     def samplesize(self) -> int:
@@ -67,9 +89,8 @@ class Output(StoppableThread):
     def __output(self):
         data = self.data_queue.get_nowait()
         data_array = np.frombuffer(data, dtype="float32")
-        volume_norm = data_array * (0 if self.muted else self.volume)
         self.time_event.set()
-        self.__stream.write(volume_norm.tobytes())
+        self.__stream.write(data_array.tobytes())
         self.data_queue.task_done()
 
     def __control(self):

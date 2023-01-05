@@ -69,6 +69,7 @@ dependencies:
     - numpy==1.23.2
     - olefile==0.46
     - opencv-python==4.6.0.66
+    - osascript==2020.12.3
     - packaging==21.3
     - pantomime==0.5.1
     - paste==3.5.2.2
@@ -245,6 +246,7 @@ dependencies:
     - requests-toolbelt==0.9.1
     - rich==12.6.0
     - rumps==5.14.23
+    - runcmd==2020.12.3
     - semver==2.13.0
     - six==1.16.0
     - sounddevice==0.4.5

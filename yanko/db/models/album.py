@@ -1,11 +1,11 @@
 from peewee import (BooleanField, CharField, ForeignKeyField, IntegerField,
                     TimestampField)
 
-from . import BaseModel
+from . import ModelBase
 from .artist import Artist
 
 
-class Album(BaseModel):
+class Album(ModelBase):
     artistInfo = ForeignKeyField(Artist, related_name='artist_info')
     id = CharField()
     parent = CharField()

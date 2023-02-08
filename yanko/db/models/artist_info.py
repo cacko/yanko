@@ -1,9 +1,9 @@
 from peewee import CharField, TextField
 
-from . import BaseModel
+from . import ModelBase
 
 
-class ArtistInfo(BaseModel):
+class ArtistInfo(ModelBase):
     artist_id = CharField(index=True)
     biography = TextField(null=True)
     musicBrainzId = CharField(null=True)

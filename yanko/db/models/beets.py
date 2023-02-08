@@ -1,10 +1,10 @@
 from peewee import CharField, FloatField
 from playhouse.sqlite_ext import JSONField
 
-from . import BaseModel
+from . import ModelBase
 
 
-class Beats(BaseModel):
+class Beats(ModelBase):
     path = CharField(index=True)
     beats = JSONField()
     tempo = FloatField()

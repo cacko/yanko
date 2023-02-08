@@ -25,8 +25,8 @@ class BasePlayer(object):
         stream_url,
         track_data,
         time_event,
-        volume = 1,
-        muted = False,
+        volume: float = 1,
+        muted: bool = False,
         format: Optional[StreamFormat] = None,
     ):
         self.volume = volume

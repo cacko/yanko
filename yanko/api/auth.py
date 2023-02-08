@@ -5,7 +5,8 @@ from bottle import HTTPError, request
 
 from yanko.core.config import app_config
 
-ALLOWED_IPS = ['127.0.0.1']
+ALLOWED_IPS = ["127.0.0.1"]
+
 
 def auth_required(f):
     @wraps(f)
@@ -19,4 +20,5 @@ def auth_required(f):
             err = HTTPError(403, "no")
             return err
         return f(*args, **kwargs)
+
     return decorated_function

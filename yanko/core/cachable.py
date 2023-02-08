@@ -7,12 +7,12 @@ from humanfriendly.tables import format_smart_table
 from progressor import Progress
 import logging
 from yanko.db.base import YankoDb
-from yanko.db.models import BaseModel
+from yanko.db.models import ModelBase
 from pydantic import BaseModel, Extra, Field
+
 
 def format_size(*args, **kwds):
     print(args, kwds)
-
 
 
 class CacheType(BaseModel, extra=Extra.ignore):
@@ -35,7 +35,6 @@ class CacheType(BaseModel, extra=Extra.ignore):
                 fp.unlink(missing_ok=True)
 
 
-
 class Cache(BaseModel, extra=Extra.ignore):
     cover_art: CacheType
     cover_icon: CacheType
@@ -55,7 +54,7 @@ class Method(Enum):
 
 
 class CachableDb(Cachable):
-    def __init__(self, model: BaseModel, id_key: str, id_value: str) -> None:
+    def __init__(self, model: ModelBase, id_key: str, id_value: str) -> None:
         self.__model = model
         self.__id_key = id_key
         self.__id_value = id_value

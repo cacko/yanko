@@ -15,7 +15,6 @@ from yanko.sonic import (
     Status,
     RecentlyPlayed,
     ArtistInfo as ArtistInfoData,
-    VolumeStatus,
 )
 from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
@@ -23,38 +22,57 @@ from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
 from multiprocessing.pool import ThreadPool
 import logging
-import time as _time
 
 
 def resolveCoverArt(obj):
-    ca = CoverArtFile(obj.coverArt)
-    res: Path = ca.path
-    obj.coverArt = res.as_posix() if res.exists() else None
-    icon: Path = ca.icon_path
-    if icon:
-        obj.coverArtIcon = icon.as_posix()
-    else:
-        obj.coverArtIcob = None
+    try:
+        ca = CoverArtFile(obj.coverArt)
+        assert ca.path
+        res = ca.path
+        obj.coverArt = res.as_posix() if res.exists() else None
+        icon = ca.icon_path
+        if icon:
+            obj.coverArtIcon = icon.as_posix()
+        else:
+            obj.coverArtIcob = None
+    except AssertionError as e:
+        logging.error(e)
     return obj
 
 
 def resolveArtistImage(obj: ArtistInfoData):
-    ca = CoverArtFile(obj.largeImageUrl)
-    res: Path = ca.path
-    obj.image = res.as_posix() if res.exists() else None
+    try:
+        assert obj.largeImageUrl
+        ca = CoverArtFile(obj.largeImageUrl)
+        assert ca.path
+        res: Path = ca.path
+        obj.image = res.as_posix() if res.exists() else None
+    except AssertionError as e:
+        logging.error(e)
     return obj
 
 
 def resolveIcon(obj):
     if isinstance(obj, ArtistSearchItem):
-        url = obj.icon.path
-        ai = ArtistInfo(url)
-        info: ArtistInfoData = ai.info
-        if info:
-            obj.icon.path = info.largeImageUrl
-    ca = CoverArtFile(obj.icon.path)
-    res: Path = ca.path
-    obj.icon.path = res.as_posix() if res.exists() else None
+        try:
+            assert obj.icon
+            url = obj.icon.path
+            ai = ArtistInfo(url)
+            info = ai.info
+            if info:
+                assert info.largeImageUrl
+                obj.icon.path = info.largeImageUrl
+        except AssertionError as e:
+            logging.error(e)
+    try:
+        assert obj.icon
+        assert obj.icon.path
+        ca = CoverArtFile(obj.icon.path)
+        res = ca.path
+        assert res
+        obj.icon.path = res.as_posix() if res.exists() else None
+    except AssertionError as e:
+        logging.error(e)
     return obj
 
 
@@ -117,7 +135,6 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
             time_event,
         )
         super().__init__()
-
 
     def run(self):
         while not self.stopped():
@@ -196,30 +213,31 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         elif isinstance(cmd, MostPlayed):
             cmd.albums = resolveAlbums(cmd.albums)
         elif isinstance(cmd, ArtistAlbums):
+            assert cmd.artistInfo
             cmd.artistInfo = resolveArtistImage(cmd.artistInfo)
             cmd.albums = resolveAlbums(cmd.albums)
         self.__ui_queue.put_nowait(cmd)
 
     def __random(self):
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.STOP,None))
+            self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.playqueue.skip_to = None
         self.api.command_queue.put_nowait((Command.RANDOM, None))
 
     def __random_album(self):
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.STOP,None))
+            self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.playqueue.skip_to = None
         self.api.command_queue.put_nowait((Command.RANDOM_ALBUM, None))
 
     def __toggle(self):
         if self.api.isPlaying:
             if self.api.status == Status.PAUSED:
-                self.api.playback_queue.put_nowait((Action.RESUME,None))
+                self.api.playback_queue.put_nowait((Action.RESUME, None))
                 self.api.status = Status.RESUMED
                 self.api.search_queue.put_nowait((Command.TOGGLE, None))
             else:
-                self.api.playback_queue.put_nowait((Action.PAUSE,None))
+                self.api.playback_queue.put_nowait((Action.PAUSE, None))
                 self.api.status = Status.PAUSED
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
@@ -246,7 +264,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __album(self, albumId):
         self.api.playqueue.skip_to = None
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.STOP,None))
+            self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
     def __current_album(self):
@@ -256,19 +274,19 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __play_last_added(self):
         self.api.playqueue.skip_to = None
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.STOP,None))
+            self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.command_queue.put_nowait((Command.PLAY_LAST_ADDED, None))
 
     def __play_most_played(self):
         self.api.playqueue.skip_to = None
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.STOP,None))
+            self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.command_queue.put_nowait((Command.PLAY_MOST_PLAYED, None))
 
     def __artist(self, artistId):
         self.api.playqueue.skip_to = None
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.STOP,None))
+            self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.command_queue.put_nowait((Command.ARTIST, artistId))
 
     def __current_artist(self):
@@ -278,25 +296,25 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __albumsong(self, albumId, songId):
         self.api.playqueue.skip_to = songId
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.STOP,None))
+            self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.command_queue.put_nowait((Command.ALBUM, albumId))
 
     def __song(self, songId):
         self.api.playqueue.skip_to = songId
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.NEXT,None))
+            self.api.playback_queue.put_nowait((Action.NEXT, None))
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
     def __quit(self):
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.EXIT,None))
+            self.api.playback_queue.put_nowait((Action.EXIT, None))
         self.commander.put_nowait(
             (Command.PLAYER_RESPONSE, Playstatus(status=Status.EXIT))
         )
 
     def __stop(self):
-        self.api.playback_queue.put_nowait((Action.STOP,None))
+        self.api.playback_queue.put_nowait((Action.STOP, None))
 
     def __volume_up(self):
         if self.api.isPlaying:
@@ -316,15 +334,15 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __next(self):
         self.api.playqueue.skip_to = None
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.NEXT,None))
+            self.api.playback_queue.put_nowait((Action.NEXT, None))
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
     def __previous(self):
         if self.api.isPlaying:
-            self.api.playback_queue.put_nowait((Action.PREVIOUS,None))
+            self.api.playback_queue.put_nowait((Action.PREVIOUS, None))
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
     def __restart(self):
-        self.api.playback_queue.put_nowait((Action.RESTART,None))
+        self.api.playback_queue.put_nowait((Action.RESTART, None))

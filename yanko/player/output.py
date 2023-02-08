@@ -13,7 +13,6 @@ import osascript
 class Output(StoppableThread):
 
     needs_buffering = True
-    __stream: sd.RawOutputStream
     __volume: float = 1.0
     __muted: bool = False
 
@@ -44,7 +43,7 @@ class Output(StoppableThread):
 
     @property
     def volume(self) -> int:
-        return self.__volume
+        return int(self.__volume)
 
     @volume.setter
     def volume(self, val: float = 1.0):
@@ -63,10 +62,10 @@ class Output(StoppableThread):
 
     @property
     def samplesize(self) -> int:
-        return self.__stream.samplesize
+        return self.__stream.samplesize  # type: ignore
 
     def run(self):
-        logging.info(f"Output thead started")
+        logging.info("Output thead started")
         self.__stream.start()
         with self.__stream:
             logging.debug(f"Buffering {Device.buffsize} blocks")

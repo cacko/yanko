@@ -4,12 +4,11 @@ from queue import Empty
 from typing import Optional
 import ffmpeg
 from yanko.player.base import BasePlayer
-from yanko.sonic import Action, Command, Playstatus, Status, VolumeStatus
+from yanko.sonic import Action, Command, Playstatus, Status
 import logging
 from .input import Input
 from .output import Output
 from .exceptions import StreamEnded
-from threading import Event
 
 
 def int_or_str(text):
@@ -29,6 +28,7 @@ class FFMPeg(BasePlayer):
 
     @property
     def status(self) -> Status:
+        assert self.__status
         return self.__status
 
     @status.setter
@@ -55,7 +55,7 @@ class FFMPeg(BasePlayer):
         try:
             self.__writer = Output(
                 time_event=self._time_event,
-                volume=self.volume,
+                volume=int(self.volume),
                 muted=self.muted,
                 end_event=self._end_event,
             )
@@ -84,13 +84,14 @@ class FFMPeg(BasePlayer):
             logging.error(e)
         except Exception as e:
             logging.error(e)
-        logging.debug(f"Ending stream")
+        logging.debug("Ending stream")
         self._time_event.clear()
         return Status.PLAYING
 
     def process_queue(self):
         try:
             command, payload = self._queue.get_nowait()
+            assert self._control
             match (command):
                 case Action.RESTART:
                     self._queue.task_done()

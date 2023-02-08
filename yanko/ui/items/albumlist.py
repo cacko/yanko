@@ -43,7 +43,7 @@ class AlbumMenuItem(MusicItem):
         dimensions=None,
         template=False,
     ):
-        title = f"{album.album} / {album.title}"
+        title = f"{album.artist} / {album.title}"
         icon = album.coverArt
         id = album.id
         dimensions = [35, 35]

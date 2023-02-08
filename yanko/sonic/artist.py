@@ -1,22 +1,26 @@
 from urllib.parse import urlparse, parse_qs
 from hashlib import blake2b
-from yanko.sonic import ArtistInfo as ArtistInfoData, ArtistInfoResponse
+from yanko.sonic import ArtistInfo as ArtistInfoData, ArtistInfo as ArtistInfoResponse
 from yanko.core.cachable import CachableDb
 from yanko.db.models.artist_info import ArtistInfo as ArtistInfoModel
 import requests
+from typing import Optional
 import logging
+
 
 class ArtistInfo(CachableDb):
 
     _url = None
     _id = None
     _artist_id = None
-    _struct: ArtistInfoModel = None
+    _struct: Optional[ArtistInfoModel] = None
 
     def __init__(self, url) -> None:
         self._url = url
         super().__init__(
-            model=ArtistInfoModel, id_key="artist_id", id_value=self.artist_id
+            model=ArtistInfoModel,
+            id_key="artist_id",
+            id_value=self.artist_id
         )
 
     @property
@@ -39,15 +43,24 @@ class ArtistInfo(CachableDb):
         return self._artist_id
 
     def _fetch(self):
-        rq = requests.get(self._url)
-        json = rq.json()
-        if json:
-            resp = ArtistInfoResponse(**json.get("subsonic-response"))
-            info = resp.artistInfo.dict()
+        try:
+            rq = requests.get(self._url)
+            json = rq.json()
+            assert json
+            info = json.get("subsonic-response", {}).get("artistInfo", None)
+            print(info)
+            assert info
+            mbz = info.get("musicBrainzId", None)
+            assert mbz
+            info["musicBrainzId"] = mbz.get("value")
+            resp = ArtistInfoResponse(**info)
+            info = resp.dict()
             self._struct = self.tocache({"artist_id": self.artist_id, **info})
+        except AssertionError as e:
+            logging.exception(e)
 
     @property
-    def info(self) -> ArtistInfoData:
+    def info(self) -> Optional[ArtistInfoData]:
         isLoaded = self.load()
         if not isLoaded:
             self._fetch()

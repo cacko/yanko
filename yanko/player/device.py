@@ -2,7 +2,6 @@ from typing import Optional, Any
 from yanko.core.bytes import nearest_bytes
 from pydantic import BaseModel, Extra, Field
 import sounddevice as sd
-import logging
 
 
 class DeviceParams(BaseModel, extra=Extra.ignore):

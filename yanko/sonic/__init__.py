@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from math import floor
 from typing import Optional
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, Extra, Field
 import pantomime
 from corestring import truncate
 from coretime import seconds_to_duration
@@ -158,12 +158,11 @@ class Song(BaseModel, extra=Extra.ignore):
 
 class Track(BaseModel, extra=Extra.ignore):
     id: str
-    parent: str
+    parent: Optional[str] = None
     isDir: bool
     title: str
     album: str
     artist: str
-
     duration: int
     created: datetime
     size: int
@@ -201,12 +200,13 @@ class Track(BaseModel, extra=Extra.ignore):
 
 class Album(BaseModel, extra=Extra.ignore):
     id: str
-    parent: str
-    isDir: bool
-    title: str
-    album: str
+    parent: Optional[str] = None
+    isDir: Optional[bool] = None
+    title: str = Field(default="")
+    name: str = Field(default="")
+    # album: str
     artist: str
-    duration: int
+    duration: Optional[int] = None
     created: datetime
     artistId: Optional[str] = None
     year: Optional[int] = None
@@ -215,17 +215,25 @@ class Album(BaseModel, extra=Extra.ignore):
     coverArtIcon: Optional[str] = None
     songCount: Optional[int] = None
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        if not self.title:
+            self.title = self.name
+        if not self.name:
+            self.name = self.title
+
 
 class Artist(BaseModel, extra=Extra.ignore):
     id: str
     name: str
-    albumCount: Optional[int] = 0
+    albumCount: int = Field(default=0)
     artistImageUrl: Optional[str] = None
     artist_info: Optional[str] = None
     coverArt: Optional[str] = None
     album: Optional[list[Album]] = None
 
-    def __post_init__(self):
+    def __init__(self, **data):
+        super().__init__(**data)
         if not self.album:
             self.album = []
 
@@ -315,7 +323,7 @@ class ArtistAlbums(BaseModel, extra=Extra.ignore):
 
 
 class SearchItemIcon(BaseModel, extra=Extra.ignore):
-    path: str
+    path: Optional[str] = None
 
 
 class SearchItem(BaseModel, extra=Extra.ignore):

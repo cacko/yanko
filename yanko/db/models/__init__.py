@@ -1,4 +1,4 @@
-__all__ = ["BaseModel"]
+__all__ = ["ModelBase"]
 
 from peewee import Model
 from playhouse.shortcuts import model_to_dict
@@ -6,7 +6,7 @@ from playhouse.shortcuts import model_to_dict
 from yanko.db.base import YankoDb
 
 
-class BaseModel(Model):
+class ModelBase(Model):
     @classmethod
     def fetch(cls, *query, **filters):
         try:

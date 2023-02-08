@@ -2,13 +2,13 @@ import hashlib
 import string
 import sys
 import time
+import requests
 from datetime import datetime, timezone
 from functools import lru_cache
 from queue import Queue
 from random import SystemRandom, choice
-from typing import Optional
+from typing import Optional, Any
 from urllib.parse import urlencode
-import requests
 import urllib3
 from corestring import string_hash
 import logging
@@ -43,20 +43,20 @@ from yanko.sonic import (
     Subsonic,
     Track,
     TrackSearchItem,
-    VolumeStatus
+    VolumeStatus,
 )
 from yanko.sonic.artist import ArtistInfo
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
 from pydantic import BaseModel
-urllib3.disable_warnings()
 
+urllib3.disable_warnings()
 
 
 class ApiArguments(BaseModel):
     u: str
-    t: str
-    s: str
+    p: str
+    # s: str
     v: str
     c: str = "Yanko"
     f: str = "json"
@@ -70,6 +70,7 @@ def get_scan_status(url, manager_queue: Queue):
         response: ScanStatusResponse = ScanStatusResponse(
             **data.get("subsonic-response")
         )
+        assert response.scanStatus
         status: ScanStatus = response.scanStatus
         manager_queue.put_nowait((Command.PLAYER_RESPONSE, status))
         if not status.scanning:
@@ -97,7 +98,7 @@ class Client(object):
     playidx = 0
     player: Optional[FFMPeg] = None
     scanning = False
-    __threads = []
+    __threads: list[StoppableThread] = []
     __volume: float = 1
     __muted: bool = False
 
@@ -138,7 +139,9 @@ class Client(object):
     @property
     def api_args(self) -> dict[str, str]:
         return ApiArguments(
-            u=self.username, t=self.token, s=self.salt, v=self.api
+            u=self.username,
+            p=self.password,
+            v=self.api
         ).dict()
 
     @property
@@ -148,7 +151,8 @@ class Client(object):
     @status.setter
     def status(self, val: Status):
         self.__status = val
-        self.manager_queue.put_nowait((Command.PLAYER_RESPONSE, Playstatus(status=val)))
+        self.manager_queue.put_nowait(
+            (Command.PLAYER_RESPONSE, Playstatus(status=val)))
         if val == Status.RESUMED:
             self.status = Status.PLAYING
 
@@ -163,7 +167,9 @@ class Client(object):
             (
                 Command.PLAYER_RESPONSE,
                 VolumeStatus(
-                    volume=self.__volume, muted=self.__muted, timestamp=time.time()
+                    volume=self.__volume,
+                    muted=self.__muted,
+                    timestamp=time.time()
                 ),
             )
         )
@@ -179,21 +185,26 @@ class Client(object):
             (
                 Command.PLAYER_RESPONSE,
                 VolumeStatus(
-                    volume=self.__volume, muted=self.__muted, timestamp=time.time()
+                    volume=self.__volume,
+                    muted=self.__muted,
+                    timestamp=time.time()
                 ),
             )
         )
-
 
     @property
     def isPlaying(self) -> bool:
         return self.player is not None and self.player.status != Status.STOPPED
 
     def test_config(self):
-        return self.make_request(url=self.create_url(Subsonic.PING)) is not None
+        return bool(self.make_request(url=self.create_url(Subsonic.PING)))
 
     def hash_password(self):
-        characters = string.ascii_uppercase + string.ascii_lowercase + string.digits
+        characters = "".join([
+            string.ascii_uppercase,
+            string.ascii_lowercase,
+            string.digits,
+        ])
         salt = "".join(SystemRandom().choice(characters) for i in range(9))  # noqa
         salted_password = self.password + salt
         token = hashlib.md5(salted_password.encode("utf-8")).hexdigest()
@@ -249,13 +260,15 @@ class Client(object):
 
     def search(self, query):
         with perftime("search"):
-            results = self.make_request(self.create_url(Subsonic.SEARCH3, query=query))
+            results = self.make_request(
+                self.create_url(Subsonic.SEARCH3, query=query))
             logging.warning(results)
             if results:
                 results = Search3Response(**results)
                 response = []
                 for artist in results.artist:
-                    iconUrl = self.create_url(Subsonic.ARTIST_INFO, id=artist.id)
+                    iconUrl = self.create_url(
+                        Subsonic.ARTIST_INFO, id=artist.id)
                     response.append(
                         ArtistSearchItem(
                             uid=artist.id,
@@ -266,7 +279,8 @@ class Client(object):
                         )
                     )
                 for album in results.album:
-                    iconUrl = self.create_url(Subsonic.COVER_ART, id=album.id, size=200)
+                    iconUrl = self.create_url(
+                        Subsonic.COVER_ART, id=album.id, size=200)
                     response.append(
                         AlbumSearchItem(
                             uid=album.id,
@@ -325,28 +339,34 @@ class Client(object):
         return top_songs.get("song") if top_songs else None
 
     def get_album_tracks(self, album_id):
-        album_info = self.make_request(self.create_url(Subsonic.ALBUM, id=album_id))
+        album_info = self.make_request(
+            self.create_url(Subsonic.ALBUM, id=album_id))
         if not album_info:
             return None
         songs = album_info.get("song", [])
         return songs
 
     def get_song_data(self, song_id) -> Song:
-        song_data = self.make_request(self.create_url(Subsonic.SONG, id=song_id))
-        return Song(**song_data)
+        song_data = self.make_request(
+            self.create_url(Subsonic.SONG, id=song_id))
+        return Song(**song_data)  # type:ignore
 
     def get_artist(self, artist_id) -> Optional[Artist]:
         if not artist_id:
-            return
-        artist_info = self.make_request(self.create_url(Subsonic.ARTIST, id=artist_id))
+            return None
+        artist_info = self.make_request(
+            self.create_url(Subsonic.ARTIST, id=artist_id))
         if not artist_info:
-            return
-        return Artist(**artist_info)
+            return None
+        print(artist_info)
+        return Artist(**artist_info)  # type: ignore
 
     def get_artist_info(self, artist_id) -> Optional[ArtistInfoData]:
-        artist_info = ArtistInfo(self.create_url(Subsonic.ARTIST_INFO, id=artist_id))
+        artist_info = ArtistInfo(self.create_url(
+            Subsonic.ARTIST_INFO, id=artist_id))
         if artist_info:
             return artist_info.info
+        return None
 
     def get_artist_albums(self, artist_id) -> list[Album]:
         artist = self.get_artist(artist_id)
@@ -356,7 +376,8 @@ class Client(object):
         if not albums:
             return []
         for album in albums:
-            album.coverArt = self.create_url(Subsonic.COVER_ART, id=album.id, size=200)
+            album.coverArt = self.create_url(
+                Subsonic.COVER_ART, id=album.id, size=200)
         return albums
 
     def play_random_songs(self, fetch=True):
@@ -473,7 +494,7 @@ class Client(object):
             return beats.beats
         return None
 
-    def play_stream(self, track_data):
+    def play_stream(self, track_data: dict[str, Any]):
         self.status = Status.LOADING
         stream_url = self.create_url(Subsonic.STREAM)
         song_id = track_data.get("id")
@@ -486,7 +507,8 @@ class Client(object):
             coverArt = track_data.get("coverArt")
             coverArtUrl = coverArt
             if coverArt:
-                coverArtUrl = self.create_url(Subsonic.COVER_ART, id=coverArt, size=500)
+                coverArtUrl = self.create_url(
+                    Subsonic.COVER_ART, id=coverArt, size=500)
 
             self.manager_queue.put_nowait(
                 (
@@ -495,7 +517,7 @@ class Client(object):
                         start=datetime.now(tz=timezone.utc),
                         track=Track(**{**track_data, "coverArt": coverArtUrl}),
                         song=self.get_song_data(song_id),
-                        beats=self.load_beats(track_data.get("path")),
+                        beats=self.load_beats(track_data.get("path", "")),
                     ),
                 )
             )
@@ -507,7 +529,7 @@ class Client(object):
                 time_event=self.time_event,
                 track_data=track_data,
                 volume=self.volume,
-                muted=self.muted
+                muted=self.muted,
             )
 
             self.playqueue.last_id = song_id
@@ -531,7 +553,8 @@ class Client(object):
             return False
         except Exception as e:
             logging.error(
-                "ffmpeg existed unexpectedly with the following error: {}".format(e)
+                "ffmpeg existed unexpectedly with the following error: {}".format(
+                    e)
             )
             return False
 
@@ -626,11 +649,15 @@ class Client(object):
             self.search_queue.task_done()
 
     def exit(self):
-        self.player.exit()
+        try:
+            assert self.player
+            self.player.exit()
+        except AssertionError:
+            pass
         for th in self.__threads:
             try:
                 th.stop()
-            except:
+            except Exception:
                 pass
 
     def __toAlbums(self, fnc, *args):

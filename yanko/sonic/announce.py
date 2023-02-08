@@ -10,11 +10,13 @@ from yanko.core.thread import StoppableThread
 from yanko.sonic import Track
 import json
 
+
 class Payload(Track):
-    
+
     @property
     def payload(self) -> dict:
         return json.loads(self.json())
+
 
 class AnnounceMeta(type):
 
@@ -30,6 +32,7 @@ class AnnounceMeta(type):
             cls().start()
         return cls().queue.put_nowait(track)
 
+
 class Announce(StoppableThread, metaclass=AnnounceMeta):
 
     __to = []
@@ -37,7 +40,7 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
 
     def __init__(self):
         self.queue = Queue()
-        self.__to = app_config.get("announce",[])
+        self.__to = app_config.get("announce", [])
         super().__init__()
 
     def run(self):

@@ -57,7 +57,7 @@ class ArtistInfo(CachableDb):
             info = resp.dict()
             self._struct = self.tocache({"artist_id": self.artist_id, **info})
         except AssertionError as e:
-            logging.exception(e)
+            logging.debug(e)
 
     @property
     def info(self) -> Optional[ArtistInfoData]:

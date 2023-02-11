@@ -331,12 +331,12 @@ class Client(object):
 
     def get_top_songs(self, artist_id):
         artist_info = self.get_artist(artist_id)
-        if not artist_info:
-            return None
+        assert artist_info
         top_songs = self.make_request(
             self.create_url(Subsonic.TOP_SONGS, artist=artist_info.name)
         )
-        return top_songs.get("song") if top_songs else None
+        assert top_songs
+        return top_songs.get("song")
 
     def get_album_tracks(self, album_id):
         album_info = self.make_request(
@@ -418,14 +418,16 @@ class Client(object):
         return self.play_radio(radio_id, not self.playqueue.skip_to)
 
     def play_artist(self, artist_id, fetch=True):
-        if fetch:
-            self.playqueue.load(self.get_top_songs(artist_id))
-
-        for song in self.playqueue:
-            playing = self.play_stream(dict(song))
-            if not playing:
-                return
-        return self.play_artist(artist_id, not self.playqueue.skip_to)
+        try:
+            if fetch:
+                top_songs = self.get_top_songs(artist_id)
+                self.playqueue.load(top_songs)
+            for song in self.playqueue:
+                playing = self.play_stream(dict(song))
+                assert playing
+            return self.play_artist(artist_id, not self.playqueue.skip_to)
+        except AssertionError:
+            return
 
     def play_last_added(self):
         last_added = self.get_last_added()

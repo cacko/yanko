@@ -24,8 +24,13 @@ class ArtistInfoItem(MusicItem):
         dimensions=None,
         template=False,
     ):
-        bio_bs = BeautifulSoup(info.biography, features="html.parser")  # type: ignore
-        biography = "\n".join(wrap(bio_bs.get_text(), width=50, max_lines=4))
+        biography = "N/A"
+        try:
+            assert info.biography
+            bio_bs = BeautifulSoup(info.biography, features="html.parser")
+            biography = "\n".join(wrap(bio_bs.get_text(), width=50, max_lines=4))
+        except AssertionError:
+            pass
         title = f"{artist} - {biography}"
         dimensions = [70, 70]
         icon = info.image
@@ -102,7 +107,13 @@ class Albumlist:
 
 
 class ArtistAlbumsList(Albumlist):
-    def update(self, info: ArtistInfo, albums: list[Album], callback, callback_artist):
+
+    def update(
+        self,
+        info: ArtistInfo,
+        albums: list[Album],
+        callback, callback_artist
+    ):
         try:
             self.menu._menu.removeAllItems()
         except AttributeError:

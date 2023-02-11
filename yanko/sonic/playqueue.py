@@ -7,14 +7,14 @@ from yanko.sonic import Command, Playlist, Track
 from datetime import datetime, timezone
 from yanko.sonic.beats import Fetcher
 import logging
+from typing import Optional
 
 
 class PlayQueue:
 
-    __queue: Queue = None
     __songs: list = []
     __idx: int = 0
-    __last_id: str = None
+    __last_id: Optional[str] = None
     __skip_error: int = 0
     skip_to = None
 
@@ -64,8 +64,8 @@ class PlayQueue:
         self.__songs = songs[:]
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
+        logging.warning(songs)
         Fetcher.add(paths=[x.get("path") for x in songs])
-
         self.__queue.put_nowait(
             (
                 Command.PLAYER_RESPONSE,

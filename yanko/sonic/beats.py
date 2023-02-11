@@ -23,7 +23,11 @@ class Beats(CachableDb):
 
     def __init__(self, path) -> None:
         self.__path = path
-        super().__init__(model=BeatsModel, id_key="path", id_value=path)
+        super().__init__(
+            model=BeatsModel,
+            id_key="path",
+            id_value=path
+        )
 
     @classmethod
     def store_beats(cls, data: dict):

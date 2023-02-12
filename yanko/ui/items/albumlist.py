@@ -26,6 +26,7 @@ class ArtistInfoItem(MusicItem):
     ):
         biography = "N/A"
         try:
+            assert info
             assert info.biography
             bio_bs = BeautifulSoup(info.biography, features="html.parser")
             biography = "\n".join(wrap(bio_bs.get_text(), width=50, max_lines=4))

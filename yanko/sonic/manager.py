@@ -213,9 +213,12 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         elif isinstance(cmd, MostPlayed):
             cmd.albums = resolveAlbums(cmd.albums)
         elif isinstance(cmd, ArtistAlbums):
-            assert cmd.artistInfo
-            cmd.artistInfo = resolveArtistImage(cmd.artistInfo)
-            cmd.albums = resolveAlbums(cmd.albums)
+            try:
+                assert cmd.artistInfo
+                cmd.artistInfo = resolveArtistImage(cmd.artistInfo)
+                cmd.albums = resolveAlbums(cmd.albums)
+            except AssertionError:
+                pass
         self.__ui_queue.put_nowait(cmd)
 
     def __random(self):

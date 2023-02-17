@@ -102,7 +102,6 @@ setup(
         "osascript>=2020.12.3",
         "fastapi>=0.92.0",
         "uvicorn>=0.20.0",
-        "uvloop>=0.17.0"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

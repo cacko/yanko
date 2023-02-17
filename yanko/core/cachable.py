@@ -4,7 +4,7 @@ from cachable import Cachable
 from humanfriendly.tables import format_smart_table
 from progressor import Progress
 from yanko.db.base import YankoDb
-from yanko.db.models import ModelBase
+from yanko.db.models import Album, Artist, ArtistInfo, Beats
 from pydantic import BaseModel, Extra, Field, PrivateAttr
 
 
@@ -55,7 +55,7 @@ class Method(Enum):
 class CachableDb(Cachable):
     def __init__(
         self,
-        model: ModelBase,
+        model: Beats | Artist | Album | ArtistInfo,
         id_key: str,
         id_value: str
     ) -> None:

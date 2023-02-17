@@ -4,6 +4,7 @@ from enum import Enum
 from requests import request
 import logging
 
+
 class Endpoints(Enum):
     BEATS = 'beats'
 
@@ -18,7 +19,11 @@ class ZnaykoMeta(type):
         return self._instance
 
     def beats(cls, path: str):
-        return cls().make_request(Method.GET, Endpoints.BEATS.value, params={"path": path})
+        return cls().make_request(
+            Method.GET,
+            Endpoints.BEATS.value,
+            params={"path": path}
+        )
 
 
 class Znayko(object, metaclass=ZnaykoMeta):

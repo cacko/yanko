@@ -49,10 +49,6 @@ class BPM(StoppableThread):
     def now_playing(self) -> Optional[NowPlaying]:
         return self.__now_playing
 
-    def get_static_beats(self):
-        bps = self.__bpm / 60
-        return [round(x / bps, 2) for x in range(0, int(self.__time_total * bps))]
-
     @now_playing.setter
     def now_playing(self, np: NowPlaying):
         self.__now_playing = np
@@ -72,6 +68,10 @@ class BPM(StoppableThread):
         else:
             self.__beats = self.get_static_beats()
             logging.debug(f"USING BPM {self.__bpm}")
+
+    def get_static_beats(self):
+        bps = self.__bpm / 60
+        return [round(x / bps, 2) for x in range(0, int(self.__time_total * bps))]
 
     def run(self):
         while not self.stopped():

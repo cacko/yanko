@@ -49,6 +49,7 @@ OPTIONS = {
         "numpy",
         "sounddevice",
         "pycparser",
+        "uvicorn"
     ],
     "frameworks": resolve_libs(
         [

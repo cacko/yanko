@@ -45,12 +45,9 @@ class ArtistInfo(CachableDb):
     def _fetch(self):
         try:
             rq = requests.get(self._url)
-            logging.debug(self._url)
             json = rq.json()
-            logging.debug(json)
             assert json
             info = json.get("subsonic-response", {}).get("artistInfo2", None)
-            logging.debug(f"artist info {info}")
             assert info
             resp = ArtistInfoResponse(**info)
             info = resp.dict()

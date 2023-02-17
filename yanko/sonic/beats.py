@@ -23,6 +23,7 @@ class Beats(CachableDb):
 
     def __init__(self, path) -> None:
         self.__path = path
+        logging.warning(f"BEATS __PATH init {self.__path}")
         super().__init__(
             model=BeatsModel,
             id_key="path",
@@ -33,6 +34,7 @@ class Beats(CachableDb):
     def store_beats(cls, data: dict):
         obj = cls(data.get("path"))
         obj.tocache(data)
+        logging.warning(f"BEATS store {obj}")
         return ["OK", obj.path]
 
     @property
@@ -42,7 +44,8 @@ class Beats(CachableDb):
             assert self._struct
             assert isinstance(self._struct.beats, list)
             return self._struct.beats
-        except AssertionError:
+        except AssertionError as e:
+            logging.exception(e)
             return []
 
     @property
@@ -58,6 +61,8 @@ class Beats(CachableDb):
     def __fetch(self):
         logging.debug(f"Fetching beats for {self.__path}")
         beats = Znayko.beats(self.__path)
+        beats["path"] = self.__path
+        logging.debug(f"BEEATS FETCHED, {self.__path} {beats}")
         return beats
 
     def _init(self):
@@ -89,39 +94,35 @@ class FetcherMeta(type):
         instance = cls()
         logging.warning(instance.is_alive())
         if not instance.is_alive():
-            instance.start(cls.queue)
+            instance.start()
 
 
 class Fetcher(StoppableThread, metaclass=FetcherMeta):
 
-    __queue: Optional[Queue] = None
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def start(self, queue) -> None:
-        self.__queue = queue
+    def start(self) -> None:
         return super().start()
 
     def run(self):
         try:
-            assert self.__queue
             while True:
                 try:
-                    audio_paths = self.__queue.get_nowait()
+                    audio_paths = Fetcher.queue.get_nowait()
                     logging.debug(audio_paths)
                     with ThreadPool(2) as pool:
                         jobs = pool.map(resolveBeats, audio_paths)
                         for res in jobs:
-                            logging.debug(f"BEATS Extracted for {res.path}")
+                            logging.debug(f"BEATS Extracted for {res.path} {res}")
                         pool.close()
                         pool.join()
-                        self.__queue.task_done()
+                        Fetcher.queue.task_done()
                 except Empty:
                     return
                 except Exception:
-                    self.__queue.task_done()
+                    Fetcher.queue.task_done()
                 finally:
                     sleep(0.1)
-        except AssertionError:
-            return
+        except AssertionError as e:
+            logging.exception(e)

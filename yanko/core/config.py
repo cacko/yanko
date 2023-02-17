@@ -28,7 +28,6 @@ class app_config_meta(type):
         res = Path(user_cache_dir(__name__))
         if not res.exists():
             res.mkdir(parents=True)
-        logging.debug(res)
         return res
 
     @property
@@ -36,7 +35,6 @@ class app_config_meta(type):
         res = Path(user_data_dir(__name__))
         if not res.exists():
             res.mkdir(parents=True)
-        logging.debug(res)
         return res
 
 

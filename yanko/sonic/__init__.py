@@ -154,7 +154,7 @@ class Song(BaseModel, extra=Extra.ignore):
     track: Optional[int] = None
     type: Optional[str] = None
     year: Optional[int] = None
-    bpm: int = Field(default=120)
+    bpm: Optional[int] = None
 
 
 class Track(BaseModel, extra=Extra.ignore):
@@ -256,14 +256,18 @@ class NowPlaying(BaseModel, extra=Extra.ignore):
 
     @property
     def bpm(self) -> int:
-        return self.song.bpm
+        try:
+            assert self.song.bpm
+            return self.song.bpm
+        except AssertionError:
+            return -1
 
     def setBpm(self, val):
         self.song.bpm = val
 
     @property
     def display_bpm(self):
-        return f"{self.bpm}{'🥁' if self.beats else ''}"
+        return f"{self.bpm if self.bpm > 0 else '-'}{'🥁' if self.beats else ''}"
 
     @property
     def total_length(self) -> str:

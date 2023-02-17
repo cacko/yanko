@@ -1,14 +1,11 @@
 from enum import Enum
 from pathlib import Path
-
-import humanfriendly
 from cachable import Cachable
 from humanfriendly.tables import format_smart_table
 from progressor import Progress
-import logging
 from yanko.db.base import YankoDb
 from yanko.db.models import ModelBase
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Extra, Field, PrivateAttr
 
 
 def format_size(*args, **kwds):
@@ -18,20 +15,22 @@ def format_size(*args, **kwds):
 class CacheType(BaseModel, extra=Extra.ignore):
     name: str
     count: int
-    size: int = Field()
+    size: int = Field(default=0)
+    _files: list[Path] = PrivateAttr()
 
-    def __post_init__(self):
-        self.__files = []
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._files = []
 
     def add(self, fp: Path):
         if fp.exists():
-            self.__files.append(fp)
+            self._files.append(fp)
             self.count += 1
             self.size += fp.stat().st_size
 
     def clear(self):
         with Progress(title="Deleting...") as progress:
-            for fp in progress.track(self.__files):
+            for fp in progress.track(self._files):
                 fp.unlink(missing_ok=True)
 
 
@@ -54,7 +53,12 @@ class Method(Enum):
 
 
 class CachableDb(Cachable):
-    def __init__(self, model: ModelBase, id_key: str, id_value: str) -> None:
+    def __init__(
+        self,
+        model: ModelBase,
+        id_key: str,
+        id_value: str
+    ) -> None:
         self.__model = model
         self.__id_key = id_key
         self.__id_value = id_value

@@ -60,10 +60,7 @@ def cli_search(query: str):
 @click.option("-d", "--drop_table", default=None)
 def cli_dbinit(drop_table: str):
     try:
-        from yanko.db.models.album import Album
-        from yanko.db.models.artist import Artist
-        from yanko.db.models.artist_info import ArtistInfo
-        from yanko.db.models.beets import Beats
+        from yanko.db.models import Album, Artist, ArtistInfo, Beats
 
         with YankoDb.db as db:
             # drop_tables = [ArtistInfo]
@@ -80,9 +77,9 @@ def cli_dbinit(drop_table: str):
 @click.option("-d", "--delete", default=None)
 def cli_cache(delete: str):
     cache_struct = Cache(
-        cover_art=CacheType("cover_art", count=0, size=0),
-        cover_icon=CacheType("cover_icon", count=0, size=0),
-        beats_json=CacheType("beats_json", count=0, size=0),
+        cover_art=CacheType(name="cover_art", count=0, size=0),
+        cover_icon=CacheType(name="cover_icon", count=0, size=0),
+        beats_json=CacheType(name="beats_json", count=0, size=0),
     )
     for fp in app_config.cache_dir.glob("*"):
         parts = fp.name.split(".")

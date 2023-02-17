@@ -55,8 +55,8 @@ urllib3.disable_warnings()
 
 class ApiArguments(BaseModel):
     u: str
-    p: str
-    # s: str
+    t: str
+    s: str
     v: str
     c: str = "Yanko"
     f: str = "json"
@@ -140,7 +140,8 @@ class Client(object):
     def api_args(self) -> dict[str, str]:
         return ApiArguments(
             u=self.username,
-            p=self.password,
+            t=self.token,
+            s=self.salt,
             v=self.api
         ).dict()
 
@@ -358,7 +359,6 @@ class Client(object):
             self.create_url(Subsonic.ARTIST, id=artist_id))
         if not artist_info:
             return None
-        print(artist_info)
         return Artist(**artist_info)  # type: ignore
 
     def get_artist_info(self, artist_id) -> Optional[ArtistInfoData]:

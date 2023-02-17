@@ -117,7 +117,7 @@ class Subsonic(Enum):
     STREAM = "stream"
     COVER_ART = "getCoverArt"
     PING = "ping"
-    ARTIST_INFO = "getArtistInfo"
+    ARTIST_INFO = "getArtistInfo2"
     TOP_SONGS = "getTopSongs"
     START_SCAN = "startScan"
     GET_SCAN_STATUS = "getScanStatus"
@@ -200,27 +200,26 @@ class Track(BaseModel, extra=Extra.ignore):
 
 class Album(BaseModel, extra=Extra.ignore):
     id: str
+    artistId: str = Field(default="")
+    artist: str = Field(default="")
+    name: str = Field(default="")
+    album: str = Field(default="")
+    title: str = Field(default="")
     parent: Optional[str] = None
     isDir: Optional[bool] = None
-    title: str = Field(default="")
-    name: str = Field(default="")
-    # album: str
-    artist: str
     duration: Optional[int] = None
-    created: datetime
-    artistId: Optional[str] = None
+    created: Optional[str] = None
     year: Optional[int] = None
     genre: Optional[str] = None
     coverArt: Optional[str] = None
     coverArtIcon: Optional[str] = None
-    songCount: Optional[int] = None
+    songCount: int = Field(default=0)
 
     def __init__(self, **data):
         super().__init__(**data)
-        if not self.title:
-            self.title = self.name
-        if not self.name:
-            self.name = self.title
+        tt = next(filter(None, [self.name, self.title, self.album]), None)
+        if tt:
+            self.name, self.title, self.album = tt, tt, tt
 
 
 class Artist(BaseModel, extra=Extra.ignore):

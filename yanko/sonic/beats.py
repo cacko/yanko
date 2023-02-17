@@ -2,7 +2,7 @@ from queue import Queue, Empty
 from yanko.core.cachable import CachableDb
 from yanko.znayko import Znayko
 from yanko.core.thread import StoppableThread
-from yanko.db.models.beets import Beats as BeatsModel
+from yanko.db.models import Beats as BeatsModel
 from time import sleep
 from multiprocessing.pool import ThreadPool
 from typing import Optional

@@ -49,12 +49,15 @@ class AlbumMenuItem(MusicItem):
         dimensions=None,
         template=False,
     ):
-        title = f"{album.artist} / {album.title}"
+        title = f"{album.artist} / {album.name}"
         icon = album.coverArt
         id = album.id
         dimensions = [35, 35]
         super().__init__(title, id, callback, key, icon, dimensions, template)
-        self.setAttrTitle(f"{album.artist}\n{album.title} ({album.year})")
+        attr_title = f"{album.artist}\n{album.name}"
+        if album.year:
+            attr_title += f"  ({album.year})"
+        self.setAttrTitle(attr_title)
 
 
 class Albumlist:
@@ -109,7 +112,7 @@ class Albumlist:
 
 class ArtistAlbumsList(Albumlist):
 
-    def update(
+    def update_with_artist(
         self,
         info: ArtistInfo,
         albums: list[Album],

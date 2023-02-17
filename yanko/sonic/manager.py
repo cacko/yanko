@@ -24,6 +24,22 @@ from multiprocessing.pool import ThreadPool
 import logging
 
 
+def resolveAlbumYear(obj):
+    try:
+        ca = CoverArtFile(obj.id)
+        assert ca.path
+        res = ca.path
+        obj.coverArt = res.as_posix() if res.exists() else None
+        icon = ca.icon_path
+        if icon:
+            obj.coverArtIcon = icon.as_posix()
+        else:
+            obj.coverArtIcob = None
+    except AssertionError as e:
+        logging.error(e)
+    return obj
+
+
 def resolveCoverArt(obj):
     try:
         ca = CoverArtFile(obj.coverArt)

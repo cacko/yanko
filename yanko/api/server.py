@@ -92,7 +92,7 @@ class Server(ButilkaServer, metaclass=ServerMeta):
                 payload = queue_item.pop(0)
             self.api.put_nowait((cmd, payload))
         except ValueError as e:
-            print(e)
+            logging.debug(e)
 
 
 app = Server.app

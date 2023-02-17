@@ -1,5 +1,6 @@
 from pathlib import Path
 from queue import Empty, Queue
+from threading import Thread
 from typing import Optional, Any
 import logging
 from rumps import rumps
@@ -49,20 +50,9 @@ class YankoAppMeta(type):
 
 class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
-    manager: Manager
-    __playlist: UIPlaylist
-    __last_added: Albumlist
-    __artist_albums: Albumlist
-    __recent: Albumlist
-    __most_played: Albumlist
-    __nowPlayingSection = []
-    __threads = []
-    __status: Status
-    __nowplaying: NowPlaying
+    __nowPlayingSection: list[str] = []
+    __threads: list[Thread] = []
     __volume: Optional[VolumeStatus] = None
-    __ui_queue: Queue
-    __bpm: BPM
-    __initCommands: list[Command] = []
 
     def __init__(self):
         super(YankoApp, self).__init__(
@@ -115,7 +105,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__bpm.start()
         self.__threads.append(self.__bpm)
         self.manager = Manager(
-            ui_queue=self.__ui_queue, 
+            ui_queue=self.__ui_queue,
             time_event=self.__bpm.time_event,
         )
         self.manager.start()
@@ -226,11 +216,15 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
 
     def _onLaMetricInit(self):
-        LaMetric.status(status=self.__status)
-        if self.__status in [Status.PLAYING] and self.__nowplaying:
-            track = self.__nowplaying.track
-            LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
-        return StatusFrame(status=self.__status.value).dict()
+        try:
+            LaMetric.status(status=self.__status)
+            if self.__status in [Status.PLAYING] and self.__nowplaying:
+                track = self.__nowplaying.track
+                assert track.coverArt
+                LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
+            return StatusFrame(status=self.__status.value).dict()
+        except AssertionError as e:
+            logging.debug(e)
 
     def _onSearch(self, resp: Search):
         Server.queue(resp.queue_id).put_nowait(resp.dict())
@@ -311,7 +305,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         albums = resp.albums
         albums.reverse()
         artistInfo = resp.artistInfo
-        self.__artist_albums.update(
+        self.__artist_albums.update_with_artist(
             artistInfo, albums, self._onAlbumClick, self._onArtistClick  # type: ignore
         )
 
@@ -320,10 +314,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.manager.commander.put_nowait((Command.QUIT, None))
         for th in self.__threads:
             try:
-                th.stop()
-            except Exception as e:
+                th.stop()  # type: ignore
+            except Exception:
                 pass
         try:
             rumps.quit_application()
-        except Exception as e:
+        except Exception:
             pass

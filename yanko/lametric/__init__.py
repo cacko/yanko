@@ -53,8 +53,8 @@ class LaMetric(object, metaclass=LaMetricMeta):
             )
             return response.json()
         except ConnectionError:
-            logging.debug(f"lametric is off")
-        except JSONDecodeError as e:
+            logging.debug("lametric is off")
+        except JSONDecodeError:
             pass
 
     def send_nowplaying(self, text, icon: Path):

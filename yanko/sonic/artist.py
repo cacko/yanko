@@ -2,7 +2,7 @@ from urllib.parse import urlparse, parse_qs
 from hashlib import blake2b
 from yanko.sonic import ArtistInfo as ArtistInfoData, ArtistInfo as ArtistInfoResponse
 from yanko.core.cachable import CachableDb
-from yanko.db.models.artist_info import ArtistInfo as ArtistInfoModel
+from yanko.db.models import ArtistInfo as ArtistInfoModel
 import requests
 from typing import Optional
 import logging
@@ -45,19 +45,18 @@ class ArtistInfo(CachableDb):
     def _fetch(self):
         try:
             rq = requests.get(self._url)
+            logging.debug(self._url)
             json = rq.json()
+            logging.debug(json)
             assert json
-            info = json.get("subsonic-response", {}).get("artistInfo", None)
-            print(info)
+            info = json.get("subsonic-response", {}).get("artistInfo2", None)
+            logging.debug(f"artist info {info}")
             assert info
-            mbz = info.get("musicBrainzId", None)
-            assert mbz
-            info["musicBrainzId"] = mbz.get("value")
             resp = ArtistInfoResponse(**info)
             info = resp.dict()
             self._struct = self.tocache({"artist_id": self.artist_id, **info})
         except AssertionError as e:
-            logging.debug(e)
+            logging.exception(e)
 
     @property
     def info(self) -> Optional[ArtistInfoData]:

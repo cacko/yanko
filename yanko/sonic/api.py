@@ -334,7 +334,7 @@ class Client(object):
         artist_info = self.get_artist(artist_id)
         assert artist_info
         top_songs = self.make_request(
-            self.create_url(Subsonic.TOP_SONGS, artist=artist_info.name)
+            self.create_url(Subsonic.TOP_SONGS, artist=artist_info.name, count=50)
         )
         assert top_songs
         return top_songs.get("song")

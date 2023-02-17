@@ -93,7 +93,7 @@ class BPM(StoppableThread):
                     )
                     self.__last_measure = None
                     if self.__time_total < self.__time_current:
-                        logging.warning(
+                        logging.debug(
                             f"current time {self.__time_current:.2f} outside durection {self.__time_total} "
                         )
                     delta = abs(self.__time_current - self.__beats[0])

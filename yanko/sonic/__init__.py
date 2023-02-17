@@ -109,6 +109,7 @@ class Subsonic(Enum):
     ALBUM = "getAlbum"
     SCROBBLE = "scrobble"
     SEARCH3 = "search3"
+    SEARCH2 = "search2"
     ARTISTS = "getArtists"
     PLAYLISTS = "getPlaylists"
     ARTIST = "getArtist"
@@ -362,6 +363,12 @@ class Response(BaseModel, extra=Extra.ignore):
     type: Optional[str] = None
     version: Optional[str] = None
     error: Optional[dict] = None
+
+
+class Search2Response(BaseModel, extra=Extra.ignore):
+    artist: list[Artist] = []
+    album: list[Album] = []
+    song: list[Track] = []
 
 
 class Search3Response(BaseModel, extra=Extra.ignore):

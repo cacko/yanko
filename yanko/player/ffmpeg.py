@@ -43,7 +43,7 @@ class FFMPeg(BasePlayer):
             info = ffmpeg.probe(self.stream_url)
             streams = info.get("streams", [])
             stream = streams[0]
-            logging.warning(stream)
+            logging.debug(stream)
             if stream.get("codec_type") != "audio":
                 logging.warning("The stream must be an audio stream")
                 return Status.STOPPED

@@ -1,5 +1,6 @@
 from pathlib import Path
 from queue import Queue
+from typing import Optional
 from yanko.core import perftime
 from yanko.core.thread import StoppableThread
 from yanko.sonic import (
@@ -137,15 +138,12 @@ class ManagerMeta(type):
 
 class Manager(StoppableThread, metaclass=ManagerMeta):
     VOLUME_STEP = 0.05
-    commander: Queue
-    alfred: Queue
-    api: Client
-    playing_now: NowPlaying
-    __ui_queue: Queue
+    alfred: Optional[Queue] = None
+    playing_now: Optional[NowPlaying] = None
 
     def __init__(self, ui_queue, time_event) -> None:
         self.__ui_queue = ui_queue
-        self.commander = Queue()
+        self.commander: Queue = Queue()
         self.api = Client(
             self.commander,
             time_event,

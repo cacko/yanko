@@ -64,7 +64,7 @@ class PlayQueue:
         self.__songs = songs[:]
         with self.playlist_file.open("w") as fp:
             json.dump(songs, fp)
-        logging.warning(songs)
+        logging.debug(songs)
         Fetcher.add(paths=[x.get("path") for x in songs])
         self.__queue.put_nowait(
             (

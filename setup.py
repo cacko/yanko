@@ -49,7 +49,8 @@ OPTIONS = {
         "numpy",
         "sounddevice",
         "pycparser",
-        "uvicorn"
+        "uvicorn",
+        "anyio"
     ],
     "frameworks": resolve_libs(
         [

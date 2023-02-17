@@ -54,7 +54,8 @@ class ServerMeta(type):
 
 class Server(StoppableThread, metaclass=ServerMeta):
 
-    api: Queue
+    api: Optional[Queue] = None
+    server: Optional[uvicorn.Server]
     config_vars = ["host", "port", "threadpool_workers"]
 
     def __init__(self, *args, **kwargs):
@@ -71,20 +72,26 @@ class Server(StoppableThread, metaclass=ServerMeta):
 
     def run(self) -> None:
         config = ApiConfig(**app_config.get("api"))
-        print(config)
-        uvicorn.run(
-            app,
+        server_config = uvicorn.Config(
+            app=app,
             host=config.host,
             port=config.port,
+            use_colors=True,
+            # factory=True,
             log_level=log_level.lower()
         )
+        self.server = uvicorn.Server(server_config)
+        self.server.run()
 
     def stop(self):
         super().stop()
+        if self.server:
+            self.server.should_exit = True
 
     def do_search(self, query):
         queue_id = string_hash(query)
         queue = __class__.queue(queue_id)
+        assert self.api
         self.api.put_nowait((Command.SEARCH, query))
         while True:
             if queue.empty():
@@ -103,8 +110,9 @@ class Server(StoppableThread, metaclass=ServerMeta):
             cmd = Command(queue_item.pop(0))
             if len(queue_item) > 0:
                 payload = queue_item.pop(0)
+            assert self.api
             self.api.put_nowait((cmd, payload))
-        except ValueError as e:
+        except (ValueError, AssertionError) as e:
             logging.debug(e)
 
 

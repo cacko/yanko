@@ -11,8 +11,6 @@ from enum import Enum
 from typing import Optional
 
 
-
-
 class Font(Enum):
     REGULAR = NSFont.fontWithName_size_("MesloLGS NF", 12)
     BOLD = NSFont.fontWithName_size_("MesloLGS NF Bold", 12)
@@ -25,10 +23,8 @@ class MenuItem(BaseMenuItem):
         super().__init__(title, callback, key, icon, dimensions, template)
         self.setAttrTitle()
 
-
     def setAvailability(self, enabled: bool):
         self._menuitem.setEnabled_(enabled)
-
 
     def string_attributes(self, font: Font, backgroundColor: Optional[NSColor] = None):
         if backgroundColor:
@@ -47,8 +43,8 @@ class MenuItem(BaseMenuItem):
         )
 
     def setAttrTitle(
-        self, 
-        title=None, 
+        self,
+        title=None,
         font: Optional[Font] = None,
         backgroundColor: Optional[NSColor] = None
     ):

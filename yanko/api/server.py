@@ -1,15 +1,16 @@
-import logging
-import time
 from queue import Queue
 from typing import Optional
 import uvicorn
 from corethread import StoppableThread
 from fastapi import FastAPI, Request
 from pydantic import BaseModel, Extra
-from corestring import string_hash
 from yanko.core import log_level
 # from yanko.api.auth import auth_required
 from yanko.core.config import app_config
+from corestring import string_hash
+import time
+import logging
+
 from yanko.sonic import Command
 from yanko.sonic.beats import Beats
 
@@ -17,9 +18,6 @@ from yanko.sonic.beats import Beats
 class ApiConfig(BaseModel, extra=Extra.ignore):
     host: str
     port: int
-
-
-app = FastAPI()
 
 
 class ServerMeta(type):
@@ -33,23 +31,14 @@ class ServerMeta(type):
             cls._instance = type.__call__(cls, *args, **kwds)
         return cls._instance
 
-    def search(cls, query):
-        return cls().do_search(query)
-
-    def state(cls):
-        return cls().do_state()
-
-    def command(cls, query):
-        return cls().do_command(query)
-
-    def beats(cls, data):
-        obj = Beats.store_beats(data)
-        return obj
-
     def queue(cls, queue_id):
         if queue_id not in cls._queue:
             cls._queue[queue_id] = Queue()
         return cls._queue[queue_id]
+
+    @property
+    def app(cls) -> FastAPI:
+        return cls().app
 
 
 class Server(StoppableThread, metaclass=ServerMeta):
@@ -59,6 +48,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
     config_vars = ["host", "port", "threadpool_workers"]
 
     def __init__(self, *args, **kwargs):
+        self.app = FastAPI()
         super().__init__(*args, **kwargs)
 
     def start(
@@ -73,7 +63,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
     def run(self) -> None:
         config = ApiConfig(**app_config.get("api"))
         server_config = uvicorn.Config(
-            app=app,
+            app=self.app,
             host=config.host,
             port=config.port,
             use_colors=True,
@@ -88,7 +78,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
         if self.server:
             self.server.should_exit = True
 
-    def do_search(self, query):
+    def search(self, query):
         queue_id = string_hash(query)
         queue = __class__.queue(queue_id)
         assert self.api
@@ -100,10 +90,10 @@ class Server(StoppableThread, metaclass=ServerMeta):
                 res = queue.get_nowait()
                 return {"items": res.get("items", [])}
 
-    def do_state(self):
+    def state(self):
         return self.state_callback()
 
-    def do_command(self, query):
+    def command(self, query):
         queue_item = query.split("=", 2)
         payload = None
         try:
@@ -116,22 +106,22 @@ class Server(StoppableThread, metaclass=ServerMeta):
             logging.debug(e)
 
 
-@app.get("/state")
-def state():
-    return Server.state()
+@Server.app.get("/state")
+async def state():
+    return Server().state()
 
 
-@app.post("/beats")
-def beats(request: Request):
-    data = request.json()
-    return Server.beats(data)
+@Server.app.post("/beats")
+async def beats(request: Request):
+    data = await request.json()
+    return Beats.store_beats(data)
 
 
-@app.get("/search/{query}")
-def search(query: str):
-    return Server.search(query)
+@Server.app.get("/search/{query}")
+async def search(query: str):
+    return Server().search(query)
 
 
-@app.get("/command/{query}")
-def command(query: str):
-    return Server.command(query)
+@Server.app.get("/command/{query}")
+async def command(query: str):
+    return Server().command(query)

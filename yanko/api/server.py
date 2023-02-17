@@ -2,15 +2,24 @@ import logging
 import time
 from queue import Queue
 from typing import Optional
-
-from butilka.server import Server as ButilkaServer
-from butilka.server import request
+import uvicorn
+from corethread import StoppableThread
+from fastapi import FastAPI, Request
+from pydantic import BaseModel, Extra
 from corestring import string_hash
-
-from yanko.api.auth import auth_required
+from yanko.core import log_level
+# from yanko.api.auth import auth_required
 from yanko.core.config import app_config
 from yanko.sonic import Command
 from yanko.sonic.beats import Beats
+
+
+class ApiConfig(BaseModel, extra=Extra.ignore):
+    host: str
+    port: int
+
+
+app = FastAPI()
 
 
 class ServerMeta(type):
@@ -23,10 +32,6 @@ class ServerMeta(type):
         if not cls._instance:
             cls._instance = type.__call__(cls, *args, **kwds)
         return cls._instance
-
-    @property
-    def app(cls):
-        return cls().app
 
     def search(cls, query):
         return cls().do_search(query)
@@ -47,15 +52,13 @@ class ServerMeta(type):
         return cls._queue[queue_id]
 
 
-class Server(ButilkaServer, metaclass=ServerMeta):
+class Server(StoppableThread, metaclass=ServerMeta):
 
     api: Queue
     config_vars = ["host", "port", "threadpool_workers"]
 
     def __init__(self, *args, **kwargs):
-        conf = app_config.get("api")
-        bottle_config = {k: v for k, v in conf.items() if k in self.config_vars}
-        super().__init__(**bottle_config)
+        super().__init__(*args, **kwargs)
 
     def start(
         self,
@@ -66,8 +69,18 @@ class Server(ButilkaServer, metaclass=ServerMeta):
         self.state_callback = state_callback
         return super().start()
 
+    def run(self) -> None:
+        config = ApiConfig(**app_config.get("api"))
+        print(config)
+        uvicorn.run(
+            app,
+            host=config.host,
+            port=config.port,
+            log_level=log_level.lower()
+        )
+
     def stop(self):
-        return self.terminate()
+        super().stop()
 
     def do_search(self, query):
         queue_id = string_hash(query)
@@ -95,29 +108,22 @@ class Server(ButilkaServer, metaclass=ServerMeta):
             logging.debug(e)
 
 
-app = Server.app
-
-
-@app.route("/state")
-@auth_required
+@app.get("/state")
 def state():
     return Server.state()
 
 
-@app.route("/beats", method="POST")
-@auth_required
-def beats():
-    data = request.json
+@app.post("/beats")
+def beats(request: Request):
+    data = request.json()
     return Server.beats(data)
 
 
-@app.route("/search/<query:path>")
-@auth_required
-def search(query):
+@app.get("/search/{query}")
+def search(query: str):
     return Server.search(query)
 
 
-@app.route("/command/<query:path>")
-@auth_required
-def command(query):
+@app.get("/command/{query}")
+def command(query: str):
     return Server.command(query)

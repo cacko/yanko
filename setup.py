@@ -85,7 +85,6 @@ setup(
         "pantomime >= 0.5.1",
         "pyfiglet>=0.7",
         "questionary>=1.10.0",
-        "butilka>=0.1.18",
         "pyyaml>=6.0",
         "redis>=4.3.4",
         "hiredis>=2.0.0",
@@ -100,7 +99,9 @@ setup(
         "corethread==0.1.3",
         "corelog==0.0.7",
         "cachable>=0.3.35",
-        "osascript>=2020.12.3"
+        "osascript>=2020.12.3",
+        "fastapi>=0.92.0",
+        "uvicorn>=0.20.0"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

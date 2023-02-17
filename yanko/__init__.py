@@ -10,10 +10,12 @@ import sys
 import signal
 import traceback
 import logging
-import os
+from yanko.core import log_level
 import corelog
 
-corelog.register(os.environ.get("YANKO_LOG_LEVEL", "INFO"))
+
+corelog.register(log_level)
+
 
 def start():
     cache_dir = app_config.cache_dir

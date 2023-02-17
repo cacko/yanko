@@ -4,6 +4,7 @@ from appdirs import user_config_dir, user_cache_dir, user_data_dir
 from yaml import Loader, load
 import logging
 
+
 class app_config_meta(type):
     _instance = None
 
@@ -38,12 +39,13 @@ class app_config_meta(type):
         logging.debug(res)
         return res
 
+
 class app_config(object, metaclass=app_config_meta):
 
     _config: dict
 
     def __init__(self) -> None:
-        pth = __class__.app_dir / "config.yaml"
+        pth = app_config.app_dir / "config.yaml"
         self._config = load(pth.read_text(), Loader=Loader)
 
     def getvar(self, var, *args, **kwargs):

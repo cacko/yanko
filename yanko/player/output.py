@@ -28,8 +28,8 @@ class Output(StoppableThread):
         self.volume = volume
         self.muted = muted
         self.paused = False
-        self.data_queue = Queue(maxsize=Device.buffsize * 100)
-        self.control_queue = Queue()
+        self.data_queue: Queue = Queue()
+        self.control_queue: Queue = Queue()
         self.time_event = time_event
         self.end_event = end_event
         self.__stream = sd.RawOutputStream(
@@ -81,6 +81,7 @@ class Output(StoppableThread):
                         self.__output()
                     self.__control()
                 except Empty:
+                    logging.debug(f"empty bufff {self.data_queue.qsize()}")
                     break
         logging.debug("Writing finished")
         self.end_event.set()

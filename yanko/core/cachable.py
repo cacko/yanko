@@ -7,10 +7,38 @@ from progressor import Progress
 from yanko.db.base import YankoDb
 from yanko.db.models import ModelBase
 from pydantic import BaseModel, Extra, Field, PrivateAttr
+from functools import lru_cache, wraps
+from time import monotonic_ns
 
 
 def format_size(*args, **kwds):
     print(args, kwds)
+
+
+def timed_lru_cache(
+    _func=None, *, seconds: int = 10, maxsize: int = 128, typed: bool = False
+):
+    def wrapper_cache(f):
+        f = lru_cache(maxsize=maxsize, typed=typed)(f)
+        f.delta = seconds * 10 ** 9  # type: ignore
+        f.expiration = monotonic_ns() + f.delta  # type: ignore
+
+        @wraps(f)
+        def wrapped_f(*args, **kwargs):
+            if monotonic_ns() >= f.expiration:  # type: ignore
+                f.cache_clear()
+                f.expiration = monotonic_ns() + f.delta  # type: ignore
+            return f(*args, **kwargs)
+
+        wrapped_f.cache_info = f.cache_info
+        wrapped_f.cache_clear = f.cache_clear
+        return wrapped_f
+
+    # To allow decorator to be used without arguments
+    if _func is None:
+        return wrapper_cache
+    else:
+        return wrapper_cache(_func)
 
 
 class CacheType(BaseModel, extra=Extra.ignore):

@@ -4,7 +4,6 @@ import sys
 import time
 import requests
 from datetime import datetime, timezone
-from functools import lru_cache
 from queue import Queue
 from random import SystemRandom, choice
 from typing import Optional, Any
@@ -49,6 +48,7 @@ from yanko.sonic.artist import ArtistInfo
 from yanko.sonic.beats import Beats
 from yanko.sonic.playqueue import PlayQueue
 from pydantic import BaseModel
+from yanko.core.cachable import timed_lru_cache
 
 urllib3.disable_warnings()
 
@@ -77,7 +77,7 @@ def get_scan_status(url, manager_queue: Queue):
             break
 
 
-@lru_cache
+@timed_lru_cache(seconds=20)
 def make_request(url):
     try:
         r = requests.get(url=url)

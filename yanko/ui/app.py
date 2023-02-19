@@ -212,7 +212,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             self.menu.insert_before(top, None),
         ]
         self.__playlist.setNowPlaying(resp.track)
-        self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
+        if resp.track.artistId != self.__artist_albums.artist:
+            self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
 
     def _onLaMetricInit(self):
@@ -305,6 +306,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         albums = resp.albums
         albums.reverse()
         artistInfo = resp.artistInfo
+        logging.debug(f"_onArtistAlbums {resp}")
         self.__artist_albums.update_with_artist(
             artistInfo, albums, self._onAlbumClick, self._onArtistClick  # type: ignore
         )

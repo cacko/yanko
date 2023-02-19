@@ -1,5 +1,6 @@
 from textwrap import wrap
 from bs4 import BeautifulSoup
+from typing import Optional
 from rumps import App, Menu
 from pydantic import BaseModel
 from yanko.sonic import Album, ArtistInfo
@@ -112,6 +113,14 @@ class Albumlist:
 
 class ArtistAlbumsList(Albumlist):
 
+    __artist_id: Optional[str] = None
+
+    @property
+    def artist(self) -> str:
+        if not self.__artist_id:
+            return "ar-unkown"
+        return self.__artist_id
+
     def update_with_artist(
         self,
         info: ArtistInfo,
@@ -130,6 +139,7 @@ class ArtistAlbumsList(Albumlist):
                 callback=callback_artist,
             )
         )
+        self.__artist_id = albums[0].artistId
         for album in albums:
             self.menu.add(AlbumMenuItem(album, callback=callback))
         self.menu._menuitem.setEnabled_(True)  # type: ignore

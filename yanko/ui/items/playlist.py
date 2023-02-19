@@ -101,16 +101,21 @@ class Playlist:
     def setNowPlaying(self, track: Track):
         menu = self.__app.menu
         for idx, item in enumerate(self.__items):
-            menu_item = menu.get(item.key)
-            if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
-                if menu_item.id == track.id:
-                    menu_item.setAttrTitle(
-                        item.track.displayTitle(idx, isAlbum=self.__isAlbum),
-                        Font.BOLD,
-                    )
-                    menu_item.state = 1
-                else:
-                    menu_item.setAttrTitle(
-                        item.track.displayTitle(idx, isAlbum=self.__isAlbum)
-                    )
-                    menu_item.state = 0
+            try:
+                menu_item = menu.get(item.key)
+                assert item
+                assert item.track
+                if isinstance(menu_item, PlaylistMenuItem) and menu_item.id:
+                    if menu_item.id == track.id:
+                        menu_item.setAttrTitle(
+                            item.track.displayTitle(idx, isAlbum=self.__isAlbum),
+                            Font.BOLD,
+                        )
+                        menu_item.state = 1
+                    else:
+                        menu_item.setAttrTitle(
+                            item.track.displayTitle(idx, isAlbum=self.__isAlbum)
+                        )
+                        menu_item.state = 0
+            except AssertionError:
+                continue

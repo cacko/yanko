@@ -10,7 +10,6 @@ class ServerMenuMeta(type):
 
     __instance: Optional["ServerMenu"] = None
 
-
     def __call__(cls, *args, **kwds):
         if not cls.__instance:
             cls.__instance = type.__call__(cls, *args, **kwds)
@@ -33,7 +32,7 @@ class ServerMenu(MenuItem, metaclass=ServerMenuMeta):
             template=True,
         )
 
-        for title, icon  in items :
+        for title, icon in items:
             self.add(ActionItem(
                 title=title,
                 icon=icon,

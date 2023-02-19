@@ -25,7 +25,7 @@ class Beats(CachableDb):
         self.__path = path
         logging.warning(f"BEATS __PATH init {self.__path}")
         super().__init__(
-            model=BeatsModel,
+            model=BeatsModel,  # type: ignore
             id_key="path",
             id_value=path
         )

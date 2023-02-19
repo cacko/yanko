@@ -1,12 +1,51 @@
+import logging
 import time
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from math import floor
 from typing import Optional
+from pathlib import Path
 from pydantic import BaseModel, Extra, Field
 import pantomime
 from corestring import truncate
 from coretime import seconds_to_duration
+from aubio import source, tempo  # type: ignore
+from numpy import median, diff
+
+
+def get_file_bpm(path):
+    samplerate, win_s, hop_s = 4000, 128, 64
+    s = source(path, samplerate, hop_s)  # type: ignore
+    samplerate = s.samplerate
+    o = tempo("specdiff", win_s, hop_s, samplerate)
+    beats = []
+    total_frames = 0
+
+    while True:
+        samples, read = s()
+        is_beat = o(samples)
+        if is_beat:
+            this_beat = o.get_last_s()
+            beats.append(this_beat)
+            # if o.get_confidence() > .2 and len(beats) > 2.:
+            #    break
+        total_frames += read
+        if read < hop_s:
+            break
+
+    def beats_to_bpm(beats, path):
+        # if enough beats are found, convert to periods then to bpm
+        if len(beats) > 1:
+            if len(beats) < 4:
+                print("few beats found in {:s}".format(path))
+            bpms = 60./diff(beats)
+            return median(bpms)
+        else:
+            print("not enough beats found in {:s}".format(path))
+            return 0
+
+    return beats_to_bpm(beats, path)
+
 
 RESULT_KEYS = [
     "searchResult3",
@@ -260,6 +299,14 @@ class NowPlaying(BaseModel, extra=Extra.ignore):
             assert self.song.bpm
             return self.song.bpm
         except AssertionError:
+            assert self.track.path
+            p = Path("/Volumes/store/Music") / self.track.path
+            logging.warning(p)
+            if p.exists():
+                res = int(get_file_bpm(p.as_posix()))
+                logging.info(f"FAST BPM: {res} {p}")
+                self.song.bpm = res
+                return res
             return -1
 
     def setBpm(self, val):

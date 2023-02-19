@@ -34,6 +34,7 @@ dependencies:
       - arrow==1.2.2
       - asitop==0.0.21
       - async-timeout==4.0.2
+      - aubio==0.5.0a0
       - banal==1.0.6
       - beautifulsoup4==4.11.1
       - better-exceptions==0.3.3
@@ -253,7 +254,7 @@ dependencies:
       - requests==2.28.1
       - requests-toolbelt==0.9.1
       - rich==12.6.0
-      - rumps==5.14.23
+      - rumps==5.14.24
       - runcmd==2020.12.3
       - semver==2.13.0
       - six==1.16.0

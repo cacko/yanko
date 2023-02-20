@@ -8,6 +8,7 @@ from yanko.sonic import (
     ArtistAlbums,
     ArtistSearchItem,
     Command,
+    FastBPM,
     MostPlayed,
     NowPlaying,
     Playstatus,
@@ -21,6 +22,7 @@ from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
+from yanko.player.bpm import get_file_bpm
 from multiprocessing.pool import ThreadPool
 import logging
 
@@ -208,6 +210,8 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                     Announce.announce(payload)
                 case Command.PLAYER_RESPONSE:
                     self.player_processor(payload)
+                case Command.GET_FAST_BPM:
+                    self.__get_fastbpm(payload)
             self.commander.task_done()
 
     def player_processor(self, cmd):
@@ -261,6 +265,19 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
 
     def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
+
+    def __get_fastbpm(self, nowplaying: NowPlaying):
+        try:
+            assert nowplaying.track.path
+            bpm = get_file_bpm(Path("/Volumes/store/Music") / nowplaying.track.path)
+            self.commander.put_nowait(
+                (Command.PLAYER_RESPONSE, FastBPM(
+                    bpm=int(bpm),
+                    nowplaying=nowplaying
+                ))
+            )
+        except AssertionError:
+            pass
 
     def __newest(self):
         self.api.search_queue.put_nowait((Command.LAST_ADDED, None))

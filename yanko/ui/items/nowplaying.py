@@ -1,4 +1,3 @@
-import logging
 from .actions import MusicItem
 from yanko.sonic import NowPlaying, Track
 from corestring import truncate_to_rows
@@ -20,10 +19,13 @@ class NowPlayingItem(MusicItem):
         self.__track = track
         title = f"{track.artist} - {track.title} - {track.album}"
         id = track.albumId
-        logging.debug(track)
         dimensions = [80, 80]
         icon = track.coverArt
         super().__init__(title, id, callback, key, icon, dimensions, template)
+        self.__set_title(np=np)
+
+    def __set_title(self, np: NowPlaying):
+        track = self.__track
         rows = [
             f"🎸 {track.artist}",
             f"🎤 {truncate_to_rows(track.title, 40)}",
@@ -31,6 +33,9 @@ class NowPlayingItem(MusicItem):
             f"ℹ️ {track.total_time} {track.audioType.upper()} {track.bitRate}kbps / BPM:{np.display_bpm}",
         ]
         self.setAttrTitle("\n".join(rows))
+
+    def update_bpm(self, np: NowPlaying):
+        self.__set_title(np)
 
     @property
     def track(self) -> Track:

@@ -2,7 +2,6 @@ from pathlib import Path
 from yanko import __name__
 from appdirs import user_config_dir, user_cache_dir, user_data_dir
 from yaml import Loader, load
-import logging
 
 
 class app_config_meta(type):

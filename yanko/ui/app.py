@@ -11,6 +11,7 @@ from yanko.sonic import (
     AlbumPlaylist,
     ArtistAlbums,
     Command,
+    FastBPM,
     LastAdded,
     MostPlayed,
     NowPlaying,
@@ -215,6 +216,18 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         if resp.track.artistId != self.__artist_albums.artist:
             self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
+        if resp.bpm == -1:
+            self.manager.commander.put_nowait((Command.GET_FAST_BPM, resp))
+
+    def _onFastBPM(self, resp: FastBPM):
+        try:
+            self.__nowplaying.setBpm(resp.bpm)
+            self.__bpm.now_playing = self.__nowplaying
+            it = self.menu.get(self.__nowPlayingSection[0])
+            assert isinstance(it, NowPlayingItem)
+            it.update_bpm(self.__nowplaying)
+        except AssertionError:
+            pass
 
     def _onLaMetricInit(self):
         try:

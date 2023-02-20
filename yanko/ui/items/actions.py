@@ -4,7 +4,7 @@ from yanko.ui.icons import Label, Symbol
 
 class ActionItemMeta(type):
 
-    _instances = {}
+    _instances: dict[str, 'ActionItem'] = {}
 
     def __call__(cls, title, *args, **kwds):
         if title not in cls._instances:
@@ -21,7 +21,7 @@ class ActionItemMeta(type):
 
     @property
     def previous(cls) -> "ActionItem":
-        return cls( Label.PREVIOUS.value, icon=Symbol.PREVIOUS.value)
+        return cls(Label.PREVIOUS.value, icon=Symbol.PREVIOUS.value)
 
     @property
     def quit(cls) -> "ActionItem":
@@ -34,7 +34,7 @@ class ActionItemMeta(type):
     @property
     def random_album(cls) -> "ActionItem":
         return cls(
-          Label.RANDOM_ALBUM.value, icon=Symbol.RANDOM_ALBUM.value
+            Label.RANDOM_ALBUM.value, icon=Symbol.RANDOM_ALBUM.value
         )
 
     @property
@@ -88,7 +88,7 @@ class MusicItem(MenuItem):
             key=key,
             icon=icon,
             dimensions=dimensions,
-            template=template,
+            template=True if template else False,
         )
 
     @property

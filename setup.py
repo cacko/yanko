@@ -110,5 +110,6 @@ setup(
     python_requires=">=3.10",
     data_files=DATA_FILES,
     options={"py2app": OPTIONS},
+    package_data={"yanko.resources": ["*"]},
     setup_requires=["py2app", "Pillow", "cffi", "pycparser"],
 )

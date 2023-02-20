@@ -4,7 +4,7 @@ from typing import Optional
 from rumps import App, Menu
 from pydantic import BaseModel
 from yanko.sonic import Album, ArtistInfo
-
+from yanko.resources import default_cover
 from .actions import MusicItem
 
 
@@ -52,6 +52,8 @@ class AlbumMenuItem(MusicItem):
     ):
         title = f"{album.artist} / {album.name}"
         icon = album.coverArt
+        if not icon or icon.startswith("http"):
+            icon = default_cover.as_posix()
         id = album.id
         dimensions = [35, 35]
         super().__init__(title, id, callback, key, icon, dimensions, template)

@@ -1,10 +1,10 @@
 from rumps import MenuItem as BaseMenuItem
 from AppKit import (
-    NSAttributedString,
-    NSFont,
-    NSFontAttributeName,
-    NSBackgroundColorAttributeName,
-    NSColor
+    NSAttributedString,  # type: ignore
+    NSFont,  # type: ignore
+    NSFontAttributeName,  # type: ignore
+    NSBackgroundColorAttributeName,  # type: ignore
+    NSColor  # type: ignore
 )
 from PyObjCTools.Conversion import propertyListFromPythonCollection
 from enum import Enum

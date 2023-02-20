@@ -263,7 +263,6 @@ class Client(object):
         with perftime("search"):
             results = self.make_request(
                 self.create_url(Subsonic.SEARCH3, query=query))
-            logging.warning(results)
             if results:
                 results = Search3Response(**results)
                 response = []

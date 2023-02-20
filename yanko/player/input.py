@@ -31,12 +31,6 @@ class Input(StoppableThread):
         process = (
             ffmpeg.input(
                 self.url,
-                # seekable=0,
-                # tcp_nodelay=1,
-                # reconnect_on_network_error=1,
-                # reconnect_streamed=1,
-                # multiple_requests=0,
-                # reconnect_delay_max=5,
             )
             .output(
                 "pipe:",

@@ -1,5 +1,4 @@
 from enum import Enum
-import logging
 from pathlib import Path
 from cachable import Cachable
 from humanfriendly.tables import format_smart_table
@@ -102,11 +101,8 @@ class CachableDb(Cachable):
 
     def tocache(self, res: dict):
         with YankoDb.db.atomic():
-            logging.warning(self.__model)
-            logging.warning(res)
             model = self.__model(**res)  # type: ignore
             res = model.save()
-            logging.warning(res)
             return model
 
     @property

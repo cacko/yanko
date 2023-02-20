@@ -59,7 +59,7 @@ class AlbumMenuItem(MusicItem):
         super().__init__(title, id, callback, key, icon, dimensions, template)
         attr_title = f"{album.artist}\n{album.name}"
         if album.year:
-            attr_title += f"  ({album.year})"
+            attr_title += f" ({album.year})"
         self.setAttrTitle(attr_title)
 
 
@@ -133,6 +133,7 @@ class ArtistAlbumsList(Albumlist):
             self.menu._menu.removeAllItems()
         except AttributeError:
             pass
+        albums.sort(key=lambda x: x.int_year)
         self.menu.add(
             ArtistInfoItem(
                 id=albums[0].artistId,

@@ -23,7 +23,6 @@ class Beats(CachableDb):
 
     def __init__(self, path) -> None:
         self.__path = path
-        logging.warning(f"BEATS __PATH init {self.__path}")
         super().__init__(
             model=BeatsModel,  # type: ignore
             id_key="path",
@@ -34,7 +33,6 @@ class Beats(CachableDb):
     def store_beats(cls, data: dict):
         obj = cls(data.get("path"))
         obj.tocache(data)
-        logging.warning(f"BEATS store {obj}")
         return ["OK", obj.path]
 
     @property
@@ -92,7 +90,6 @@ class FetcherMeta(type):
     def add(cls, paths: list[str]):
         cls.queue.put_nowait(paths)
         instance = cls()
-        logging.warning(instance.is_alive())
         if not instance.is_alive():
             instance.start()
 

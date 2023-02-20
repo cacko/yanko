@@ -223,6 +223,14 @@ class Album(BaseModel, extra=Extra.ignore):
         if tt:
             self.name, self.title, self.album = tt, tt, tt
 
+    @property
+    def int_year(self) -> int:
+        try:
+            assert self.year
+            return int(self.year)
+        except (ValueError, AssertionError):
+            return 0
+
 
 class Artist(BaseModel, extra=Extra.ignore):
     id: str

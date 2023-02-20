@@ -35,7 +35,6 @@ class AnnounceMeta(type):
 
 class Announce(StoppableThread, metaclass=AnnounceMeta):
 
-    __to = []
     queue: Queue
 
     def __init__(self):
@@ -57,6 +56,6 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
             Path(payload["coverArt"]).read_bytes()).decode()
         for url in self.__to:
             try:
-                resp = requests.post(url, json=Payload(**payload).payload)
+                requests.post(url, json=Payload(**payload).payload)
             except ConnectionError:
                 logging.warn(f"Announer failer for {url}")

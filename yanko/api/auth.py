@@ -1,24 +1,27 @@
-# from functools import wraps
-
-# import pyotp
-# from bottle import HTTPError, request
-
-# from yanko.core.config import app_config
-
-# ALLOWED_IPS = ["127.0.0.1"]
+from fastapi.exceptions import HTTPException
+from starlette.requests import Request
+from starlette.status import HTTP_403_FORBIDDEN
+from yanko.core.config import app_config
+import pyotp
 
 
-# def auth_required(f):
-#     @wraps(f)
-#     def decorated_function(*args, **kwargs):
-#         if request.remote_addr in ALLOWED_IPS:
-#             return f(*args, **kwargs)
-#         conf = app_config.get("api")
-#         otp = request.get_header("x-totp", "")
-#         totp = pyotp.TOTP(conf.get("secret"))
-#         if not totp.verify(otp):
-#             err = HTTPError(403, "no")
-#             return err
-#         return f(*args, **kwargs)
+ALLOWED_IPS = ["127.0.0.1"]
 
-#     return decorated_function
+
+class Authorization:
+
+    async def __call__(self, request: Request):
+        client = request.client
+        assert client
+        if client.host in ALLOWED_IPS:
+            return
+        conf = app_config.get("api")
+        otp = request.headers.get("x-totp", "")
+        totp = pyotp.TOTP(conf.get("secret"))
+        if not totp.verify(otp):
+            raise HTTPException(
+                status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
+            )
+
+
+check_auth = Authorization()

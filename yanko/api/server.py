@@ -2,17 +2,16 @@ from queue import Queue
 from typing import Optional
 import uvicorn
 from corethread import StoppableThread
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from pydantic import BaseModel, Extra
 from yanko.core import log_level
-# from yanko.api.auth import auth_required
 from yanko.core.config import app_config
 from corestring import string_hash
 import time
 import logging
-
 from yanko.sonic import Command
 from yanko.sonic.beats import Beats
+from .auth import check_auth
 
 
 class ApiConfig(BaseModel, extra=Extra.ignore):
@@ -107,21 +106,21 @@ class Server(StoppableThread, metaclass=ServerMeta):
 
 
 @Server.app.get("/state")
-async def state():
+async def state(auth=Depends(check_auth)):
     return Server().state()
 
 
 @Server.app.post("/beats")
-async def beats(request: Request):
+async def beats(request: Request, auth=Depends(check_auth)):
     data = await request.json()
     return Beats.store_beats(data)
 
 
 @Server.app.get("/search/{query}")
-async def search(query: str):
+async def search(query: str, auth=Depends(check_auth)):
     return Server().search(query)
 
 
 @Server.app.get("/command/{query}")
-async def command(query: str):
+async def command(query: str, auth=Depends(check_auth)):
     return Server().command(query)

@@ -363,6 +363,7 @@ class Client(object):
     def get_artist_info(self, artist_id) -> Optional[ArtistInfoData]:
         artist_info = ArtistInfo(self.create_url(
             Subsonic.ARTIST_INFO, id=artist_id))
+        logging.info(artist_info)
         if artist_info:
             return artist_info.info
         return None

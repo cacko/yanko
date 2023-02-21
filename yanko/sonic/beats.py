@@ -60,7 +60,7 @@ class Beats(CachableDb):
         logging.debug(f"Fetching beats for {self.__path}")
         beats = Znayko.beats(self.__path)
         beats["path"] = self.__path
-        logging.debug(f"BEEATS FETCHED, {self.__path} {beats}")
+        logging.debug(f"BEEATS FETCHED, {self.__path}")
         return beats
 
     def _init(self):

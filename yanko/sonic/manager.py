@@ -292,6 +292,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.SEARCH, query))
 
     def __artist_albums(self, query):
+        logging.info(query)
         if query:
             self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
 

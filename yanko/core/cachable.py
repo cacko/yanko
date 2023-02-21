@@ -1,4 +1,5 @@
 from enum import Enum
+import logging
 from pathlib import Path
 from cachable import Cachable
 from humanfriendly.tables import format_smart_table
@@ -93,6 +94,9 @@ class CachableDb(Cachable):
         super().__init__()
 
     def fromcache(self):
+        logging.info(self.__model)
+        logging.info(self.__id_key)
+        logging.info(self.__id_value)
         if model := self.__model.fetch(
             getattr(self.__model, self.__id_key) == self.__id_value
         ):
@@ -101,6 +105,7 @@ class CachableDb(Cachable):
 
     def tocache(self, res: dict):
         with YankoDb.db.atomic():
+            logging.info(res)
             model = self.__model(**res)  # type: ignore
             res = model.save()
             return model

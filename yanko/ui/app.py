@@ -213,8 +213,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             self.menu.insert_before(top, None),
         ]
         self.__playlist.setNowPlaying(resp.track)
-        if resp.track.artistId != self.__artist_albums.artist:
-            self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
+        self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
         if resp.bpm == -1:
             self.manager.commander.put_nowait((Command.GET_FAST_BPM, resp))

@@ -66,6 +66,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
             host=config.host,
             port=config.port,
             use_colors=True,
+            workers=4,
             # factory=True,
             log_level=log_level.lower()
         )

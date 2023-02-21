@@ -277,7 +277,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                 ))
             )
         except AssertionError:
-            pass
+            self.__error()
 
     def __newest(self):
         self.api.search_queue.put_nowait((Command.LAST_ADDED, None))
@@ -346,6 +346,11 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
             self.api.playback_queue.put_nowait((Action.EXIT, None))
         self.commander.put_nowait(
             (Command.PLAYER_RESPONSE, Playstatus(status=Status.EXIT))
+        )
+
+    def __error(self):
+        self.commander.put_nowait(
+            (Command.PLAYER_RESPONSE, Playstatus(status=Status.ERROR))
         )
 
     def __stop(self):

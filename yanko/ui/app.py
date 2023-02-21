@@ -280,6 +280,8 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                     ActionItem.next.show()
                     ActionItem.previous.show()
                 ActionItem.restart.show()
+            case Status.ERROR:
+                self.icon = Symbol.ERROR.value
             case Status.STOPPED:
                 self.icon = Symbol.STOPPED.value
                 self.title = ""

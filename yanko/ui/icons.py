@@ -59,6 +59,7 @@ class Symbol(Enum):
     HOURGLASS = "hourglass"
     HOURGLASS_BOTTOM = "hourglass.bottomhalf.filled"
     HOURGLASS_TOP = "hourglass.tophalf.filled"
+    ERROR = "exclamationmark.circle"
 
 
 class Icon(Enum):

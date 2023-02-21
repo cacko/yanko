@@ -30,7 +30,7 @@ class ServerMeta(type):
             cls._instance = type.__call__(cls, *args, **kwds)
         return cls._instance
 
-    def queue(cls, queue_id):
+    def queue(cls, queue_id) -> Queue:
         if queue_id not in cls._queue:
             cls._queue[queue_id] = Queue()
         return cls._queue[queue_id]
@@ -78,7 +78,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
         if self.server:
             self.server.should_exit = True
 
-    def search(self, query):
+    async def search(self, query):
         queue_id = string_hash(query)
         queue = __class__.queue(queue_id)
         assert self.api
@@ -90,10 +90,10 @@ class Server(StoppableThread, metaclass=ServerMeta):
                 res = queue.get_nowait()
                 return {"items": res.get("items", [])}
 
-    def state(self):
+    async def state(self):
         return self.state_callback()
 
-    def command(self, query):
+    async def command(self, query):
         queue_item = query.split("=", 2)
         payload = None
         try:
@@ -107,7 +107,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
 
 
 @Server.app.get("/state")
-async def state(auth=Depends(check_auth)):
+def state(auth=Depends(check_auth)):
     return Server().state()
 
 
@@ -119,9 +119,9 @@ async def beats(request: Request, auth=Depends(check_auth)):
 
 @Server.app.get("/search/{query}")
 async def search(query: str, auth=Depends(check_auth)):
-    return Server().search(query)
+    return await Server().search(query)
 
 
 @Server.app.get("/command/{query}")
 async def command(query: str, auth=Depends(check_auth)):
-    return Server().command(query)
+    return await Server().command(query)

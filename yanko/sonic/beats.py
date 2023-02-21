@@ -30,7 +30,7 @@ class Beats(CachableDb):
         )
 
     @classmethod
-    def store_beats(cls, data: dict):
+    async def store_beats(cls, data: dict):
         obj = cls(data.get("path"))
         obj.tocache(data)
         return ["OK", obj.path]

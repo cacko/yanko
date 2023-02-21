@@ -100,6 +100,7 @@ class Status(Enum):
     RESUMED = "resumed"
     NEXT = "next"
     PREVIOUS = "previous"
+    ERROR = "error"
 
 
 class Subsonic(Enum):

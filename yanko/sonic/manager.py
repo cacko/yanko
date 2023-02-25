@@ -22,7 +22,7 @@ from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
-from yanko.player.bpm import get_file_bpm
+from yanko.player.bpm import Beats as BeatsExtractor
 from multiprocessing.pool import ThreadPool
 import logging
 
@@ -269,7 +269,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __get_fastbpm(self, nowplaying: NowPlaying):
         try:
             assert nowplaying.track.path
-            bpm = get_file_bpm(Path("/Volumes/store/Music") / nowplaying.track.path)
+            bpm = BeatsExtractor(nowplaying.track.path).fast_bpm
             self.commander.put_nowait(
                 (Command.PLAYER_RESPONSE, FastBPM(
                     bpm=int(bpm),

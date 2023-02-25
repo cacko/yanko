@@ -3,6 +3,7 @@ from typing import Optional
 import uvicorn
 from corethread import StoppableThread
 from fastapi import FastAPI, Request, Depends
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Extra
 from yanko.core import log_level
 from yanko.core.config import app_config
@@ -78,7 +79,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
         if self.server:
             self.server.should_exit = True
 
-    async def search(self, query):
+    def search(self, query):
         queue_id = string_hash(query)
         queue = __class__.queue(queue_id)
         assert self.api
@@ -90,11 +91,12 @@ class Server(StoppableThread, metaclass=ServerMeta):
                 res = queue.get_nowait()
                 return {"items": res.get("items", [])}
 
-    async def state(self):
+    def state(self):
         return self.state_callback()
 
-    async def command(self, query):
+    def command(self, query):
         queue_item = query.split("=", 2)
+        logging.warning(queue_item)
         payload = None
         try:
             cmd = Command(queue_item.pop(0))
@@ -107,21 +109,21 @@ class Server(StoppableThread, metaclass=ServerMeta):
 
 
 @Server.app.get("/state")
-def state(auth=Depends(check_auth)):
-    return Server().state()
+async def state(auth=Depends(check_auth)):
+    return await run_in_threadpool(Server().state)
 
 
 @Server.app.post("/beats")
 async def beats(request: Request, auth=Depends(check_auth)):
     data = await request.json()
-    return Beats.store_beats(data)
+    return await run_in_threadpool(Beats.store_beats, data=data)
 
 
-@Server.app.get("/search/{query}")
+@Server.app.get("/search/{query:path}")
 async def search(query: str, auth=Depends(check_auth)):
-    return await Server().search(query)
+    return await run_in_threadpool(Server().search, query=query)
 
 
-@Server.app.get("/command/{query}")
+@Server.app.get("/command/{query:path}")
 async def command(query: str, auth=Depends(check_auth)):
-    return await Server().command(query)
+    return await run_in_threadpool(Server().command, query=query)

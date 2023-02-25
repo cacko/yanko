@@ -106,7 +106,8 @@ setup(
         "uvicorn>=0.20.0",
         "anyio>=3.6.2",
         "aubio>=0.5.0a0",
-        "corefile>=0.1.2"
+        "corefile>=0.1.2",
+        "librosa>=0.10.0"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

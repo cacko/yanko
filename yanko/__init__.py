@@ -3,6 +3,7 @@ __name__ = "Yanko"
 from pathlib import Path
 from cachable.storage.file import FileStorage
 from yanko.db.base import YankoDb
+from yanko.player.bpm import Beats
 from yanko.ui.app import YankoApp
 from yanko.core.config import app_config
 from yanko.sonic.coverart import CoverArtFile
@@ -19,6 +20,8 @@ corelog.register(log_level)
 
 def start():
     cache_dir = app_config.cache_dir
+    store_root = app_config.get("store", {}).get("music", "")
+    Beats.register(store_root=store_root)
     if not cache_dir.parent.exists():
         cache_dir.parent.mkdir(parents=True)
     CoverArtFile.register(storage=FileStorage.register(storage_path=cache_dir))

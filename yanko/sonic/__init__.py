@@ -7,6 +7,7 @@ from pydantic import BaseModel, Extra, Field
 import pantomime
 from corestring import truncate
 from coretime import seconds_to_duration
+from yanko.player.bpm import BeatsStruct
 
 RESULT_KEYS = [
     "searchResult3",
@@ -74,7 +75,6 @@ class Command(Enum):
     PLAY_MOST_PLAYED = "play_most_played"
     ANNOUNCE = "announce"
     PLAYER_RESPONSE = "player_response"
-    GET_FAST_BPM = "get_fast_bpm"
 
 
 class Action(Enum):
@@ -262,17 +262,17 @@ class NowPlaying(BaseModel, extra=Extra.ignore):
     track: Track
     song: Song
     start: datetime
-    beats: Optional[list[float]] = None
+    beats: Optional[BeatsStruct] = None
 
     @property
     def bpm(self) -> int:
-        try:
-            assert self.song.bpm
+        if self.beats and self.beats.tempo:
+            return int(self.beats.tempo)
+        if self.song.bpm:
             return self.song.bpm
-        except AssertionError:
-            return -1
+        return -1
 
-    def setBpm(self, val):
+    def setBpm(self, val: int):
         self.song.bpm = val
 
     @property
@@ -293,6 +293,15 @@ class NowPlaying(BaseModel, extra=Extra.ignore):
     def menubar_title(self) -> str:
         return f"{self.track.artist} / {truncate(self.track.title)}"
 
+    @property
+    def extracted_beats(self) -> Optional[list[float]]:
+        try:
+            assert self.beats
+            assert self.beats.beats
+            return self.beats.beats
+        except AssertionError:
+            return None
+
 
 class Playlist(BaseModel, extra=Extra.ignore):
     tracks: list[Track]
@@ -305,11 +314,6 @@ class AlbumPlaylist(Playlist):
 
 class Playstatus(BaseModel, extra=Extra.ignore):
     status: Status
-
-
-class FastBPM(BaseModel, extra=Extra.ignore):
-    bpm: int
-    nowplaying: NowPlaying
 
 
 class VolumeStatus(BaseModel, extra=Extra.ignore):

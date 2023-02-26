@@ -96,7 +96,7 @@ class Server(StoppableThread, metaclass=ServerMeta):
 
     def command(self, query):
         queue_item = query.split("=", 2)
-        logging.warning(queue_item)
+        logging.debug(queue_item)
         payload = None
         try:
             cmd = Command(queue_item.pop(0))

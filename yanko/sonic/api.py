@@ -14,6 +14,7 @@ import logging
 from yanko.core import perftime
 from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
+from yanko.player.bpm import BeatsStruct
 from yanko.player.ffmpeg import FFMPeg
 from yanko.sonic import (
     RESULT_KEYS,
@@ -363,7 +364,6 @@ class Client(object):
     def get_artist_info(self, artist_id) -> Optional[ArtistInfoData]:
         artist_info = ArtistInfo(self.create_url(
             Subsonic.ARTIST_INFO, id=artist_id))
-        logging.info(artist_info)
         if artist_info:
             return artist_info.info
         return None
@@ -490,10 +490,10 @@ class Client(object):
                     return
                 playing = self.play_stream(dict(song))  # type: ignore
 
-    def load_beats(self, path: str):
-        beats = Beats(path)
+    def load_beats(self, path: str) -> Optional[BeatsStruct]:
+        beats = Beats(path, allow_extract=False)
         if beats.isCached:
-            return beats.beats
+            return beats.model
         return None
 
     def play_stream(self, track_data: dict[str, Any]):

@@ -4,6 +4,7 @@ from threading import Thread
 from typing import Optional, Any
 import logging
 from rumps import rumps
+from yanko.player.bpm import BeatsStruct
 from yanko.player.device import Device
 from yanko.api.server import Server
 from yanko.lametric import LaMetric, StatusFrame
@@ -11,7 +12,6 @@ from yanko.sonic import (
     AlbumPlaylist,
     ArtistAlbums,
     Command,
-    FastBPM,
     LastAdded,
     MostPlayed,
     NowPlaying,
@@ -23,6 +23,7 @@ from yanko.sonic import (
     Status,
     VolumeStatus,
 )
+from yanko.sonic.beats import Fetcher
 from yanko.sonic.manager import Manager
 from yanko.ui.icons import AnimatedIcon, Label, Symbol
 from yanko.ui.items.actions import ActionItem, MusicItem
@@ -31,6 +32,7 @@ from yanko.ui.items.bpm import BPM, BPMEvent
 from yanko.ui.items.nowplaying import NowPlayingItem
 from yanko.ui.items.playlist import Playlist as UIPlaylist
 from yanko.ui.items.servermenu import ServerMenu
+from yanko.core.config import app_config
 
 LoadingIcon = AnimatedIcon(
     [Symbol.HOURGLASS, Symbol.HOURGLASS_BOTTOM, Symbol.HOURGLASS_TOP]
@@ -114,6 +116,12 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         api_server = Server()
         api_server.start(self.manager.commander, self._onLaMetricInit)
         self.__threads.append(api_server)
+        fetcher = Fetcher.register(
+            manager_queue=self.manager.commander,
+            do_extract=app_config.get("beats", {}).get("extract", False)
+        )
+        fetcher.start()
+        self.__threads.append(fetcher)
         for cmd, _ in self.__initCommands:
             self.manager.commander.put_nowait((cmd, None))
 
@@ -198,6 +206,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             self.icon = resp.icon
 
     def _onNowPlaying(self, resp: NowPlaying):
+        logging.warning(f"ON NOW PLAYING {resp}")
         track = resp.track
         self.__bpm.now_playing = resp
         self.__nowplaying = resp
@@ -215,17 +224,17 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         self.__playlist.setNowPlaying(resp.track)
         self.manager.commander.put_nowait((Command.ARTIST_ALBUMS, resp.track.artistId))
         self.manager.commander.put_nowait((Command.RECENTLY_PLAYED, None))
-        if resp.bpm == -1:
-            self.manager.commander.put_nowait((Command.GET_FAST_BPM, resp))
 
-    def _onFastBPM(self, resp: FastBPM):
+    def _onBeatsStruct(self, resp: BeatsStruct):
         try:
-            self.__nowplaying.setBpm(resp.bpm)
+            assert self.__nowplaying
+            assert self.__nowplaying.track.path == resp.path
+            self.__nowplaying.beats = resp
             self.__bpm.now_playing = self.__nowplaying
             it = self.menu.get(self.__nowPlayingSection[0])
             assert isinstance(it, NowPlayingItem)
             it.update_bpm(self.__nowplaying)
-        except AssertionError:
+        except (AssertionError, AttributeError):
             pass
 
     def _onLaMetricInit(self):
@@ -271,7 +280,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onPlaystatus(self, resp: Playstatus):
         self.__status = resp.status
         LaMetric.status(resp.status)
-        logging.debug(f"status={resp.status}")
+        logging.warning(f"status={resp.status}")
         match resp.status:
             case Status.PAUSED:
                 self.icon = Symbol.PAUSE.value

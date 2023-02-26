@@ -1,28 +1,29 @@
 from queue import Queue, Empty
+
 from yanko.core.cachable import CachableDb
+from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
 from yanko.db.models import Beats as BeatsModel
-from yanko.player.bpm import Beats as BeatsExtractor
+from yanko.player.bpm import Beats as BeatsExtractor, BeatsStruct
 from time import sleep
-from multiprocessing.pool import ThreadPool
 from typing import Optional
 import logging
-
-
-def resolveBeats(audio_path):
-    beats = Beats(path=audio_path)
-    if not beats.isCached:
-        beats.fetch()
-    return beats
+from yanko.sonic import Command
 
 
 class Beats(CachableDb):
 
-    __path: str
     _struct: Optional[BeatsModel] = None
 
-    def __init__(self, path) -> None:
+    def __init__(
+        self,
+        path,
+        allow_extract: bool = False,
+        extractor: Optional[BeatsExtractor] = None
+    ) -> None:
         self.__path = path
+        self.__allow_extract = allow_extract
+        self.__extractor = extractor
         super().__init__(
             model=BeatsModel,  # type: ignore
             id_key="path",
@@ -31,7 +32,7 @@ class Beats(CachableDb):
 
     @classmethod
     async def store_beats(cls, data: dict):
-        obj = cls(data.get("path"))
+        obj = cls(path=data.get("path"))
         obj.tocache(data)
         return ["OK", obj.path]
 
@@ -42,9 +43,27 @@ class Beats(CachableDb):
             assert self._struct
             assert isinstance(self._struct.beats, list)
             return self._struct.beats
-        except AssertionError as e:
-            logging.exception(e)
+        except AssertionError:
             return []
+
+    @property
+    def fast_bpm(self) -> int:
+        try:
+            self._init()
+            assert self._struct
+            assert isinstance(self._struct.tempo, float)
+            return int(self._struct.tempo)
+        except AssertionError:
+            return 120
+
+    @property
+    def model(self):
+        try:
+            self._init()
+            assert self._struct
+            return BeatsStruct(**self._struct.to_dict())
+        except AssertionError:
+            return None
 
     @property
     def path(self):
@@ -52,21 +71,28 @@ class Beats(CachableDb):
         return self._struct.path if self._struct else None
 
     def fetch(self):
-        resp = self.__fetch()
-        if resp:
+        try:
+            resp = self.__fetch()
+            assert resp
             self._struct = self.tocache(resp)
+        except AssertionError:
+            pass
 
     def __fetch(self):
-        logging.debug(f"Extracting beats for {self.__path}")
-        result = BeatsExtractor(self.__path).extract().dict()
+        if not self.__extractor:
+            self.__extractor = BeatsExtractor(self.__path)
+        result = None
+        result = self.__extractor.fast_bpm().dict()
         result["path"] = self.__path
-        logging.debug(f"BEEATS FETCHED, {self.__path}")
+        if self.__allow_extract:
+            logging.debug(f"Extracting beats for {self.__path}")
+            result = self.__extractor.extract().dict()
+            result["path"] = self.__path
         return result
 
     def _init(self):
         if self.isCached:
             self._struct = self.fromcache()
-            logging.debug(f"In DB beats for {self.__path}")
             return
         self.fetch()
 
@@ -75,11 +101,26 @@ class FetcherMeta(type):
 
     __instance: Optional["Fetcher"] = None
     __queue: Optional[Queue] = None
+    __manager_queue: Optional[Queue] = None
+    __do_extract: bool = False
 
     def __call__(cls, *args, **kwds):
         if not cls.__instance or not cls.__instance.is_alive():
             cls.__instance = type.__call__(cls, *args, **kwds)
         return cls.__instance
+
+    def register(cls, manager_queue: Queue, do_extract: bool = False):
+        cls.__manager_queue = manager_queue
+        cls.__do_extract = do_extract
+        return cls()
+
+    @property
+    def do_extract(cls) -> bool:
+        return cls.__do_extract
+
+    @property
+    def manager_queue(cls) -> Optional[Queue]:
+        return cls.__manager_queue
 
     @property
     def queue(cls):
@@ -88,37 +129,61 @@ class FetcherMeta(type):
         return cls.__queue
 
     def add(cls, paths: list[str]):
-        cls.queue.put_nowait(paths)
-        instance = cls()
-        if not instance.is_alive():
-            instance.start()
+        cls.queue.queue.clear()
+        for p in paths:
+            cls.queue.put_nowait(p)
 
 
 class Fetcher(StoppableThread, metaclass=FetcherMeta):
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
-    def start(self) -> None:
-        return super().start()
+    def resolveBeats(
+        self,
+        extractor: BeatsExtractor,
+        allow_extract: bool = False
+    ):
+        beats = Beats(
+            path=extractor.requested_path,
+            extractor=extractor,
+            allow_extract=False
+        )
+        return beats
 
     def run(self):
-        try:
-            while True:
-                try:
-                    audio_paths = Fetcher.queue.get_nowait()
-                    with ThreadPool(1) as pool:
-                        jobs = pool.map(resolveBeats, audio_paths)
-                        for res in jobs:
-                            logging.debug(f"BEATS Extracted for {res.path} {res}")
-                        pool.close()
-                        pool.join()
-                        Fetcher.queue.task_done()
-                except Empty:
-                    return
-                except Exception:
-                    Fetcher.queue.task_done()
-                finally:
-                    sleep(0.1)
-        except AssertionError as e:
-            logging.exception(e)
+        while True:
+            try:
+                audio_path = Fetcher.queue.get_nowait()
+                extractor = BeatsExtractor(path=audio_path)
+                assert Fetcher.manager_queue
+                beats = self.resolveBeats(extractor=extractor, allow_extract=False)
+                Fetcher.manager_queue.put_nowait(
+                    (
+                        Command.PLAYER_RESPONSE,
+                        BeatsStruct(
+                            tempo=float(beats.fast_bpm),
+                            beats=None,
+                            path=audio_path
+                        ),
+                    )
+                )
+                if app_config.get("beats", {}).get("extract", False):
+                    beats = self.resolveBeats(extractor=extractor, allow_extract=True)
+                    Fetcher.manager_queue.put_nowait(
+                        (
+                            Command.PLAYER_RESPONSE,
+                            beats.model,
+                        )
+                    )
+                Fetcher.queue.task_done()
+            except Empty:
+                pass
+            except AssertionError as e:
+                logging.exception(e)
+                Fetcher.queue.task_done()
+            except Exception:
+                Fetcher.queue.task_done()
+            finally:
+                sleep(0.1)

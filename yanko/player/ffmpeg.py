@@ -34,6 +34,7 @@ class FFMPeg(BasePlayer):
     @status.setter
     def status(self, val: Status):
         self.__status = val
+        logging.warning(f"FFMPEG STATUS {val}")
         self._manager_queue.put_nowait(
             (Command.PLAYER_RESPONSE, Playstatus(status=val))
         )
@@ -80,9 +81,9 @@ class FFMPeg(BasePlayer):
                     return queue_action
                 _time.sleep(0.1)
         except StreamEnded as e:
-            logging.error(e)
+            logging.exception(e)
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
         logging.debug("Ending stream")
         self._time_event.clear()
         return Status.PLAYING

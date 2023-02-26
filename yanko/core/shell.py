@@ -37,7 +37,7 @@ class Shell(object, metaclass=ShellMeta):
         assert self.executable
         assert self.args
         cmd = (self.executable, *self.executable_arguments, *self.args)
-        logging.info(f"Shell.getOutput: {cmd}")
+        logging.debug(f"Shell.getOutput: {cmd}")
         with Popen(
             cmd,
             stdout=PIPE,
@@ -60,5 +60,5 @@ class Shell(object, metaclass=ShellMeta):
 
     def execute(self):
         cmd = [self.executable, *self.executable_arguments, *self.args]
-        logging.info(f"Shell.execute: {shlex.join(cmd)}")
+        logging.debug(f"Shell.execute: {shlex.join(cmd)}")
         return call(shlex.join(cmd), shell=True, env=self.environment)

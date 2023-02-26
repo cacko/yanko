@@ -13,8 +13,8 @@ from librosa import (
     frames_to_time,
     time_to_frames,
     onset,
-    beat,
     decompose,
+    feature
 )
 from librosa.util import peak_pick, softmask
 import numpy as np
@@ -62,7 +62,7 @@ class BeatsMeta(type):
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return super().__call__(*args, **kwds)
 
-    def register(cls, store_root: str):
+    def register(cls, store_root: str, extract: bool = False):
         cls.__store_root = Path(store_root)
 
     @property
@@ -92,11 +92,15 @@ class Beats(object, metaclass=BeatsMeta):
         assert self.__path.exists()
 
     def __decode(self):
-        worker = Decoder(input_path=self.__path, output_path=self.__tmppath)
-        return worker.execute()
+        if not self.__tmppath.exists():
+            worker = Decoder(input_path=self.__path, output_path=self.__tmppath)
+            return worker.execute()
 
     @property
-    def fast_bpm(self):
+    def requested_path(self) -> str:
+        return self.__requested_path
+
+    def fast_bpm(self) -> BeatsStruct:
         self.__decode()
         samplerate, win_s, hop_s = 4000, 128, 64
         s = source(self.__tmppath.as_posix(), samplerate, hop_s)  # type: ignore
@@ -104,7 +108,6 @@ class Beats(object, metaclass=BeatsMeta):
         o = tempo("specdiff", win_s, hop_s, samplerate)
         beats = []
         total_frames = 0
-
         while True:
             samples, read = s()
             is_beat = o(samples)
@@ -115,17 +118,20 @@ class Beats(object, metaclass=BeatsMeta):
             if read < hop_s:
                 break
 
-        def beats_to_bpm(beats) -> int:
+        def beats_to_bpm(beats):
             if len(beats) > 1:
                 if len(beats) < 4:
                     logging.error("few beats found in {:s}".format(self.__path))
-                bpms = 60./diff(beats)
-                return int(median(bpms))
+                bpms = 60/diff(beats)
+                return median(bpms)
             else:
                 logging.error("not enough beats found in {:s}".format(self.__path))
                 return 0
-
-        return beats_to_bpm(beats)
+        return BeatsStruct(
+            beats=[],
+            tempo=beats_to_bpm(beats),  # type: ignore
+            path=self.__requested_path,
+        )
 
     def extract(self) -> BeatsStruct:
         with music_lock:
@@ -137,11 +143,11 @@ class Beats(object, metaclass=BeatsMeta):
                 D = stft(y)
                 y_percussive = None
                 if self.__with_vocals:
-                    logging.info(f"Percussive margin: {self.__margin}")
+                    logging.debug(f"Percussive margin: {self.__margin}")
                     _, D_percussive = decompose.hpss(D, margin=self.__margin)
                     y_percussive = istft(D_percussive, length=len(y))
                 else:
-                    logging.info(f"No vocals mode: {self.__path}")
+                    logging.debug(f"No vocals mode: {self.__path}")
                     S_full, phase = magphase(stft(y))
                     S_filter = decompose.nn_filter(
                         S_full,
@@ -179,7 +185,7 @@ class Beats(object, metaclass=BeatsMeta):
                 beat_times = frames_to_time(
                     onset_frames, hop_length=self.__hop_length
                 )
-                tempo = beat.tempo(y=y_percussive, sr=sr)
+                tempo = feature.tempo(y=y_percussive, sr=sr)
 
                 return BeatsStruct(
                     beats=list(map(float, list(beat_times))),

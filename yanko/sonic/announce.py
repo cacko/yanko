@@ -58,4 +58,4 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
             try:
                 requests.post(url, json=Payload(**payload).payload)
             except ConnectionError:
-                logging.warn(f"Announer failer for {url}")
+                logging.warn(f"Announcer failer for {url}")

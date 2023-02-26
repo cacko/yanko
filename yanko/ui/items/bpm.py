@@ -9,43 +9,6 @@ from yanko.sonic import NowPlaying
 from yanko.ui.icons import AnimatedIcon, Symbol
 from pydantic import BaseModel, Extra
 
-from aubio import source, tempo  # type: ignore
-from numpy import median, diff
-
-
-def get_file_bpm(path):
-    samplerate, win_s, hop_s = 4000, 128, 64
-    s = source(path, samplerate, hop_s)  # type: ignore
-    samplerate = s.samplerate
-    o = tempo("specdiff", win_s, hop_s, samplerate)
-    beats = []
-    total_frames = 0
-
-    while True:
-        samples, read = s()
-        is_beat = o(samples)
-        if is_beat:
-            this_beat = o.get_last_s()
-            beats.append(this_beat)
-            # if o.get_confidence() > .2 and len(beats) > 2.:
-            #    break
-        total_frames += read
-        if read < hop_s:
-            break
-
-    def beats_to_bpm(beats, path):
-        # if enough beats are found, convert to periods then to bpm
-        if len(beats) > 1:
-            if len(beats) < 4:
-                print("few beats found in {:s}".format(path))
-            bpms = 60./diff(beats)
-            return median(bpms)
-        else:
-            print("not enough beats found in {:s}".format(path))
-            return 0
-
-    return beats_to_bpm(beats, path)
-
 
 PausingIcon = AnimatedIcon(icons=[Symbol.GRID1, Symbol.GRID4])
 
@@ -96,7 +59,7 @@ class BPM(StoppableThread):
         self.__time_total = np.track.duration
         self.__last_measure = 0
         self.__bpm = np.bpm
-        self.__beats = np.beats
+        self.__beats = np.extracted_beats
         self.__beat_count = 1
         if self.__beats:
             total_beats = len(self.__beats)
@@ -138,7 +101,7 @@ class BPM(StoppableThread):
                         self.__beats.pop(0)
                         self.__beat_count += 1
             except Exception as e:
-                logging.error(e)
+                logging.error(e, exc_info=True)
             finally:
                 sleep(0.1)
 

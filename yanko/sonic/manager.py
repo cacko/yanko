@@ -3,12 +3,12 @@ from queue import Queue
 from typing import Optional
 from yanko.core import perftime
 from yanko.core.thread import StoppableThread
+from yanko.player.bpm import BeatsStruct
 from yanko.sonic import (
     Action,
     ArtistAlbums,
     ArtistSearchItem,
     Command,
-    FastBPM,
     MostPlayed,
     NowPlaying,
     Playstatus,
@@ -22,25 +22,24 @@ from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
 from yanko.sonic.coverart import CoverArtFile
 from yanko.sonic.artist import ArtistInfo
-from yanko.player.bpm import Beats as BeatsExtractor
 from multiprocessing.pool import ThreadPool
 import logging
 
 
-def resolveAlbumYear(obj):
-    try:
-        ca = CoverArtFile(obj.id)
-        assert ca.path
-        res = ca.path
-        obj.coverArt = res.as_posix() if res.exists() else None
-        icon = ca.icon_path
-        if icon:
-            obj.coverArtIcon = icon.as_posix()
-        else:
-            obj.coverArtIcob = None
-    except AssertionError as e:
-        logging.error(e)
-    return obj
+# def resolveAlbumYear(obj):
+#     try:
+#         ca = CoverArtFile(obj.id)
+#         assert ca.path
+#         res = ca.path
+#         obj.coverArt = res.as_posix() if res.exists() else None
+#         icon = ca.icon_path
+#         if icon:
+#             obj.coverArtIcon = icon.as_posix()
+#         else:
+#             obj.coverArtIcob = None
+#     except AssertionError:
+#         logging.error(f"failed to resolve cover art {obj}")
+#     return obj
 
 
 def resolveCoverArt(obj):
@@ -54,8 +53,8 @@ def resolveCoverArt(obj):
             obj.coverArtIcon = icon.as_posix()
         else:
             obj.coverArtIcob = None
-    except AssertionError as e:
-        logging.error(e)
+    except AssertionError:
+        logging.error(f"failed to resolve icon cover art {obj}")
     return obj
 
 
@@ -66,8 +65,8 @@ def resolveArtistImage(obj: ArtistInfoData):
         assert ca.path
         res: Path = ca.path
         obj.image = res.as_posix() if res.exists() else None
-    except AssertionError as e:
-        logging.error(e)
+    except AssertionError:
+        logging.error(f"failed to resolve cover art {obj}")
     return obj
 
 
@@ -82,7 +81,7 @@ def resolveIcon(obj):
                 assert info.largeImageUrl
                 obj.icon.path = info.largeImageUrl
         except AssertionError as e:
-            logging.error(e)
+            logging.exception(e)
     try:
         assert obj.icon
         assert obj.icon.path
@@ -91,7 +90,7 @@ def resolveIcon(obj):
         assert res
         obj.icon.path = res.as_posix() if res.exists() else None
     except AssertionError as e:
-        logging.error(e)
+        logging.exception(e)
     return obj
 
 
@@ -210,8 +209,6 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                     Announce.announce(payload)
                 case Command.PLAYER_RESPONSE:
                     self.player_processor(payload)
-                case Command.GET_FAST_BPM:
-                    self.__get_fastbpm(payload)
             self.commander.task_done()
 
     def player_processor(self, cmd):
@@ -230,6 +227,8 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
             cmd.albums = resolveAlbums(cmd.albums)
         elif isinstance(cmd, MostPlayed):
             cmd.albums = resolveAlbums(cmd.albums)
+        elif isinstance(cmd, BeatsStruct):
+            pass
         elif isinstance(cmd, ArtistAlbums):
             try:
                 assert cmd.artistInfo
@@ -266,19 +265,6 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
     def __rescan(self):
         self.api.search_queue.put_nowait((Command.RESCAN, None))
 
-    def __get_fastbpm(self, nowplaying: NowPlaying):
-        try:
-            assert nowplaying.track.path
-            bpm = BeatsExtractor(nowplaying.track.path).fast_bpm
-            self.commander.put_nowait(
-                (Command.PLAYER_RESPONSE, FastBPM(
-                    bpm=int(bpm),
-                    nowplaying=nowplaying
-                ))
-            )
-        except AssertionError:
-            self.__error()
-
     def __newest(self):
         self.api.search_queue.put_nowait((Command.LAST_ADDED, None))
 
@@ -292,7 +278,6 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         self.api.search_queue.put_nowait((Command.SEARCH, query))
 
     def __artist_albums(self, query):
-        logging.info(query)
         if query:
             self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, query))
 

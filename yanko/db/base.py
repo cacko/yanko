@@ -1,11 +1,11 @@
 import logging
 from pathlib import Path
-
 from playhouse.sqlite_ext import SqliteExtDatabase
-
 from yanko.core.config import app_config
+from yanko.core import log_level
 
-logging.getLogger('peewee').setLevel(level=logging.INFO)
+
+logging.getLogger('peewee').setLevel(level=log_level)
 
 
 class YankoDbMeta(type):

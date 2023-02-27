@@ -31,7 +31,7 @@ class Beats(CachableDb):
         )
 
     @classmethod
-    async def store_beats(cls, data: dict):
+    def store_beats(cls, data: dict):
         obj = cls(path=data.get("path"))
         obj.tocache(data)
         return ["OK", obj.path]
@@ -89,6 +89,15 @@ class Beats(CachableDb):
             result = self.__extractor.extract().dict()
             result["path"] = self.__path
         return result
+
+    def extract(self) -> BeatsStruct:
+        self._init()
+        print(self._struct)
+        if not self._struct or not self._struct.beats:
+            self.fetch()
+        assert self._struct
+        data = self._struct.to_dict()
+        return BeatsStruct(**data)
 
     def _init(self):
         if self.isCached:

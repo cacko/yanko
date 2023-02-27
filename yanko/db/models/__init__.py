@@ -1,3 +1,4 @@
+import logging
 from playhouse.sqlite_ext import JSONField
 from peewee import (
     BooleanField,
@@ -8,7 +9,7 @@ from peewee import (
     TimestampField,
     TextField
 )
-from peewee import Model
+from peewee import Model, IntegrityError
 from playhouse.shortcuts import model_to_dict
 from yanko.db.base import YankoDb
 
@@ -23,6 +24,17 @@ class ModelBase(Model):
 
     def to_dict(self):
         return model_to_dict(self)
+
+    def save(self, *args, **kwds):
+        try:
+            return super().save(*args, **kwds)
+        except IntegrityError as e:
+            logging.exception(e)
+            return self.__class__.upsert(self.to_dict())
+
+    @classmethod
+    def upsert(cls, data: dict):
+        raise NotImplementedError
 
     class Meta:
         database = YankoDb.db
@@ -54,7 +66,7 @@ class Album(ModelBase):
 
 
 class ArtistInfo(ModelBase):
-    artist_id = CharField(index=True)
+    artist_id = CharField(index=True, unique=True)
     biography = TextField(null=True)
     musicBrainzId = CharField(null=True)
     lastFmUrl = CharField(null=True)
@@ -63,8 +75,22 @@ class ArtistInfo(ModelBase):
     largeImageUrl = CharField(null=True)
     image = CharField(null=True)
 
+    @classmethod
+    def upsert(cls, data: dict):
+        artist_id = data.get("artist_id", "")
+        del data["artist_id"]
+        del data["id"]
+        return cls.update(**data).where(cls.artist_id == artist_id).execute()
+
 
 class Beats(ModelBase):
-    path = CharField(index=True)
+    path = CharField(index=True, unique=True)
     beats = JSONField()
     tempo = FloatField()
+
+    @classmethod
+    def upsert(cls, data: dict):
+        path = data.get("path", "")
+        del data["path"]
+        del data["id"]
+        return cls.update(**data).where(cls.path == path).execute()

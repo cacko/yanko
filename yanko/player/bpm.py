@@ -62,7 +62,7 @@ class BeatsMeta(type):
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return super().__call__(*args, **kwds)
 
-    def register(cls, store_root: str, extract: bool = False):
+    def register(cls, store_root: str):
         cls.__store_root = Path(store_root)
 
     @property

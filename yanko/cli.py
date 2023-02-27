@@ -1,11 +1,13 @@
 import click
 from requests import get
 from requests.exceptions import ConnectionError
-
+from pathlib import Path
 from yanko.core.cachable import Cache, CacheType
 from yanko.core.config import app_config
 from yanko.db.base import YankoDb
 from yanko.sonic import Command
+from yanko.sonic.beats import Beats
+from yanko.player.bpm import Beats as BeatsExtractor
 from yanko.sonic.coverart import CoverArtFile
 
 
@@ -69,6 +71,23 @@ def cli_dbinit(drop_table: str):
             # if drop_tables:
             #     db.drop_tables(drop_tables)
             db.create_tables([Beats, Artist, Album, ArtistInfo])
+    except Exception as e:
+        print(e)
+
+
+@cli.command("beats", short_help="Extract Beats")
+@click.argument("path")
+def cli_beats(path: str):
+    try:
+        file_path = Path(path)
+        assert file_path.exists()
+        store_root = app_config.get("store", {}).get("music", "")
+        BeatsExtractor.register(store_root=store_root)
+        beats = Beats(
+            path=f"{file_path.relative_to(store_root).as_posix()}",
+            allow_extract=True
+        )
+        click.echo(beats.extract())
     except Exception as e:
         print(e)
 

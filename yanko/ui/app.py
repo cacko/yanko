@@ -1,4 +1,3 @@
-from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 from typing import Optional, Any
@@ -244,7 +243,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             if self.__status in [Status.PLAYING] and self.__nowplaying:
                 track = self.__nowplaying.track
                 assert track.coverArt
-                LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))
+                LaMetric.nowplaying(f"{track.artist} / {track.title}", track.coverArt)
             return StatusFrame(status=self.__status.value).dict()
         except AssertionError as e:
             logging.debug(e)

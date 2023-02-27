@@ -2,6 +2,11 @@ import logging
 import time
 from contextlib import contextmanager
 import os
+from .config import app_config
+
+
+log_level = os.environ.get("YANKO_LOG_LEVEL", "INFO")
+pid_file = app_config.data_dir / "yanko.pid"
 
 
 @contextmanager
@@ -20,4 +25,13 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-log_level = os.environ.get("YANKO_LOG_LEVEL", "INFO")
+def check_pid():
+    try:
+        assert pid_file.exists()
+        pid = pid_file.read_text()
+        print(pid)
+        assert pid
+        os.kill(int(pid), 0)
+        return True
+    except (AssertionError, ValueError, OSError):
+        return False

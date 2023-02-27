@@ -33,6 +33,7 @@ from yanko.ui.items.nowplaying import NowPlayingItem
 from yanko.ui.items.playlist import Playlist as UIPlaylist
 from yanko.ui.items.servermenu import ServerMenu
 from yanko.core.config import app_config
+from yanko.core import pid_file
 
 LoadingIcon = AnimatedIcon(
     [Symbol.HOURGLASS, Symbol.HOURGLASS_BOTTOM, Symbol.HOURGLASS_TOP]
@@ -344,5 +345,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 pass
         try:
             rumps.quit_application()
+            pid_file.unlink(missing_ok=True)
         except Exception:
             pass

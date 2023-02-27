@@ -5,7 +5,6 @@ import semver
 from setuptools import setup
 
 from yanko import __name__
-from yanko.version import __version__
 
 
 def resolve_libs(libs):
@@ -28,7 +27,7 @@ def version():
 
 
 APP = ["app.py"]
-DATA_FILES = []
+DATA_FILES:  list[tuple[str, list[str]]] = []
 OPTIONS = {
     "iconfile": "icon.icns",
     "argv_emulation": False,

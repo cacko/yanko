@@ -211,7 +211,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         track = resp.track
         self.__bpm.now_playing = resp
         self.__nowplaying = resp
-        LaMetric.nowplaying(f"{track.artist} / {track.title}", Path(track.coverArt))  # type: ignore
+        LaMetric.nowplaying(f"{track.artist} / {track.title}", track.coverArt)
         self.title = resp.menubar_title
         for itm in self.__nowPlayingSection:
             self._menu.pop(itm)

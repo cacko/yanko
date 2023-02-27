@@ -3,6 +3,8 @@ import time
 from contextlib import contextmanager
 import os
 from typing import Optional
+
+from fastapi import Path
 from .config import app_config
 import osascript
 from yanko import __name__
@@ -41,8 +43,8 @@ def check_pid():
 def show_alert(msg: str, title: Optional[str] = None):
     if not title:
         title = __name__
-    osascript.osascript(f'display alert "{msg}"')
-    script = f'display dialog "{msg}" with icon posix file '
-    "/Applications/Yanko.app/Contents/Resources/icon.icns"
-    'buttons {"OK"} default button 1'
+    icon_path = Path(__file__) / "icon.ocns"
+    script = f'display dialog "{msg}" '
+    f'with icon posix file "{icon_path.as_posix()}" '
+    'buttons {"OK"} default button 1 '
     osascript.osascript(script)

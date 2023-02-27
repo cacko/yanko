@@ -41,4 +41,8 @@ def check_pid():
 def show_alert(msg: str, title: Optional[str] = None):
     if not title:
         title = __name__
-    osascript.osascript(f'display alert "{title}" message "{msg}"')
+    osascript.osascript(f'display alert "{msg}"')
+    script = f'display dialog "{msg}" with icon posix file '
+    "/Applications/Yanko.app/Contents/Resources/icon.icns"
+    'buttons {"OK"} default button 1'
+    osascript.osascript(script)

@@ -7,6 +7,7 @@ if len(argv) > 1:
     cli()
 else:
     from yanko import start
+    show_alert(__file__)
     if check_pid():
         show_alert("Yanko already running.")
         exit(1)

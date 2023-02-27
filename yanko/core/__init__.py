@@ -31,7 +31,6 @@ def check_pid():
     try:
         assert pid_file.exists()
         pid = pid_file.read_text()
-        print(pid)
         assert pid
         os.kill(int(pid), 0)
         return True

@@ -81,6 +81,7 @@ def get_scan_status(url, manager_queue: Queue):
 @timed_lru_cache(seconds=20)
 def make_request(url):
     try:
+        logging.debug(f"make_request: {url}")
         r = requests.get(url=url)
         return r
     except requests.exceptions.ConnectionError as e:
@@ -225,6 +226,7 @@ class Client(object):
 
         try:
             response = r.json()
+            logging.debug(response)
         except ValueError:
             response = {
                 "subsonic-response": {

@@ -156,7 +156,7 @@ class Song(BaseModel, extra=Extra.ignore):
     track: Optional[int] = None
     type: Optional[str] = None
     year: Optional[int] = None
-    bpm: Optional[int] = None
+    bpm: Optional[int] = Field(alias="Bpm")
 
 
 class Track(BaseModel, extra=Extra.ignore):

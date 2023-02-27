@@ -2,8 +2,10 @@ import logging
 import time
 from contextlib import contextmanager
 import os
+from typing import Optional
 from .config import app_config
-
+import osascript
+from yanko import __name__
 
 log_level = os.environ.get("YANKO_LOG_LEVEL", "INFO")
 pid_file = app_config.data_dir / "yanko.pid"
@@ -35,3 +37,9 @@ def check_pid():
         return True
     except (AssertionError, ValueError, OSError):
         return False
+
+
+def show_alert(msg: str, title: Optional[str] = None):
+    if not title:
+        title = __name__
+    osascript.osascript(f'display alert "{title}" message "{msg}"')

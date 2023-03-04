@@ -308,6 +308,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait((Action.STOP, None))
         self.api.command_queue.put_nowait((Command.ARTIST, artistId))
+        self.api.search_queue.put_nowait((Command.ARTIST_ALBUMS, artistId))
 
     def __current_artist(self):
         if self.playing_now:

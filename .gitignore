@@ -31,3 +31,4 @@ yanko.db
 *.wav
 *.db-shm
 *.db-wal
+appdata/

@@ -98,11 +98,11 @@ dependencies:
       - paste==3.5.2.2
       - pathspec==0.10.1
       - peewee==3.16.2
-      - pillow==9.2.0
+      - pillow==9.5.0
       - pixelme==0.4.13
       - platformdirs==2.5.2
       - pooch==1.6.0
-      - progressor==1.0.14
+      - progressor==1.0.16
       - prompt-toolkit==3.0.30
       - py2app==0.28.5
       - pycparser==2.21
@@ -267,12 +267,13 @@ dependencies:
       - python-dotenv==0.21.1
       - pyyaml==6.0
       - questionary==1.10.0
+      - quickmachotkey==2023.3.4
       - random-user-agent==1.0.1
       - redis==4.3.4
       - requests==2.28.1
       - requests-toolbelt==0.9.1
-      - rich==13.3.4
-      - rumps==5.14.32
+      - rich==13.3.5
+      - rumps==5.14.38
       - runcmd==2020.12.3
       - scikit-learn==1.2.1
       - scipy==1.10.1

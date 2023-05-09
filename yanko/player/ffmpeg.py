@@ -34,7 +34,6 @@ class FFMPeg(BasePlayer):
     @status.setter
     def status(self, val: Status):
         self.__status = val
-        logging.warning(f"FFMPEG STATUS {val}")
         self._manager_queue.put_nowait(
             (Command.PLAYER_RESPONSE, Playstatus(status=val))
         )

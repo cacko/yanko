@@ -34,6 +34,7 @@ from yanko.ui.items.servermenu import ServerMenu
 from yanko.core.config import app_config
 from yanko.core import pid_file
 
+
 LoadingIcon = AnimatedIcon(
     [Symbol.HOURGLASS, Symbol.HOURGLASS_BOTTOM, Symbol.HOURGLASS_TOP]
 )
@@ -206,7 +207,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             self.icon = resp.icon
 
     def _onNowPlaying(self, resp: NowPlaying):
-        logging.warning(f"ON NOW PLAYING {resp}")
         track = resp.track
         self.__bpm.now_playing = resp
         self.__nowplaying = resp
@@ -280,7 +280,6 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def _onPlaystatus(self, resp: Playstatus):
         self.__status = resp.status
         LaMetric.status(resp.status)
-        logging.warning(f"status={resp.status}")
         match resp.status:
             case Status.PAUSED:
                 self.icon = Symbol.PAUSE.value

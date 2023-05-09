@@ -43,7 +43,7 @@ def check_pid():
 def show_alert(msg: str, title: Optional[str] = None):
     if not title:
         title = __name__
-    icon_path = Path(__file__) / "icon.ocns"
+    icon_path = Path(__file__).parent / "icon.icns"
     script = f'display dialog "{msg}" '
     f'with icon posix file "{icon_path.as_posix()}" '
     'buttons {"OK"} default button 1 '

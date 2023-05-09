@@ -25,7 +25,6 @@ from yanko.sonic.artist import ArtistInfo
 from multiprocessing.pool import ThreadPool
 import logging
 
-
 # def resolveAlbumYear(obj):
 #     try:
 #         ca = CoverArtFile(obj.id)

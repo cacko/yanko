@@ -38,6 +38,9 @@ class Output(StoppableThread):
             device=Device.index,
             channels=Device.output_channels,
             dtype="float32",
+            dither_off=True,
+            clip_off=True,
+            change_device_parameters=True
         )
         super().__init__(*args, **kwargs)
 

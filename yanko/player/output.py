@@ -35,12 +35,16 @@ class Output(StoppableThread):
         self.__stream = sd.RawOutputStream(
             samplerate=Device.samplerate,
             blocksize=Device.blocksize,
+            extra_settings=(
+                sd.CoreAudioSettings(
+                    change_device_parameters=True
+                )
+            ),
             device=Device.index,
             channels=Device.output_channels,
             dtype="float32",
             dither_off=True,
             clip_off=True,
-            change_device_parameters=True
         )
         super().__init__(*args, **kwargs)
 

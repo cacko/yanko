@@ -83,6 +83,7 @@ class Beats(object, metaclass=BeatsMeta):
         with_vocals=False,
         force=False
     ):
+        path = path.split("Music/")[-1]
         self.__requested_path = path
         self.__path = Beats.store_root / path.lstrip("/")
         self.__tmppath = TempPath(f"{uuid4().hex}.wav")

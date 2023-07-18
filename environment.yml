@@ -1,7 +1,6 @@
 name: Yanko
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - autopep8=2.0.2
   - bzip2=1.0.8
@@ -20,11 +19,9 @@ dependencies:
   - python=3.10.10
   - python_abi=3.10
   - readline=8.2
-  - setuptools=67.7.1
   - sqlite=3.40.0
   - tk=8.6.12
   - tomli=2.0.1
-  - typing_extensions=4.5.0
   - tzdata=2023c
   - wheel=0.40.0
   - xz=5.2.6
@@ -64,7 +61,7 @@ dependencies:
       - deprecated==1.2.13
       - enumb==0.1.5
       - expo==0.1.2
-      - fastapi==0.95.1
+      - fastapi==0.100.0
       - ffmpeg-python==0.2.0
       - flake8==6.0.0
       - fs==2.4.16
@@ -86,7 +83,6 @@ dependencies:
       - mdurl==0.1.2
       - modulegraph==0.19.3
       - msgpack==1.0.4
-      - mypy-extensions==0.4.3
       - normality==2.4.0
       - numba==0.56.4
       - numpy==1.23.5
@@ -110,157 +106,157 @@ dependencies:
       - pyfiglet==0.8.post1
       - pyflakes==3.0.1
       - pygments==2.13.0
-      - pyobjc==9.1.1
-      - pyobjc-core==9.1.1
-      - pyobjc-framework-accessibility==9.1.1
-      - pyobjc-framework-accounts==9.1.1
-      - pyobjc-framework-addressbook==9.1.1
-      - pyobjc-framework-adservices==9.1.1
-      - pyobjc-framework-adsupport==9.1.1
-      - pyobjc-framework-applescriptkit==9.1.1
-      - pyobjc-framework-applescriptobjc==9.1.1
-      - pyobjc-framework-applicationservices==9.1.1
-      - pyobjc-framework-apptrackingtransparency==9.1.1
-      - pyobjc-framework-audiovideobridging==9.1.1
-      - pyobjc-framework-authenticationservices==9.1.1
-      - pyobjc-framework-automaticassessmentconfiguration==9.1.1
-      - pyobjc-framework-automator==9.1.1
-      - pyobjc-framework-avfoundation==9.1.1
-      - pyobjc-framework-avkit==9.1.1
-      - pyobjc-framework-avrouting==9.1.1
-      - pyobjc-framework-backgroundassets==9.1.1
-      - pyobjc-framework-businesschat==9.1.1
-      - pyobjc-framework-calendarstore==9.1.1
-      - pyobjc-framework-callkit==9.1.1
-      - pyobjc-framework-cfnetwork==9.1.1
-      - pyobjc-framework-classkit==9.1.1
-      - pyobjc-framework-cloudkit==9.1.1
-      - pyobjc-framework-cocoa==9.1.1
-      - pyobjc-framework-collaboration==9.1.1
-      - pyobjc-framework-colorsync==9.1.1
-      - pyobjc-framework-contacts==9.1.1
-      - pyobjc-framework-contactsui==9.1.1
-      - pyobjc-framework-coreaudio==9.1.1
-      - pyobjc-framework-coreaudiokit==9.1.1
-      - pyobjc-framework-corebluetooth==9.1.1
-      - pyobjc-framework-coredata==9.1.1
-      - pyobjc-framework-corehaptics==9.1.1
-      - pyobjc-framework-corelocation==9.1.1
-      - pyobjc-framework-coremedia==9.1.1
-      - pyobjc-framework-coremediaio==9.1.1
-      - pyobjc-framework-coremidi==9.1.1
-      - pyobjc-framework-coreml==9.1.1
-      - pyobjc-framework-coremotion==9.1.1
-      - pyobjc-framework-coreservices==9.1.1
-      - pyobjc-framework-corespotlight==9.1.1
-      - pyobjc-framework-coretext==9.1.1
-      - pyobjc-framework-corewlan==9.1.1
-      - pyobjc-framework-cryptotokenkit==9.1.1
-      - pyobjc-framework-datadetection==9.1.1
-      - pyobjc-framework-devicecheck==9.1.1
-      - pyobjc-framework-dictionaryservices==9.1.1
-      - pyobjc-framework-discrecording==9.1.1
-      - pyobjc-framework-discrecordingui==9.1.1
-      - pyobjc-framework-diskarbitration==9.1.1
-      - pyobjc-framework-dvdplayback==9.1.1
-      - pyobjc-framework-eventkit==9.1.1
-      - pyobjc-framework-exceptionhandling==9.1.1
-      - pyobjc-framework-executionpolicy==9.1.1
-      - pyobjc-framework-extensionkit==9.1.1
-      - pyobjc-framework-externalaccessory==9.1.1
-      - pyobjc-framework-fileprovider==9.1.1
-      - pyobjc-framework-fileproviderui==9.1.1
-      - pyobjc-framework-findersync==9.1.1
-      - pyobjc-framework-fsevents==9.1.1
-      - pyobjc-framework-gamecenter==9.1.1
-      - pyobjc-framework-gamecontroller==9.1.1
-      - pyobjc-framework-gamekit==9.1.1
-      - pyobjc-framework-gameplaykit==9.1.1
-      - pyobjc-framework-healthkit==9.1.1
-      - pyobjc-framework-imagecapturecore==9.1.1
-      - pyobjc-framework-imserviceplugin==9.1.1
-      - pyobjc-framework-inputmethodkit==9.1.1
-      - pyobjc-framework-installerplugins==9.1.1
-      - pyobjc-framework-instantmessage==9.1.1
-      - pyobjc-framework-intents==9.1.1
-      - pyobjc-framework-intentsui==9.1.1
-      - pyobjc-framework-iobluetooth==9.1.1
-      - pyobjc-framework-iobluetoothui==9.1.1
-      - pyobjc-framework-iosurface==9.1.1
-      - pyobjc-framework-ituneslibrary==9.1.1
-      - pyobjc-framework-kernelmanagement==9.1.1
-      - pyobjc-framework-latentsemanticmapping==9.1.1
-      - pyobjc-framework-launchservices==9.1.1
-      - pyobjc-framework-libdispatch==9.1.1
-      - pyobjc-framework-libxpc==9.1.1
-      - pyobjc-framework-linkpresentation==9.1.1
-      - pyobjc-framework-localauthentication==9.1.1
-      - pyobjc-framework-localauthenticationembeddedui==9.1.1
-      - pyobjc-framework-mailkit==9.1.1
-      - pyobjc-framework-mapkit==9.1.1
-      - pyobjc-framework-mediaaccessibility==9.1.1
-      - pyobjc-framework-medialibrary==9.1.1
-      - pyobjc-framework-mediaplayer==9.1.1
-      - pyobjc-framework-mediatoolbox==9.1.1
-      - pyobjc-framework-metal==9.1.1
-      - pyobjc-framework-metalfx==9.1.1
-      - pyobjc-framework-metalkit==9.1.1
-      - pyobjc-framework-metalperformanceshaders==9.1.1
-      - pyobjc-framework-metalperformanceshadersgraph==9.1.1
-      - pyobjc-framework-metrickit==9.1.1
-      - pyobjc-framework-mlcompute==9.1.1
-      - pyobjc-framework-modelio==9.1.1
-      - pyobjc-framework-multipeerconnectivity==9.1.1
-      - pyobjc-framework-naturallanguage==9.1.1
-      - pyobjc-framework-netfs==9.1.1
-      - pyobjc-framework-network==9.1.1
-      - pyobjc-framework-networkextension==9.1.1
-      - pyobjc-framework-notificationcenter==9.1.1
-      - pyobjc-framework-opendirectory==9.1.1
-      - pyobjc-framework-osakit==9.1.1
-      - pyobjc-framework-oslog==9.1.1
-      - pyobjc-framework-passkit==9.1.1
-      - pyobjc-framework-pencilkit==9.1.1
-      - pyobjc-framework-phase==9.1.1
-      - pyobjc-framework-photos==9.1.1
-      - pyobjc-framework-photosui==9.1.1
-      - pyobjc-framework-preferencepanes==9.1.1
-      - pyobjc-framework-pushkit==9.1.1
-      - pyobjc-framework-quartz==9.1.1
-      - pyobjc-framework-quicklookthumbnailing==9.1.1
-      - pyobjc-framework-replaykit==9.1.1
-      - pyobjc-framework-safariservices==9.1.1
-      - pyobjc-framework-safetykit==9.1.1
-      - pyobjc-framework-scenekit==9.1.1
-      - pyobjc-framework-screencapturekit==9.1.1
-      - pyobjc-framework-screensaver==9.1.1
-      - pyobjc-framework-screentime==9.1.1
-      - pyobjc-framework-scriptingbridge==9.1.1
-      - pyobjc-framework-searchkit==9.1.1
-      - pyobjc-framework-security==9.1.1
-      - pyobjc-framework-securityfoundation==9.1.1
-      - pyobjc-framework-securityinterface==9.1.1
-      - pyobjc-framework-servicemanagement==9.1.1
-      - pyobjc-framework-sharedwithyou==9.1.1
-      - pyobjc-framework-sharedwithyoucore==9.1.1
-      - pyobjc-framework-shazamkit==9.1.1
-      - pyobjc-framework-social==9.1.1
-      - pyobjc-framework-soundanalysis==9.1.1
-      - pyobjc-framework-speech==9.1.1
-      - pyobjc-framework-spritekit==9.1.1
-      - pyobjc-framework-storekit==9.1.1
-      - pyobjc-framework-syncservices==9.1.1
-      - pyobjc-framework-systemconfiguration==9.1.1
-      - pyobjc-framework-systemextensions==9.1.1
-      - pyobjc-framework-threadnetwork==9.1.1
-      - pyobjc-framework-uniformtypeidentifiers==9.1.1
-      - pyobjc-framework-usernotifications==9.1.1
-      - pyobjc-framework-usernotificationsui==9.1.1
-      - pyobjc-framework-videosubscriberaccount==9.1.1
-      - pyobjc-framework-videotoolbox==9.1.1
-      - pyobjc-framework-virtualization==9.1.1
-      - pyobjc-framework-vision==9.1.1
-      - pyobjc-framework-webkit==9.1.1
+      - pyobjc==9.2
+      - pyobjc-core==9.2
+      - pyobjc-framework-accessibility==9.2
+      - pyobjc-framework-accounts==9.2
+      - pyobjc-framework-addressbook==9.2
+      - pyobjc-framework-adservices==9.2
+      - pyobjc-framework-adsupport==9.2
+      - pyobjc-framework-applescriptkit==9.2
+      - pyobjc-framework-applescriptobjc==9.2
+      - pyobjc-framework-applicationservices==9.2
+      - pyobjc-framework-apptrackingtransparency==9.2
+      - pyobjc-framework-audiovideobridging==9.2
+      - pyobjc-framework-authenticationservices==9.2
+      - pyobjc-framework-automaticassessmentconfiguration==9.2
+      - pyobjc-framework-automator==9.2
+      - pyobjc-framework-avfoundation==9.2
+      - pyobjc-framework-avkit==9.2
+      - pyobjc-framework-avrouting==9.2
+      - pyobjc-framework-backgroundassets==9.2
+      - pyobjc-framework-businesschat==9.2
+      - pyobjc-framework-calendarstore==9.2
+      - pyobjc-framework-callkit==9.2
+      - pyobjc-framework-cfnetwork==9.2
+      - pyobjc-framework-classkit==9.2
+      - pyobjc-framework-cloudkit==9.2
+      - pyobjc-framework-cocoa==9.2
+      - pyobjc-framework-collaboration==9.2
+      - pyobjc-framework-colorsync==9.2
+      - pyobjc-framework-contacts==9.2
+      - pyobjc-framework-contactsui==9.2
+      - pyobjc-framework-coreaudio==9.2
+      - pyobjc-framework-coreaudiokit==9.2
+      - pyobjc-framework-corebluetooth==9.2
+      - pyobjc-framework-coredata==9.2
+      - pyobjc-framework-corehaptics==9.2
+      - pyobjc-framework-corelocation==9.2
+      - pyobjc-framework-coremedia==9.2
+      - pyobjc-framework-coremediaio==9.2
+      - pyobjc-framework-coremidi==9.2
+      - pyobjc-framework-coreml==9.2
+      - pyobjc-framework-coremotion==9.2
+      - pyobjc-framework-coreservices==9.2
+      - pyobjc-framework-corespotlight==9.2
+      - pyobjc-framework-coretext==9.2
+      - pyobjc-framework-corewlan==9.2
+      - pyobjc-framework-cryptotokenkit==9.2
+      - pyobjc-framework-datadetection==9.2
+      - pyobjc-framework-devicecheck==9.2
+      - pyobjc-framework-dictionaryservices==9.2
+      - pyobjc-framework-discrecording==9.2
+      - pyobjc-framework-discrecordingui==9.2
+      - pyobjc-framework-diskarbitration==9.2
+      - pyobjc-framework-dvdplayback==9.2
+      - pyobjc-framework-eventkit==9.2
+      - pyobjc-framework-exceptionhandling==9.2
+      - pyobjc-framework-executionpolicy==9.2
+      - pyobjc-framework-extensionkit==9.2
+      - pyobjc-framework-externalaccessory==9.2
+      - pyobjc-framework-fileprovider==9.2
+      - pyobjc-framework-fileproviderui==9.2
+      - pyobjc-framework-findersync==9.2
+      - pyobjc-framework-fsevents==9.2
+      - pyobjc-framework-gamecenter==9.2
+      - pyobjc-framework-gamecontroller==9.2
+      - pyobjc-framework-gamekit==9.2
+      - pyobjc-framework-gameplaykit==9.2
+      - pyobjc-framework-healthkit==9.2
+      - pyobjc-framework-imagecapturecore==9.2
+      - pyobjc-framework-imserviceplugin==9.2
+      - pyobjc-framework-inputmethodkit==9.2
+      - pyobjc-framework-installerplugins==9.2
+      - pyobjc-framework-instantmessage==9.2
+      - pyobjc-framework-intents==9.2
+      - pyobjc-framework-intentsui==9.2
+      - pyobjc-framework-iobluetooth==9.2
+      - pyobjc-framework-iobluetoothui==9.2
+      - pyobjc-framework-iosurface==9.2
+      - pyobjc-framework-ituneslibrary==9.2
+      - pyobjc-framework-kernelmanagement==9.2
+      - pyobjc-framework-latentsemanticmapping==9.2
+      - pyobjc-framework-launchservices==9.2
+      - pyobjc-framework-libdispatch==9.2
+      - pyobjc-framework-libxpc==9.2
+      - pyobjc-framework-linkpresentation==9.2
+      - pyobjc-framework-localauthentication==9.2
+      - pyobjc-framework-localauthenticationembeddedui==9.2
+      - pyobjc-framework-mailkit==9.2
+      - pyobjc-framework-mapkit==9.2
+      - pyobjc-framework-mediaaccessibility==9.2
+      - pyobjc-framework-medialibrary==9.2
+      - pyobjc-framework-mediaplayer==9.2
+      - pyobjc-framework-mediatoolbox==9.2
+      - pyobjc-framework-metal==9.2
+      - pyobjc-framework-metalfx==9.2
+      - pyobjc-framework-metalkit==9.2
+      - pyobjc-framework-metalperformanceshaders==9.2
+      - pyobjc-framework-metalperformanceshadersgraph==9.2
+      - pyobjc-framework-metrickit==9.2
+      - pyobjc-framework-mlcompute==9.2
+      - pyobjc-framework-modelio==9.2
+      - pyobjc-framework-multipeerconnectivity==9.2
+      - pyobjc-framework-naturallanguage==9.2
+      - pyobjc-framework-netfs==9.2
+      - pyobjc-framework-network==9.2
+      - pyobjc-framework-networkextension==9.2
+      - pyobjc-framework-notificationcenter==9.2
+      - pyobjc-framework-opendirectory==9.2
+      - pyobjc-framework-osakit==9.2
+      - pyobjc-framework-oslog==9.2
+      - pyobjc-framework-passkit==9.2
+      - pyobjc-framework-pencilkit==9.2
+      - pyobjc-framework-phase==9.2
+      - pyobjc-framework-photos==9.2
+      - pyobjc-framework-photosui==9.2
+      - pyobjc-framework-preferencepanes==9.2
+      - pyobjc-framework-pushkit==9.2
+      - pyobjc-framework-quartz==9.2
+      - pyobjc-framework-quicklookthumbnailing==9.2
+      - pyobjc-framework-replaykit==9.2
+      - pyobjc-framework-safariservices==9.2
+      - pyobjc-framework-safetykit==9.2
+      - pyobjc-framework-scenekit==9.2
+      - pyobjc-framework-screencapturekit==9.2
+      - pyobjc-framework-screensaver==9.2
+      - pyobjc-framework-screentime==9.2
+      - pyobjc-framework-scriptingbridge==9.2
+      - pyobjc-framework-searchkit==9.2
+      - pyobjc-framework-security==9.2
+      - pyobjc-framework-securityfoundation==9.2
+      - pyobjc-framework-securityinterface==9.2
+      - pyobjc-framework-servicemanagement==9.2
+      - pyobjc-framework-sharedwithyou==9.2
+      - pyobjc-framework-sharedwithyoucore==9.2
+      - pyobjc-framework-shazamkit==9.2
+      - pyobjc-framework-social==9.2
+      - pyobjc-framework-soundanalysis==9.2
+      - pyobjc-framework-speech==9.2
+      - pyobjc-framework-spritekit==9.2
+      - pyobjc-framework-storekit==9.2
+      - pyobjc-framework-syncservices==9.2
+      - pyobjc-framework-systemconfiguration==9.2
+      - pyobjc-framework-systemextensions==9.2
+      - pyobjc-framework-threadnetwork==9.2
+      - pyobjc-framework-uniformtypeidentifiers==9.2
+      - pyobjc-framework-usernotifications==9.2
+      - pyobjc-framework-usernotificationsui==9.2
+      - pyobjc-framework-videosubscriberaccount==9.2
+      - pyobjc-framework-videotoolbox==9.2
+      - pyobjc-framework-virtualization==9.2
+      - pyobjc-framework-vision==9.2
+      - pyobjc-framework-webkit==9.2
       - pyotp==2.6.0
       - pyparsing==3.0.9
       - python-dateutil==2.8.2
@@ -278,13 +274,14 @@ dependencies:
       - scikit-learn==1.2.1
       - scipy==1.10.1
       - semver==2.13.0
+      - setuptools==58.2.0
       - six==1.16.0
       - sniffio==1.3.0
       - sounddevice==0.4.6
       - soundfile==0.12.1
       - soupsieve==2.3.2.post1
       - soxr==0.3.3
-      - starlette==0.26.1
+      - starlette==0.27.0
       - stringcase==1.2.0
       - structlog==22.3.0
       - text-unidecode==1.3
@@ -293,14 +290,14 @@ dependencies:
       - types-pyyaml==6.0.12.4
       - types-requests==2.28.11.12
       - types-urllib3==1.26.25.5
-      - typing-extensions==4.3.0
+      - typing-extensions==4.7.1
       - typing-inspect==0.8.0
       - urllib3==1.26.12
-      - uvicorn==0.21.1
+      - uvicorn==0.23.1
       - uvloop==0.17.0
       - watchfiles==0.18.1
       - wcwidth==0.2.5
       - websockets==10.4
       - wrapt==1.14.1
       - yapf==0.32.0
-prefix: /Volumes/Devo/miniforge3/envs/Yanko
+prefix: /Volumes/Devo/Users/jago/miniforge3/envs/Yanko

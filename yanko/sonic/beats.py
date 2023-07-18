@@ -21,7 +21,7 @@ class Beats(CachableDb):
         allow_extract: bool = True,
         extractor: Optional[BeatsExtractor] = None
     ) -> None:
-        self.__path = path
+        self.__path = path.split("Music/")[-1]
         self.__allow_extract = allow_extract
         self.__extractor = extractor
         super().__init__(

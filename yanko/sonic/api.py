@@ -493,7 +493,7 @@ class Client(object):
                 playing = self.play_stream(dict(song))  # type: ignore
 
     def load_beats(self, path: str) -> Optional[BeatsStruct]:
-        beats = Beats(path.split("Music/")[-1], allow_extract=True)
+        beats = Beats(path.split("Music/")[-1])
         if beats.isCached:
             return beats.model
         return None

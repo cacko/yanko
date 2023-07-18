@@ -18,7 +18,7 @@ class Beats(CachableDb):
     def __init__(
         self,
         path,
-        allow_extract: bool = True,
+        allow_extract: bool = False,
         extractor: Optional[BeatsExtractor] = None
     ) -> None:
         self.__path = path.split("Music/")[-1]
@@ -152,7 +152,7 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
     def resolveBeats(
         self,
         extractor: BeatsExtractor,
-        allow_extract: bool = True
+        allow_extract: bool = False
     ):
         beats = Beats(
             path=extractor.requested_path,
@@ -167,7 +167,7 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
                 audio_path = Fetcher.queue.get_nowait()
                 extractor = BeatsExtractor(path=audio_path)
                 assert Fetcher.manager_queue
-                beats = self.resolveBeats(extractor=extractor, allow_extract=True)
+                beats = self.resolveBeats(extractor=extractor)
                 Fetcher.manager_queue.put_nowait(
                     (
                         Command.PLAYER_RESPONSE,
@@ -179,7 +179,7 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
                     )
                 )
                 if app_config.get("beats", {}).get("extract", False):
-                    beats = self.resolveBeats(extractor=extractor, allow_extract=True)
+                    beats = self.resolveBeats(extractor=extractor)
                     Fetcher.manager_queue.put_nowait(
                         (
                             Command.PLAYER_RESPONSE,

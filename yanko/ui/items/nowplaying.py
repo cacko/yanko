@@ -19,7 +19,7 @@ class NowPlayingItem(MusicItem):
         self.__track = track
         title = f"{track.artist} - {track.title} - {track.album}"
         id = track.albumId
-        dimensions = [80, 80]
+        dimensions = [60, 60]
         icon = track.coverArt
         super().__init__(title, id, callback, key, icon, dimensions, template)
         self.__set_title(np=np)

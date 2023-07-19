@@ -1,4 +1,5 @@
 from queue import Empty, Queue
+import pyperclip3 as pc
 from threading import Thread
 from typing import Optional, Any
 import logging
@@ -19,6 +20,7 @@ from yanko.sonic import (
     RecentlyPlayed,
     ScanStatus,
     Search,
+    Share,
     Status,
     VolumeStatus,
 )
@@ -69,6 +71,7 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
                 ActionItem.recent,
                 ActionItem.last_added,
                 ActionItem.most_played,
+                ActionItem.share,
                 None,
                 ActionItem.previous,
                 ActionItem.restart,
@@ -154,6 +157,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def onRestart(self, sender):
         self.manager.commander.put_nowait((Command.RESTART, None))
 
+    @rumps.clicked(Label.SHARE.value)
+    def onShare(self, sender):
+        self.manager.commander.put_nowait((Command.SHARE, None))
+
     def onServerMenuItem(self, sender):
         match (sender.title):
             case Label.RESCAN.value:
@@ -236,6 +243,14 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             it.update_bpm(self.__nowplaying)
         except (AssertionError, AttributeError):
             pass
+
+    def _onShare(self, resp: Share):
+        try:
+            assert resp
+            pc.copy(resp.url)
+            logging.debug(f"Coppied {resp.url} to cluipboard")
+        except Exception as e:
+            logging.exception(e)
 
     def _onLaMetricInit(self):
         try:

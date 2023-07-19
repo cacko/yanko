@@ -23,6 +23,8 @@ from yanko.sonic import (
     AlbumType,
     Artist,
     ArtistAlbums,
+    Shares,
+    Share
 )
 from yanko.sonic import ArtistInfo as ArtistInfoData
 from yanko.sonic import (
@@ -261,6 +263,16 @@ class Client(object):
             target=get_scan_status, args=(url, self.manager_queue)
         )
         get_status.start()
+
+    def createShare(self, track: Track) -> Optional[Share]:
+        url = self.create_url(Subsonic.CREATE_SHARE, id=track.id)
+        logging.warning(url)
+        try:
+            resp = Shares(**self.make_request(url))
+            return resp.share[0]
+        except Exception as e:
+            logging.exception(e)
+            return None
 
     def search(self, query):
         with perftime("search"):
@@ -519,7 +531,7 @@ class Client(object):
                     Command.PLAYER_RESPONSE,
                     NowPlaying(
                         start=datetime.now(tz=timezone.utc),
-                        track=Track(**{**track_data, "coverArt": coverArtUrl}),
+                        track=Track(**{**track_data, "coverArt": coverArtUrl}),  # type: ignore
                         song=self.get_song_data(song_id),
                         beats=self.load_beats(track_data.get("path", "")),
                     ),
@@ -646,6 +658,13 @@ class Client(object):
                         (
                             Command.PLAYER_RESPONSE,
                             LastAdded(albums=self.get_last_added()),
+                        )
+                    )
+                case Command.SHARE:
+                    self.manager_queue.put_nowait(
+                        (
+                            Command.PLAYER_RESPONSE,
+                            self.createShare(payload)
                         )
                     )
             self.search_queue.task_done()

@@ -14,9 +14,11 @@ from yanko.sonic import (
     Playstatus,
     LastAdded,
     Search,
+    Share,
     Status,
     RecentlyPlayed,
     ArtistInfo as ArtistInfoData,
+    Track,
 )
 from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
@@ -208,6 +210,9 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                     Announce.announce(payload)
                 case Command.PLAYER_RESPONSE:
                     self.player_processor(payload)
+                case Command.SHARE:
+                    self.__share_track()
+
             self.commander.task_done()
 
     def player_processor(self, cmd):
@@ -227,6 +232,8 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         elif isinstance(cmd, MostPlayed):
             cmd.albums = resolveAlbums(cmd.albums)
         elif isinstance(cmd, BeatsStruct):
+            pass
+        elif isinstance(cmd, Share):
             pass
         elif isinstance(cmd, ArtistAlbums):
             try:
@@ -326,6 +333,16 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
+    def __share_track(self):
+        try:
+            assert self.playing_now
+            assert self.playing_now.track
+            self.api.search_queue.put_nowait((
+                Command.SHARE, self.playing_now.track
+            ))
+        except AssertionError:
+            pass
+
     def __quit(self):
         if self.api.isPlaying:
             self.api.playback_queue.put_nowait((Action.EXIT, None))
@@ -340,7 +357,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
 
     def __stop(self):
         self.api.playback_queue.put_nowait((Action.STOP, None))
-
+ 
     def __volume_up(self):
         if self.api.isPlaying:
             self.api.volume = min(2, self.api.volume + self.VOLUME_STEP)

@@ -30,6 +30,7 @@ RESULT_KEYS = [
     "artists",
     "topSongs",
     "scanStatus",
+    "shares"
 ]
 
 
@@ -75,6 +76,7 @@ class Command(Enum):
     PLAY_MOST_PLAYED = "play_most_played"
     ANNOUNCE = "announce"
     PLAYER_RESPONSE = "player_response"
+    SHARE = "share"
 
 
 class Action(Enum):
@@ -124,6 +126,7 @@ class Subsonic(Enum):
     TOP_SONGS = "getTopSongs"
     START_SCAN = "startScan"
     GET_SCAN_STATUS = "getScanStatus"
+    CREATE_SHARE = "createShare"
     SONG = "getSong"
 
 
@@ -366,6 +369,18 @@ class AlbumSearchItem(SearchItem):
 
 class TrackSearchItem(SearchItem):
     pass
+
+
+class Share(BaseModel, extra=Extra.ignore):
+    entry: list[Song]
+    id: str
+    url: str
+    description: str
+    username: str
+
+
+class Shares(BaseModel, extra=Extra.ignore):
+    share: list[Share]
 
 
 class Search(BaseModel, extra=Extra.ignore):

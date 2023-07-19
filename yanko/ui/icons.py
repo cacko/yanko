@@ -21,6 +21,7 @@ class Label(Enum):
     MOST_PLAYED = "Most played"
     CACHE = "Image Cache"
     ADVANCED = "Advanced"
+    SHARE = "Share"
 
 
 class Symbol(Enum):
@@ -60,6 +61,7 @@ class Symbol(Enum):
     HOURGLASS_BOTTOM = "hourglass.bottomhalf.filled"
     HOURGLASS_TOP = "hourglass.tophalf.filled"
     ERROR = "exclamationmark.circle"
+    SHARE = "gift.circle"
 
 
 class Icon(Enum):

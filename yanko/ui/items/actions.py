@@ -55,6 +55,10 @@ class ActionItemMeta(type):
             Label.MOST_PLAYED.value, icon=Symbol.MOST_PLAYED.value
         )
 
+    @property
+    def share(cls) -> "ActionItem":
+        return cls(Label.SHARE.value, icon=Symbol.SHARE.value)
+
 
 class ActionItem(MenuItem, metaclass=ActionItemMeta):
     def __init__(

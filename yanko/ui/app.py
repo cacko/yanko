@@ -66,12 +66,14 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
             menu=[
                 ActionItem.random,
                 ActionItem.random_album,
+                ActionItem.share_song,
+                ActionItem.share_album,
                 None,
                 ActionItem.artist,
                 ActionItem.recent,
                 ActionItem.last_added,
                 ActionItem.most_played,
-                ActionItem.share,
+
                 None,
                 ActionItem.previous,
                 ActionItem.restart,
@@ -157,9 +159,13 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
     def onRestart(self, sender):
         self.manager.commander.put_nowait((Command.RESTART, None))
 
-    @rumps.clicked(Label.SHARE.value)
-    def onShare(self, sender):
-        self.manager.commander.put_nowait((Command.SHARE, None))
+    @rumps.clicked(Label.SHARE_SONG.value)
+    def onShareSong(self, sender):
+        self.manager.commander.put_nowait((Command.SHARE, "id"))
+
+    @rumps.clicked(Label.SHARE_ALBUM.value)
+    def onShareAlbum(self, sender):
+        self.manager.commander.put_nowait((Command.SHARE, "albumId"))
 
     def onServerMenuItem(self, sender):
         match (sender.title):

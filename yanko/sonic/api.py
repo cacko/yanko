@@ -264,8 +264,8 @@ class Client(object):
         )
         get_status.start()
 
-    def createShare(self, track: Track) -> Optional[Share]:
-        url = self.create_url(Subsonic.CREATE_SHARE, id=track.id)
+    def createShare(self, id: str) -> Optional[Share]:
+        url = self.create_url(Subsonic.CREATE_SHARE, id=id)
         logging.warning(url)
         try:
             resp = Shares(**self.make_request(url))

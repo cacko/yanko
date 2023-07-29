@@ -56,8 +56,12 @@ class ActionItemMeta(type):
         )
 
     @property
-    def share(cls) -> "ActionItem":
-        return cls(Label.SHARE.value, icon=Symbol.SHARE.value)
+    def share_song(cls) -> "ActionItem":
+        return cls(Label.SHARE_SONG.value, icon=Symbol.SHARE_SONG.value)
+
+    @property
+    def share_album(cls) -> "ActionItem":
+        return cls(Label.SHARE_ALBUM.value, icon=Symbol.SHARE_ALBUM.value)
 
 
 class ActionItem(MenuItem, metaclass=ActionItemMeta):

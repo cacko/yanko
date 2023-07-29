@@ -21,7 +21,8 @@ class Label(Enum):
     MOST_PLAYED = "Most played"
     CACHE = "Image Cache"
     ADVANCED = "Advanced"
-    SHARE = "Share"
+    SHARE_SONG = "Share Song"
+    SHARE_ALBUM = "Share Album"
 
 
 class Symbol(Enum):
@@ -61,12 +62,13 @@ class Symbol(Enum):
     HOURGLASS_BOTTOM = "hourglass.bottomhalf.filled"
     HOURGLASS_TOP = "hourglass.tophalf.filled"
     ERROR = "exclamationmark.circle"
-    SHARE = "gift.circle"
+    SHARE_ALBUM = "gift"
+    SHARE_SONG = "giftcard"
 
 
 class Icon(Enum):
     def __new__(cls, *args):
-        icons_path: Path = Path(__file__).parent / "icons"
+        icons_path = Path(__file__).parent / "icons"
         value = icons_path / args[0]
         obj = object.__new__(cls)
         obj._value_ = value.as_posix()

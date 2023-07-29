@@ -17,8 +17,7 @@ from yanko.sonic import (
     Share,
     Status,
     RecentlyPlayed,
-    ArtistInfo as ArtistInfoData,
-    Track,
+    ArtistInfo as ArtistInfoData
 )
 from yanko.sonic.announce import Announce
 from yanko.sonic.api import Client
@@ -211,7 +210,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
                 case Command.PLAYER_RESPONSE:
                     self.player_processor(payload)
                 case Command.SHARE:
-                    self.__share_track()
+                    self.__share(payload)
 
             self.commander.task_done()
 
@@ -333,12 +332,13 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         else:
             self.api.command_queue.put_nowait((Command.PLAYLIST, None))
 
-    def __share_track(self):
+    def __share(self, property: str):
         try:
             assert self.playing_now
             assert self.playing_now.track
+            logging.debug(f"__share {property}")
             self.api.search_queue.put_nowait((
-                Command.SHARE, self.playing_now.track
+                Command.SHARE, getattr(self.playing_now.track, property)
             ))
         except AssertionError:
             pass

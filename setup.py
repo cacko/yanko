@@ -49,7 +49,8 @@ OPTIONS = {
         "sounddevice",
         "pycparser",
         "uvicorn",
-        "anyio"
+        "anyio",
+        "aubio"
     ],
     "frameworks": resolve_libs(
         [
@@ -109,7 +110,6 @@ setup(
         "librosa>=0.10.0",
         "quickmachotkey>=2023.3.4",
         "pyperclip3>=0.4.1",
-        "samplerate>=0.1.0"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

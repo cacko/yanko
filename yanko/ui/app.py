@@ -35,6 +35,7 @@ from yanko.ui.items.playlist import Playlist as UIPlaylist
 from yanko.ui.items.servermenu import ServerMenu
 from yanko.core.config import app_config
 from yanko.core import pid_file
+from yanko.ui.preferences.environment import EnvironmentPane
 
 
 LoadingIcon = AnimatedIcon(

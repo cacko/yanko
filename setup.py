@@ -107,7 +107,8 @@ setup(
         "aubio>=0.5.0a0",
         "corefile>=0.1.2",
         "librosa>=0.10.0",
-        "quickmachotkey>=2023.3.4"
+        "quickmachotkey>=2023.3.4",
+        "pyperclip3>=0.4.1"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

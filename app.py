@@ -1,9 +1,12 @@
 import logging
 from sys import argv, exit
 import os
+
+logging.info({k: v for k, v in os.environ.items()})
+
+
 from yanko.core import pid_file, check_pid, show_alert
 from subprocess import run
-logging.info({k: v for k, v in os.environ.items()})
 
 if len(argv) > 1:
     from yanko.cli import cli

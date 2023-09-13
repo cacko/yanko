@@ -83,10 +83,12 @@ dependencies:
       - mccabe==0.7.0
       - mdurl==0.1.2
       - modulegraph==0.19.3
+      - modulegraph2==2.2.1
       - msgpack==1.0.4
       - normality==2.4.0
       - numba==0.57.1
       - numpy==1.23.5
+      - objectgraph==1.0.3
       - olefile==0.46
       - opencv-python==4.6.0.66
       - osascript==2020.12.3
@@ -101,7 +103,7 @@ dependencies:
       - pooch==1.6.0
       - progressor==1.0.16
       - prompt-toolkit==3.0.30
-      - py2app==0.28.5
+      - py2app==2.0a0
       - pycodestyle==2.10.0
       - pycparser==2.21
       - pydantic==1.10.7

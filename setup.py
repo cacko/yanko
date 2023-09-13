@@ -53,16 +53,16 @@ OPTIONS = {
         "anyio",
         "aubio"
     ],
-    "frameworks": resolve_libs(
-        [
-            "libffi.8.dylib",
-            #         "libtcl8.6.dylib",
-            #         "libtk8.6.dylib",
-            #         "libssl.3.dylib",
-            #         "libcrypto.3.dylib",
-            #         "libsqlite3.dylib",
-        ]
-    ),
+    # "frameworks": resolve_libs(
+    #     [
+    #         # "libffi.8.dylib",
+    #         #         "libtcl8.6.dylib",
+    #         #         "libtk8.6.dylib",
+    #         #         "libssl.3.dylib",
+    #         #         "libcrypto.3.dylib",
+    #         #         "libsqlite3.dylib",
+    #     ]
+    # ),
 }
 setup(
     app=APP,

@@ -30,7 +30,7 @@ DATA_FILES:  list[tuple[str, list[str]]] = []
 OPTIONS = {
     "iconfile": "icon.icns",
     "argv_emulation": False,
-    "emulate_shell_environment": True,
+    "emulate_shell_environment": False,
     "plist": {
         "LSUIElement": True,
         "CFBundleIdentifier": "net.cacko.yanko",

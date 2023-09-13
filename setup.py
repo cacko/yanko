@@ -108,7 +108,8 @@ setup(
         "corefile>=0.1.2",
         "librosa>=0.10.0",
         "quickmachotkey>=2023.3.4",
-        "pyperclip3>=0.4.1"
+        "pyperclip3>=0.4.1",
+        "pyobjc-framework-Cocoa"
     ],
     python_requires=">=3.10",
     data_files=DATA_FILES,

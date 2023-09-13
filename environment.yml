@@ -2,29 +2,29 @@ name: Yanko
 channels:
   - conda-forge
 dependencies:
-  - autopep8=2.0.2
+  - autopep8=2.0.4
   - bzip2=1.0.8
-  - ca-certificates=2022.12.7
-  - libcxx=16.0.2
+  - ca-certificates=2023.7.22
+  - libcxx=16.0.6
+  - libexpat=2.5.0
   - libffi=3.4.2
-  - libsqlite=3.40.0
+  - libsqlite=3.43.0
   - libzlib=1.2.13
-  - mypy=1.2.0
+  - mypy=1.5.1
   - mypy_extensions=1.0.0
-  - ncurses=6.3
-  - openssl=3.1.0
-  - pip=23.1.1
+  - ncurses=6.4
+  - openssl=3.1.2
+  - pip=23.2.1
   - psutil=5.9.5
-  - pycodestyle=2.10.0
-  - python=3.10.10
-  - python_abi=3.10
+  - python=3.11.5
+  - python_abi=3.11
   - readline=8.2
-  - sqlite=3.40.0
+  - sqlite=3.43.0
   - tk=8.6.12
   - tomli=2.0.1
   - typing_extensions=4.7.1
   - tzdata=2023c
-  - wheel=0.40.0
+  - wheel=0.41.2
   - xz=5.2.6
   - pip:
       - altgraph==0.17.3
@@ -75,7 +75,7 @@ dependencies:
       - joblib==1.2.0
       - lazy-loader==0.1
       - librosa==0.10.0
-      - llvmlite==0.39.1
+      - llvmlite==0.40.1
       - macholib==1.16.2
       - markdown-it-py==2.2.0
       - marshmallow==3.17.1
@@ -85,7 +85,7 @@ dependencies:
       - modulegraph==0.19.3
       - msgpack==1.0.4
       - normality==2.4.0
-      - numba==0.56.4
+      - numba==0.57.1
       - numpy==1.23.5
       - olefile==0.46
       - opencv-python==4.6.0.66
@@ -102,6 +102,7 @@ dependencies:
       - progressor==1.0.16
       - prompt-toolkit==3.0.30
       - py2app==0.28.5
+      - pycodestyle==2.10.0
       - pycparser==2.21
       - pydantic==1.10.7
       - pyfiglet==0.8.post1

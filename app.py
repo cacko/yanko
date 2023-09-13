@@ -1,9 +1,9 @@
-import pprint
+import logging
 from sys import argv, exit
 import os
 from yanko.core import pid_file, check_pid, show_alert
 from subprocess import run
-pprint.pprint({k: v for k, v in os.environ.items()})
+logging.info({k: v for k, v in os.environ.items()})
 
 if len(argv) > 1:
     from yanko.cli import cli

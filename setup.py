@@ -38,7 +38,7 @@ OPTIONS = {
         "CFBundleVersion": f"{version()}",
         "LSEnvironment": dict(
             PATH="$PATH:/usr/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin", 
-            YANKO_LOG_LEVEL="CRITICAL",
+            YANKO_LOG_LEVEL="INFO",
             # LD_LIBRARY_PATH="/Users/jago/.local/lib:$LD_LIBRARY_PATH"
         ),
     },

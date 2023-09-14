@@ -29,15 +29,15 @@ APP = ["app.py"]
 DATA_FILES:  list[tuple[str, list[str]]] = []
 OPTIONS = {
     "iconfile": "icon.icns",
-    "argv_emulation": False,
-    "emulate_shell_environment": False,
-    "semi_standalone": False,
+    # "argv_emulation": False,
+    # "emulate_shell_environment": False,
+    # "semi_standalone": False,
     "plist": {
         "LSUIElement": True,
         "CFBundleIdentifier": "net.cacko.yanko",
         "CFBundleVersion": f"{version()}",
         "LSEnvironment": dict(
-            PATH="$PATH:/Applications/Yanko.app/Contents/Frameworks:/usr/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin",
+            PATH="/Applications/Yanko.app/Contents/Frameworks:/usr/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin",
             YANKO_LOG_LEVEL="INFO",
             LD_LIBRARY_PATH="/Applications/Yanko.app/Contents/Frameworks:/Users/jago/.local/lib:$LD_LIBRARY_PATH"
         ),

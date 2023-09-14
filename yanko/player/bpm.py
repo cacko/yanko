@@ -1,5 +1,4 @@
 import logging
-from numpy import median, diff
 from yanko.core.shell import Shell
 from pathlib import Path
 from corefile import TempPath
@@ -104,7 +103,8 @@ class Beats(object, metaclass=BeatsMeta):
     def fast_bpm(self) -> BeatsStruct:
         self.__decode()
         y, sr = load(self.__tmppath.as_posix())
-        tempo, _ = beat.beat_track(y=y, sr=sr)
+        onset_env = onset.onset_strength(y=y, sr=sr, aggregate=np.median)
+        tempo, _ = beat.beat_track(onset_envelope=onset_env, sr=sr)
         return BeatsStruct(
             beats=[],
             tempo=tempo,

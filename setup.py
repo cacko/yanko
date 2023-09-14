@@ -109,7 +109,7 @@ setup(
     #     "quickmachotkey>=2023.3.4",
     #     "pyperclip3>=0.4.1",
     # ],
-    python_requires=">=3.10",
+    python_requires=">=3.11",
     data_files=DATA_FILES,
     options={"py2app": OPTIONS},
     package_data={"yanko.resources": ["*"]},

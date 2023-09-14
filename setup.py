@@ -31,7 +31,6 @@ OPTIONS = {
     "iconfile": "icon.icns",
     "argv_emulation": False,
     "emulate_shell_environment": True,
-    # "semi_standalone": False,
     "plist": {
         "LSUIElement": True,
         "CFBundleIdentifier": "net.cacko.yanko",
@@ -51,16 +50,15 @@ OPTIONS = {
         # "pycparser",
         # "uvicorn",
         # "anyio",
-        # "aubio"
     ],
     "frameworks":
         resolve_libs([
             "libffi.dylib",
-            #         #         "libtcl8.6.dylib",
-            #         #         "libtk8.6.dylib",
-            #         #         "libssl.3.dylib",
-            #         #         "libcrypto.3.dylib",
-            #         #         "libsqlite3.dylib",
+            # "libtcl10.dylib",
+            # "libtk.dylib",
+            "libssl.dylib",
+            "libcrypto.dylib",
+            "libsqlite3.dylib",
         ])
     # ),
 }
@@ -106,7 +104,6 @@ setup(
     #     "fastapi>=0.92.0",
     #     "uvicorn>=0.20.0",
     #     "anyio>=3.6.2",
-    #     "aubio>=0.5.0a0",
     #     "corefile>=0.1.2",
     #     "librosa>=0.10.0",
     #     "quickmachotkey>=2023.3.4",

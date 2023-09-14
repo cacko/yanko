@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Any
 from yanko.core.bytes import nearest_bytes
 from pydantic import BaseModel, Extra, Field
@@ -105,12 +106,18 @@ class DeviceMeta(type):
     def name(cls) -> str:
         return cls().get_property("name")
 
+    def check(cls):
+        logging.warning(sd.default.device)
+
 
 class Device(object, metaclass=DeviceMeta):
 
     __device: DeviceParams
 
     def __init__(self, *args, **kwargs) -> None:
+        self.init()
+
+    def init(self):
         _, device = sd.default.device
         device_spec = sd.query_devices(device, "output")
         self.__device = DeviceParams(**device_spec)  # type: ignore

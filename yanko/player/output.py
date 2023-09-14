@@ -32,12 +32,16 @@ class Output(StoppableThread):
         self.control_queue: Queue = Queue()
         self.time_event = time_event
         self.end_event = end_event
+        self.init_stream()
+        super().__init__(*args, **kwargs)
+
+    def init_stream(self):
         self.__stream = sd.RawOutputStream(
             samplerate=Device.samplerate,
             blocksize=Device.blocksize,
             extra_settings=(
                 sd.CoreAudioSettings(
-                    change_device_parameters=True
+                    change_device_parameters=False
                 )
             ),
             device=Device.index,
@@ -46,7 +50,6 @@ class Output(StoppableThread):
             dither_off=True,
             clip_off=True,
         )
-        super().__init__(*args, **kwargs)
 
     @property
     def volume(self) -> int:

@@ -30,7 +30,7 @@ DATA_FILES:  list[tuple[str, list[str]]] = []
 OPTIONS = {
     "iconfile": "icon.icns",
     "argv_emulation": False,
-    "emulate_shell_environment": True,
+    "emulate_shell_environment": False,
     "semi_standalone": False,
     "plist": {
         "LSUIElement": True,

@@ -34,7 +34,6 @@ dependencies:
       - arrow==1.2.3
       - asitop==0.0.21
       - async-timeout==4.0.2
-      - aubio==0.5.0a0
       - audioread==3.0.0
       - babel==2.12.1
       - banal==1.0.6

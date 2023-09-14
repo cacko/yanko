@@ -1,5 +1,4 @@
 import logging
-from aubio import source, tempo  # type: ignore
 from numpy import median, diff
 from yanko.core.shell import Shell
 from pathlib import Path
@@ -14,7 +13,8 @@ from librosa import (
     time_to_frames,
     onset,
     decompose,
-    feature
+    feature,
+    beat
 )
 from librosa.util import peak_pick, softmask
 import numpy as np
@@ -103,34 +103,11 @@ class Beats(object, metaclass=BeatsMeta):
 
     def fast_bpm(self) -> BeatsStruct:
         self.__decode()
-        samplerate, win_s, hop_s = 4000, 128, 64
-        s = source(self.__tmppath.as_posix(), samplerate, hop_s)  # type: ignore
-        samplerate = s.samplerate
-        o = tempo("specdiff", win_s, hop_s, samplerate)
-        beats = []
-        total_frames = 0
-        while True:
-            samples, read = s()
-            is_beat = o(samples)
-            if is_beat:
-                this_beat = o.get_last_s()
-                beats.append(this_beat)
-            total_frames += read
-            if read < hop_s:
-                break
-
-        def beats_to_bpm(beats):
-            if len(beats) > 1:
-                if len(beats) < 4:
-                    logging.error("few beats found in {:s}".format(self.__path))
-                bpms = 60/diff(beats)
-                return median(bpms)
-            else:
-                logging.error("not enough beats found in {:s}".format(self.__path))
-                return 0
+        y, sr = load(self.__tmppath.as_posix())
+        tempo, _ = beat.beat_track(y=y, sr=sr)
         return BeatsStruct(
             beats=[],
-            tempo=beats_to_bpm(beats),  # type: ignore
+            tempo=tempo,
             path=self.__requested_path,
         )
 

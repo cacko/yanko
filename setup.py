@@ -36,11 +36,11 @@ OPTIONS = {
         "LSUIElement": True,
         "CFBundleIdentifier": "net.cacko.yanko",
         "CFBundleVersion": f"{version()}",
-        "LSEnvironment": dict(
-            PATH="@executable_path/../Frameworks:/usr/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin",
-            YANKO_LOG_LEVEL="INFO",
-            LD_LIBRARY_PATH="@executable_path/../Frameworks:/Users/jago/.local/lib:$LD_LIBRARY_PATH"
-        ),
+        # "LSEnvironment": dict(
+        #     PATH="@executable_path/../Frameworks:/usr/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin",
+        #     YANKO_LOG_LEVEL="INFO",
+        #     LD_LIBRARY_PATH="@executable_path/../Frameworks:/Users/jago/.local/lib:$LD_LIBRARY_PATH"
+        # ),
     },
     "packages": [
         "_sounddevice_data",

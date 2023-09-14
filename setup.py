@@ -31,7 +31,7 @@ OPTIONS = {
     "iconfile": "icon.icns",
     "argv_emulation": False,
     "emulate_shell_environment": True,
-    "semi_standalone": True,
+    "semi_standalone": False,
     "plist": {
         "LSUIElement": True,
         "CFBundleIdentifier": "net.cacko.yanko",

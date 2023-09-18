@@ -44,7 +44,8 @@ OPTIONS = {
     "packages": [
         "_sounddevice_data",
         "PIL",
-        "cv2"
+        "cv2",
+        "uvicorn"
     ],
     "frameworks":
         resolve_libs([

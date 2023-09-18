@@ -45,7 +45,8 @@ OPTIONS = {
         "_sounddevice_data",
         "PIL",
         "cv2",
-        "uvicorn"
+        "uvicorn",
+        "anyio"
     ],
     "frameworks":
         resolve_libs([

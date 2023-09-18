@@ -276,7 +276,6 @@ dependencies:
       - python-dotenv==0.21.1
       - pyyaml==6.0
       - questionary==1.10.0
-      - quickmachotkey==2023.3.4
       - random-user-agent==1.0.1
       - redis==4.3.4
       - requests==2.28.1

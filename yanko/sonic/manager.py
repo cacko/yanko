@@ -52,7 +52,7 @@ def resolveCoverArt(obj):
         if icon:
             obj.coverArtIcon = icon.as_posix()
         else:
-            obj.coverArtIcob = None
+            obj.coverArtIcon = None
     except AssertionError:
         logging.error(f"failed to resolve icon cover art {obj}")
     return obj
@@ -81,7 +81,7 @@ def resolveIcon(obj):
                 assert info.largeImageUrl
                 obj.icon.path = info.largeImageUrl
         except AssertionError as e:
-            logging.exception(e)
+            logging.error(e)
     try:
         assert obj.icon
         assert obj.icon.path
@@ -90,7 +90,7 @@ def resolveIcon(obj):
         assert res
         obj.icon.path = res.as_posix() if res.exists() else None
     except AssertionError as e:
-        logging.exception(e)
+        logging.error(e)
     return obj
 
 
@@ -357,7 +357,7 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
 
     def __stop(self):
         self.api.playback_queue.put_nowait((Action.STOP, None))
- 
+
     def __volume_up(self):
         if self.api.isPlaying:
             self.api.volume = min(2, self.api.volume + self.VOLUME_STEP)

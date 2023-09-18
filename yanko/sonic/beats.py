@@ -1,5 +1,4 @@
 from queue import Queue, Empty
-
 from yanko.core.cachable import CachableDb
 from yanko.core.config import app_config
 from yanko.core.thread import StoppableThread
@@ -18,10 +17,12 @@ class Beats(CachableDb):
     def __init__(
         self,
         path,
-        allow_extract: bool = False,
+        allow_extract: Optional[bool] = None,
         extractor: Optional[BeatsExtractor] = None
     ) -> None:
         self.__path = path.split("Music/")[-1]
+        if allow_extract is None:
+            allow_extract = app_config.get("beats", {}).get("extract", False)
         self.__allow_extract = allow_extract
         self.__extractor = extractor
         super().__init__(
@@ -152,7 +153,7 @@ class Fetcher(StoppableThread, metaclass=FetcherMeta):
     def resolveBeats(
         self,
         extractor: BeatsExtractor,
-        allow_extract: bool = False
+        allow_extract: Optional[bool] = None
     ):
         beats = Beats(
             path=extractor.requested_path,

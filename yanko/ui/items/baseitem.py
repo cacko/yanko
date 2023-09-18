@@ -12,8 +12,8 @@ from typing import Optional
 
 
 class Font(Enum):
-    REGULAR = NSFont.fontWithName_size_("MesloLGS NF", 12)
-    BOLD = NSFont.fontWithName_size_("MesloLGS NF Bold", 12)
+    REGULAR = NSFont.fontWithName_size_("MesloLGS NF", 13)
+    BOLD = NSFont.fontWithName_size_("MesloLGS NF Bold", 13)
 
 
 class MenuItem(BaseMenuItem):

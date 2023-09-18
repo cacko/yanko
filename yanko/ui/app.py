@@ -227,7 +227,10 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
         LaMetric.nowplaying(f"{track.artist} / {track.title}", track.coverArt)
         self.title = resp.menubar_title
         for itm in self.__nowPlayingSection:
-            self._menu.pop(itm)
+            try:
+                del self.menu[itm]
+            except KeyError:
+                pass
         top = self.__playlist.insert_before
         self.__nowPlayingSection = [
             self.menu.insert_before(

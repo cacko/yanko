@@ -9,14 +9,7 @@ from yanko.sonic import Status, StreamFormat
 
 class BasePlayer(object):
 
-    _queue: Queue
     _control: Optional[Queue] = None
-    _manager_queue: Queue
-    _time_event: Event
-    _end_event: Event
-    _format = "raw"
-    volume: float
-    muted: bool
 
     def __init__(
         self,
@@ -25,9 +18,10 @@ class BasePlayer(object):
         stream_url,
         track_data,
         time_event,
+        format: StreamFormat,
         volume: float = 1,
         muted: bool = False,
-        format: Optional[StreamFormat] = None,
+
     ):
         self.volume = volume
         self.muted = muted
@@ -38,7 +32,7 @@ class BasePlayer(object):
         self._end_event = Event()
         self._url = stream_url
         self._data = track_data
-        self._format = format.value if format else StreamFormat.RAW.value
+        self._format = format
 
     @property
     def lock_file(self) -> Path:
@@ -49,7 +43,9 @@ class BasePlayer(object):
         song_id = self._data.get("id")
         url = urlparse(self._url)
         query = parse_qs(url.query)
-        query = {"id": song_id, "format": self._format, **query}
+        query = dict(id=song_id, format=self._format.value, **query)
+        if self._format == StreamFormat.NONE:
+            del query["format"]
         return f"{url.scheme}://{url.netloc}{url.path}?{urlencode(query, doseq=True)}"
 
     @property

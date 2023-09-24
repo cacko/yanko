@@ -38,10 +38,11 @@ class StreamFormat(Enum):
     RAW = "raw"
     AAC = "aac"
     FLAC = "flac"
+    NONE = "none"
 
     @classmethod
     def _missing_(cls, value):
-        return cls.RAW
+        return cls.NONE
 
 
 class Command(Enum):

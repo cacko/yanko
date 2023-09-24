@@ -24,7 +24,8 @@ from yanko.sonic import (
     Artist,
     ArtistAlbums,
     Shares,
-    Share
+    Share,
+    StreamFormat
 )
 from yanko.sonic import ArtistInfo as ArtistInfoData
 from yanko.sonic import (
@@ -105,6 +106,7 @@ class Client(object):
     __threads: list[StoppableThread] = []
     __volume: float = 1
     __muted: bool = False
+    __format: StreamFormat
 
     BATCH_SIZE = 20
 
@@ -121,7 +123,7 @@ class Client(object):
         self.search_results = []
 
         streaming_config = app_config.get("streaming", {})
-        self.invert_random = streaming_config.get("invert_random", False)
+        self.__format = StreamFormat(streaming_config.get("format", False))
 
         self.command_queue = Queue()
         input_thread = StoppableThread(target=self.add_input)
@@ -546,6 +548,7 @@ class Client(object):
                 track_data=track_data,
                 volume=self.volume,
                 muted=self.muted,
+                format=self.__format
             )
 
             self.playqueue.last_id = song_id

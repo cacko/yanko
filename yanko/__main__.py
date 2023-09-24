@@ -15,4 +15,5 @@ else:
         exit(1)
     else:
         pid_file.write_text(f"{os.getpid()}")
+        run(["sudo", "renice", "-15", f"{os.getpid()}"])
         start()

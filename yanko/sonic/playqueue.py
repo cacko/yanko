@@ -32,13 +32,18 @@ class PlayQueue:
 
     @property
     def last_id(self):
-        if not self.__last_id:
-            data = self.last_id_file.read_bytes()
-            if not data:
-                return None
-            last_id = pickle.loads(data)
-            self.__last_id = last_id
-        return self.__last_id
+        try:
+            if not self.__last_id:
+                assert self.last_id_file.exists()
+                data = self.last_id_file.read_bytes()
+                if not data:
+                    return None
+                last_id = pickle.loads(data)
+                self.__last_id = last_id
+            return self.__last_id
+        except AssertionError:
+            return None
+
 
     @last_id.setter
     def last_id(self, val):

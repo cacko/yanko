@@ -84,7 +84,10 @@ class Playlist:
                     ),
                 )
             self.append(PlaylistItem(track=track, key=insert_after))
-        self.append(PlaylistItem(key=menu.insert_after(insert_after, None)))
+        try:
+            self.append(PlaylistItem(key=menu.insert_after(insert_after, None)))
+        except KeyError as e:
+            pass
 
     def reset(self):
         menu = self.__app.menu

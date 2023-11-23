@@ -222,6 +222,7 @@ class Client(object):
         return f"https://{self.host}/rest/{endpoint.value}?{qs}"
 
     def make_request(self, url, usecache=True):
+        print(url)
         try:
             r = make_request(url=url)
         except requests.exceptions.ConnectionError as e:
@@ -268,9 +269,11 @@ class Client(object):
 
     def createShare(self, id: str) -> Optional[Share]:
         url = self.create_url(Subsonic.CREATE_SHARE, id=id, downloadable="true")
-        logging.warning(url)
+        logging.debug(url)
         try:
             resp = Shares(**self.make_request(url))
+            logging.debug(resp)
+            logging.info(f"share url {resp.sharep[0]}")
             return resp.share[0]
         except Exception as e:
             logging.exception(e)

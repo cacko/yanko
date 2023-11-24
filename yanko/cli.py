@@ -68,11 +68,16 @@ def cli_dbinit(drop_table: str):
             # drop_tables = [ArtistInfo]
             # # if drop_table:
             # #     drop_tables.append(drop_table)
-            # if drop_tables:
-            #     db.drop_tables(drop_tables)
+            if drop_table:
+                db.drop_tables([Beats, Artist, Album, ArtistInfo])
             db.create_tables([Beats, Artist, Album, ArtistInfo])
     except Exception as e:
         print(e)
+
+
+@cli.command("reset")
+def cli_reset():
+    pass
 
 
 @cli.command("beats", short_help="Extract Beats")

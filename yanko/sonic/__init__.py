@@ -111,7 +111,7 @@ class Subsonic(Enum):
     RANDOM_SONGS = "getRandomSongs"
     MUSIC_FOLDERS = "getMusicFolders"
     ALBUM_LIST = "getAlbumList"
-    ALBUM = "album"
+    ALBUM = "getAlbum"
     SCROBBLE = "scrobble"
     SEARCH3 = "search3"
     SEARCH2 = "search2"

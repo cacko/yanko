@@ -273,7 +273,7 @@ class Client(object):
         try:
             resp = Shares(**self.make_request(url))
             logging.debug(resp)
-            logging.info(f"share url {resp.sharep[0]}")
+            logging.info(f"share url {resp.share[0]}")
             return resp.share[0]
         except Exception as e:
             logging.exception(e)

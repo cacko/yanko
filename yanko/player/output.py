@@ -58,7 +58,7 @@ class Output(StoppableThread):
     @volume.setter
     def volume(self, val: float = 1.0):
         self.__volume = int(50 * val)
-        osascript.osascript(f"set volume output volume {self.__volume}")
+        # osascript.osascript(f"set volume output volume {self.__volume}")
 
     @property
     def muted(self) -> bool:

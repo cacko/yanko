@@ -93,7 +93,6 @@ class Beats(CachableDb):
 
     def extract(self) -> BeatsStruct:
         self._init()
-        print(self._struct)
         if not self._struct or not self._struct.beats:
             self.fetch()
         assert self._struct

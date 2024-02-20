@@ -360,7 +360,9 @@ class YankoApp(rumps.App, metaclass=YankoAppMeta):
 
     @rumps.events.before_quit
     def terminate(self):
+        self._onPlaystatus(Playstatus(status=Status.STOPPED))
         self.manager.commander.put_nowait((Command.QUIT, None))
+    
         for th in self.__threads:
             try:
                 th.stop()  # type: ignore

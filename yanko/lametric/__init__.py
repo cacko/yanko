@@ -39,6 +39,10 @@ class LaMetricMeta(type):
 
 
 class LaMetric(object, metaclass=LaMetricMeta):
+
+    def __del__(self):
+        self.send_status()
+
     def __make_request(self, method: Method, endpoint: str, **args):
         conf = app_config.get("lametric")
         if not conf:
@@ -73,5 +77,5 @@ class LaMetric(object, metaclass=LaMetricMeta):
 
     def send_status(self, status: Status = Status.STOPPED):
         return self.__make_request(
-            Method.POST, "api/status", json=StatusFrame(status=status.value).dict()
+            Method.GET, "api/playstatus", params=dict(status=status.value)
         )

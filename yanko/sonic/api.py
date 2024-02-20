@@ -222,7 +222,6 @@ class Client(object):
         return f"https://{self.host}/rest/{endpoint.value}?{qs}"
 
     def make_request(self, url, usecache=True):
-        print(url)
         try:
             r = make_request(url=url)
         except requests.exceptions.ConnectionError as e:

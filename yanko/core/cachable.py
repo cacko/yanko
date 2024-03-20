@@ -5,7 +5,7 @@ from humanfriendly.tables import format_smart_table
 from progressor import Progress
 from yanko.db.base import YankoDb
 from yanko.db.models import ModelBase
-from pydantic import BaseModel, Extra, Field, PrivateAttr
+from pydantic import BaseModel,Field, PrivateAttr
 from functools import lru_cache, wraps
 from time import monotonic_ns
 
@@ -40,7 +40,7 @@ def timed_lru_cache(
         return wrapper_cache(_func)
 
 
-class CacheType(BaseModel, extra=Extra.ignore):
+class CacheType(BaseModel):
     name: str
     count: int
     size: int = Field(default=0)
@@ -62,7 +62,7 @@ class CacheType(BaseModel, extra=Extra.ignore):
                 fp.unlink(missing_ok=True)
 
 
-class Cache(BaseModel, extra=Extra.ignore):
+class Cache(BaseModel):
     cover_art: CacheType
     cover_icon: CacheType
     beats_json: CacheType

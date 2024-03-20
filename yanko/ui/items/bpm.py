@@ -7,7 +7,7 @@ import logging
 from yanko.core.thread import StoppableThread
 from yanko.sonic import NowPlaying
 from yanko.ui.icons import AnimatedIcon, Symbol
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 
 
 PausingIcon = AnimatedIcon(icons=[Symbol.GRID1, Symbol.GRID4])
@@ -15,7 +15,7 @@ PausingIcon = AnimatedIcon(icons=[Symbol.GRID1, Symbol.GRID4])
 PlayingIcon = AnimatedIcon(icons=[Symbol.GRID2, Symbol.GRID3])
 
 
-class BPMEvent(BaseModel, extra=Extra.ignore):
+class BPMEvent(BaseModel):
     icon: str
     tempo: str
     beat_no: int

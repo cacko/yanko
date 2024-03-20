@@ -15,7 +15,7 @@ class Payload(Track):
 
     @property
     def payload(self) -> dict:
-        return json.loads(self.json())
+        return self.model_dump(mode='json')
 
 
 class AnnounceMeta(type):
@@ -56,6 +56,7 @@ class Announce(StoppableThread, metaclass=AnnounceMeta):
             Path(payload["coverArt"]).read_bytes()).decode()
         for url in self.__to:
             try:
-                requests.post(url, json=Payload(**payload).payload)
+                logging.warning(payload)
+                requests.put(url, json=Payload(**payload).payload)
             except ConnectionError:
                 logging.warn(f"Announcer failer for {url}")

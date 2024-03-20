@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from math import floor
 from typing import Optional
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Field
 import pantomime
 from corestring import truncate
 from coretime import seconds_to_duration
@@ -138,7 +138,7 @@ class AlbumType(Enum):
     FREQUENT = "frequent"
 
 
-class Song(BaseModel, extra=Extra.ignore):
+class Song(BaseModel):
     album: Optional[str] = None
     albumId: Optional[str] = None
     artist: Optional[str] = None
@@ -160,10 +160,10 @@ class Song(BaseModel, extra=Extra.ignore):
     track: Optional[int] = None
     type: Optional[str] = None
     year: Optional[int] = None
-    bpm: Optional[int] = Field(alias="Bpm")
+    bpm: Optional[int] = None
 
 
-class Track(BaseModel, extra=Extra.ignore):
+class Track(BaseModel):
     id: str
     parent: Optional[str] = None
     isDir: bool
@@ -205,7 +205,7 @@ class Track(BaseModel, extra=Extra.ignore):
         return seconds_to_duration(self.duration)
 
 
-class Album(BaseModel, extra=Extra.ignore):
+class Album(BaseModel):
     id: str
     artistId: str = Field(default="")
     artist: str = Field(default="")
@@ -237,7 +237,7 @@ class Album(BaseModel, extra=Extra.ignore):
             return 0
 
 
-class Artist(BaseModel, extra=Extra.ignore):
+class Artist(BaseModel):
     id: str
     name: str
     albumCount: int = Field(default=0)
@@ -252,7 +252,7 @@ class Artist(BaseModel, extra=Extra.ignore):
             self.album = []
 
 
-class ArtistInfo(BaseModel, extra=Extra.ignore):
+class ArtistInfo(BaseModel):
     biography: Optional[str] = None
     musicBrainzId: Optional[str] = None
     lastFmUrl: Optional[str] = None
@@ -262,7 +262,7 @@ class ArtistInfo(BaseModel, extra=Extra.ignore):
     image: Optional[str] = None
 
 
-class NowPlaying(BaseModel, extra=Extra.ignore):
+class NowPlaying(BaseModel):
     track: Track
     song: Song
     start: datetime
@@ -307,7 +307,7 @@ class NowPlaying(BaseModel, extra=Extra.ignore):
             return None
 
 
-class Playlist(BaseModel, extra=Extra.ignore):
+class Playlist(BaseModel):
     tracks: list[Track]
     start: datetime
 
@@ -316,11 +316,11 @@ class AlbumPlaylist(Playlist):
     pass
 
 
-class Playstatus(BaseModel, extra=Extra.ignore):
+class Playstatus(BaseModel):
     status: Status
 
 
-class VolumeStatus(BaseModel, extra=Extra.ignore):
+class VolumeStatus(BaseModel):
     volume: float
     muted: bool
     timestamp: float
@@ -330,34 +330,33 @@ class VolumeStatus(BaseModel, extra=Extra.ignore):
         return floor(time.time() - self.timestamp) > 3
 
 
-class LastAdded(BaseModel, extra=Extra.ignore):
+class LastAdded(BaseModel):
     albums: list[Album]
 
 
-class RecentlyPlayed(BaseModel, extra=Extra.ignore):
+class RecentlyPlayed(BaseModel):
     albums: list[Album]
 
 
-class MostPlayed(BaseModel, extra=Extra.ignore):
+class MostPlayed(BaseModel):
     albums: list[Album]
 
 
-class ArtistAlbums(BaseModel, extra=Extra.ignore):
+class ArtistAlbums(BaseModel):
     albums: list[Album]
     artistInfo: Optional[ArtistInfo] = None
 
 
-class SearchItemIcon(BaseModel, extra=Extra.ignore):
+class SearchItemIcon(BaseModel):
     path: Optional[str] = None
 
 
-class SearchItem(BaseModel, extra=Extra.ignore):
+class SearchItem(BaseModel):
     uid: str
     title: str
     subtitle: str
     arg: str
     icon: Optional[SearchItemIcon] = None
-    type = "file:skipcheck"
 
 
 class ArtistSearchItem(SearchItem):
@@ -372,7 +371,7 @@ class TrackSearchItem(SearchItem):
     pass
 
 
-class Share(BaseModel, extra=Extra.ignore):
+class Share(BaseModel):
     entry: list[Song]
     id: str
     url: str
@@ -380,21 +379,21 @@ class Share(BaseModel, extra=Extra.ignore):
     username: str
 
 
-class Shares(BaseModel, extra=Extra.ignore):
+class Shares(BaseModel):
     share: list[Share]
 
 
-class Search(BaseModel, extra=Extra.ignore):
+class Search(BaseModel):
     queue_id: str
     items: list[SearchItem]
 
 
-class ScanStatus(BaseModel, extra=Extra.ignore):
+class ScanStatus(BaseModel):
     scanning: bool
     count: int
 
 
-class Response(BaseModel, extra=Extra.ignore):
+class Response(BaseModel):
     status: Optional[str] = None
     serverVersion: Optional[str] = None
     type: Optional[str] = None
@@ -402,13 +401,13 @@ class Response(BaseModel, extra=Extra.ignore):
     error: Optional[dict] = None
 
 
-class Search2Response(BaseModel, extra=Extra.ignore):
+class Search2Response(BaseModel):
     artist: list[Artist] = []
     album: list[Album] = []
     song: list[Track] = []
 
 
-class Search3Response(BaseModel, extra=Extra.ignore):
+class Search3Response(BaseModel):
     artist: list[Artist] = []
     album: list[Album] = []
     song: list[Track] = []

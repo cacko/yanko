@@ -1,7 +1,7 @@
 from pathlib import Path
 from yanko import __name__
 from appdirs import user_config_dir, user_cache_dir, user_data_dir
-from yaml import Loader, load
+from yaml import full_load
 
 
 class app_config_meta(type):
@@ -43,7 +43,7 @@ class app_config(object, metaclass=app_config_meta):
 
     def __init__(self) -> None:
         pth = app_config.app_dir / "config.yaml"
-        self._config = load(pth.read_text(), Loader=Loader)
+        self._config = full_load(pth.read_text())
 
     def getvar(self, var, *args, **kwargs):
         return self._config.get(var, *args, *kwargs)

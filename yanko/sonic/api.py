@@ -408,6 +408,7 @@ class Client(object):
             )
             if not random_songs:
                 return
+            logging.warning(random_songs)
             self.playqueue.load(random_songs.get("song", []))
         for song in self.playqueue:
             playing = self.play_stream(dict(song))

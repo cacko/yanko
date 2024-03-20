@@ -26,7 +26,7 @@ def version():
 
 
 APP = ["app.py"]
-DATA_FILES:  list[tuple[str, list[str]]] = []
+DATA_FILES: list[tuple[str, list[str]]] = []
 OPTIONS = {
     "iconfile": "icon.icns",
     "argv_emulation": False,
@@ -38,23 +38,20 @@ OPTIONS = {
         "LSEnvironment": dict(
             PATH="@executable_path/../Frameworks:/usr/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin",
             YANKO_LOG_LEVEL="CRITICAL",
-            LD_LIBRARY_PATH="@executable_path/../Frameworks:/Users/jago/.local/lib:$LD_LIBRARY_PATH"
+            LD_LIBRARY_PATH="@executable_path/../Frameworks:/Users/jago/.local/lib:$LD_LIBRARY_PATH",
         ),
     },
-    "packages": [
-        "_sounddevice_data",
-        "PIL",
-        "cv2",
-        "uvicorn",
-        "anyio"
-    ],
-    "frameworks":
-        resolve_libs([
+    "packages": ["_sounddevice_data", "PIL", "cv2", "uvicorn", "anyio", "pysqlite3"],
+    "frameworks": resolve_libs(
+        [
             "libffi.dylib",
             "libssl.dylib",
             "libcrypto.dylib",
             "libsqlite3.dylib",
-        ])
+            "libssl.3.dylib",
+            "libcrypto.3.dylib",
+        ]
+    ),
     # ),
 }
 setup(
@@ -63,5 +60,5 @@ setup(
     python_requires=">=3.11",
     data_files=DATA_FILES,
     options={"py2app": OPTIONS},
-    package_data={"yanko.resources": ["*"]}
+    package_data={"yanko.resources": ["*"]},
 )

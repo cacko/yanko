@@ -4,7 +4,7 @@ import uvicorn
 from corethread import StoppableThread
 from fastapi import FastAPI, Request, Depends
 from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 from yanko.core import log_level
 from yanko.core.config import app_config
 from corestring import string_hash
@@ -15,7 +15,7 @@ from yanko.sonic.beats import Beats
 from .auth import check_auth
 
 
-class ApiConfig(BaseModel, extra=Extra.ignore):
+class ApiConfig(BaseModel):
     host: str
     port: int
 

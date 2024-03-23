@@ -41,7 +41,7 @@ OPTIONS = {
             LD_LIBRARY_PATH="@executable_path/../Frameworks:/Users/jago/.local/lib:$LD_LIBRARY_PATH",
         ),
     },
-    "packages": ["_sounddevice_data","blis", "cymem", "PIL", "cv2", "uvicorn", "anyio", "pysqlite3"],
+    "packages": ["_sounddevice_data","blis",  "preshed","cymem", "PIL", "cv2", "uvicorn", "anyio", "pysqlite3"],
     "frameworks": resolve_libs(
         [
             "libffi.dylib",

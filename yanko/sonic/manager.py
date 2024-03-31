@@ -359,14 +359,16 @@ class Manager(StoppableThread, metaclass=ManagerMeta):
         self.api.playback_queue.put_nowait((Action.STOP, None))
 
     def __volume_up(self):
-        if self.api.isPlaying:
-            self.api.volume = min(2, self.api.volume + self.VOLUME_STEP)
-            self.api.playback_queue.put_nowait((Action.VOLUME_UP, self.api.volume))
+        pass
+        # if self.api.isPlaying:
+        #     self.api.volume = min(2, self.api.volume + self.VOLUME_STEP)
+        #     self.api.playback_queue.put_nowait((Action.VOLUME_UP, self.api.volume))
 
     def __volume_down(self):
-        if self.api.isPlaying:
-            self.api.volume = max(0, self.api.volume - self.VOLUME_STEP)
-            self.api.playback_queue.put_nowait((Action.VOLUME_DOWN, self.api.volume))
+        pass 
+        # if self.api.isPlaying:
+        #     self.api.volume = max(0, self.api.volume - self.VOLUME_STEP)
+        #     self.api.playback_queue.put_nowait((Action.VOLUME_DOWN, self.api.volume))
 
     def __mute(self):
         if self.api.isPlaying:

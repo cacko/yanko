@@ -3,7 +3,7 @@ from typing import Optional, Any
 from yanko.core.bytes import nearest_bytes
 from pydantic import BaseModel, Field
 import sounddevice as sd
-
+from rich import print
 
 class DeviceParams(BaseModel):
     name: Optional[str] = None
@@ -118,6 +118,7 @@ class Device(object, metaclass=DeviceMeta):
         self.init()
 
     def init(self):
+        print(sd.query_devices())
         _, device = sd.default.device
         device_spec = sd.query_devices(device, "output")
         self.__device = DeviceParams(**device_spec)  # type: ignore

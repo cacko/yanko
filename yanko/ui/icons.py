@@ -26,7 +26,7 @@ class Label(Enum):
 
 
 class Symbol(Enum):
-    STOPPED = "speaker.zzz.fill"
+    STOPPED = "sum"
     PLAY = "play"
     STOP = "stop"
     FIND = "find.png"

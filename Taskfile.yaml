@@ -4,11 +4,13 @@ version: "3"
 
 vars:
   PROJECT: Yanko
+  ENTRY: src/Yanko.py
+  APP: Yanko
 
 tasks:
   default:
     cmds:
-      - sudo nice -n -19 mamba run --live-stream -n {{.PROJECT}} python app.py {{.CLI_ARGS}}
+      - sudo nice -n -19 mamba run  -n {{.PROJECT}} python {{.ENTRY}} {{.CLI_ARGS}}
     silent: true
 
   notunes:
@@ -33,20 +35,21 @@ tasks:
       - rm -rf build || true
       - rm -rf dist || true
       - rm -rf .eggs || true
-      - mamba run --live-stream -n {{.PROJECT}} python setup.py py2app
+      # - mamba run --live-stream -n {{.PROJECT}} python setup.py py2app
+      - mamba run  -n {{.PROJECT}} python -m nuitka {{.ENTRY}} --verbose
 
   install:
     cmds:
       - killall {{.PROJECT}} || true
       - rm -rf /Applications/{{.PROJECT}}.app
-      - mv dist/{{.PROJECT}}.app /Applications
+      - mv {{.PROJECT}}.app /Applications 2>/dev/null
 
   dmg:
     desc: create dmg file
     cmds:
       - echo "create DMS"
       - rm -f {{.PROJECT}}.dmg
-      - ./node_modules/.bin/appdmg {{.PROJECT}}.json {{.PROJECT}}.dmg
+      - dmgbuild -s {{.PROJECT}}.json {{.APP}} {{.PROJECT}}.dmg
 
   deploy:
     desc: push + build + dmg + install
